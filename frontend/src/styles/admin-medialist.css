@@ -1,0 +1,196 @@
+/* Admin "media list" — clean row-list layout for admin data pages.
+   Scoped under .admin-medialist so its class names never collide. */
+
+.admin-medialist {
+  display: flex;
+  flex-direction: column;
+}
+
+.admin-medialist .ml-row {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 12px 18px;
+  border-bottom: 1px solid var(--border-dim);
+  transition: background 0.18s ease;
+}
+.admin-medialist .ml-row:last-child { border-bottom: none; }
+.admin-medialist .ml-row.ml-clickable { cursor: pointer; }
+.admin-medialist .ml-row.ml-clickable:hover { background: var(--admin-surface-raise); }
+
+.admin-medialist .ml-index {
+  width: 26px;
+  text-align: center;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--admin-ink-faint);
+  flex-shrink: 0;
+}
+
+.admin-medialist .ml-cover {
+  width: 46px;
+  height: 46px;
+  border-radius: 10px;
+  object-fit: cover;
+  background: var(--admin-surface-raise);
+  border: 1px solid var(--border-dim);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--admin-ink-faint);
+  font-size: 18px;
+  flex-shrink: 0;
+  overflow: hidden;
+}
+
+.admin-medialist .ml-info {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  flex: 1;
+}
+
+.admin-medialist .ml-name {
+  font-weight: 600;
+  color: var(--admin-ink);
+  font-size: 14px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.admin-medialist a.ml-name { text-decoration: none; }
+.admin-medialist a.ml-name:hover { text-decoration: underline; }
+
+.admin-medialist .ml-sub {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 5px;
+  font-size: 12px;
+  color: var(--admin-ink-dim);
+  flex-wrap: wrap;
+}
+.admin-medialist .ml-sub code {
+  font-family: 'Roboto Mono', monospace;
+  background: var(--admin-surface-raise);
+  border: 1px solid var(--border-dim);
+  padding: 1px 6px;
+  border-radius: 4px;
+  font-size: 11px;
+  color: var(--admin-ink);
+}
+.admin-medialist .ml-sub .ml-code {
+  color: var(--admin-badge-green, #16a34a);
+  font-weight: 700;
+}
+.admin-medialist .ml-sub .ml-mob { color: var(--admin-ink-dim); }
+
+/* Right-hand meta zone */
+.admin-medialist .ml-right {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-shrink: 0;
+}
+
+.admin-medialist .ml-date {
+  font-size: 11px;
+  color: var(--admin-ink-faint);
+  white-space: nowrap;
+  min-width: 68px;
+  text-align: right;
+}
+
+/* Small pill (booth number, wing, assembly) */
+.admin-medialist .ml-tag {
+  font-size: 11px;
+  font-weight: 600;
+  padding: 4px 10px;
+  border-radius: 20px;
+  white-space: nowrap;
+  background: rgba(21, 101, 192, 0.1);
+  color: #1565c0;
+}
+.admin-medialist .ml-tag.ml-tag-wing {
+  background: rgba(242, 116, 5, 0.1);
+  color: #d35400;
+}
+
+/* Referral count pill */
+.admin-medialist .ml-count {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--admin-badge-green, #16a34a);
+  background: rgba(22, 163, 74, 0.1);
+  padding: 4px 10px;
+  border-radius: 20px;
+  white-space: nowrap;
+}
+
+/* Status badge (pill) */
+.admin-medialist .ml-badge {
+  font-size: 11px;
+  font-weight: 700;
+  padding: 4px 11px;
+  border-radius: 20px;
+  white-space: nowrap;
+  text-transform: capitalize;
+}
+.admin-medialist .ml-badge.b-pending      { background: rgba(239, 108, 0, 0.12);  color: #ef6c00; }
+.admin-medialist .ml-badge.b-confirmed,
+.admin-medialist .ml-badge.b-interested   { background: rgba(46, 125, 50, 0.12);  color: #2e7d32; }
+.admin-medialist .ml-badge.b-rejected,
+.admin-medialist .ml-badge.b-not_interested { background: rgba(211, 47, 47, 0.12); color: #c62828; }
+.admin-medialist .ml-badge.b-neutral      { background: rgba(239, 108, 0, 0.12);  color: #ef6c00; }
+
+/* Action buttons */
+.admin-medialist .ml-actions { display: flex; gap: 6px; }
+.admin-medialist .ml-reviewed {
+  font-size: 11px;
+  color: var(--admin-ink-faint);
+  font-style: italic;
+}
+
+/* Rank / crown indicator (leaderboards) */
+.admin-medialist .ml-rank {
+  width: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+.admin-medialist .ml-rank .ml-crown {
+  filter: drop-shadow(0 1px 1px rgba(0, 0, 0, 0.2));
+}
+.admin-medialist .ml-rank .ml-medal {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+  font-weight: 800;
+  color: #fff;
+}
+.admin-medialist .ml-rank .ml-medal.silver { background: linear-gradient(#cfcfcf, #a3a3a3); }
+.admin-medialist .ml-rank .ml-medal.bronze { background: linear-gradient(#d38a4f, #a0522d); }
+.admin-medialist .ml-rank .ml-medal.plain  { background: transparent; color: var(--admin-ink-faint); }
+
+/* Subtle gold tint for the #1 row */
+.admin-medialist .ml-row.ml-first {
+  background: linear-gradient(90deg, rgba(255, 193, 7, 0.1), transparent 60%);
+}
+.admin-medialist .ml-row.ml-first:hover {
+  background: linear-gradient(90deg, rgba(255, 193, 7, 0.16), transparent 60%);
+}
+
+/* Responsive: hide the date on narrow screens, let sub-line wrap */
+@media (max-width: 640px) {
+  .admin-medialist .ml-row { padding: 12px 12px; gap: 10px; }
+  .admin-medialist .ml-index { display: none; }
+  .admin-medialist .ml-date { display: none; }
+}

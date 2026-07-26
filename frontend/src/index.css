@@ -1,0 +1,392 @@
+/* Campsite — Style Reference Implementation for BJP Nalam Thittam */
+
+:root {
+  /* Colors */
+  --color-campfire-orange: #ff6b1a;
+  --color-ember-brown: #451a03;
+  --color-sunlit-cream: #fef3c7;
+  --color-forest-pulse: #22c55e;
+  --color-ember-alert: #ef4444;
+  --color-midnight-ink: #171717;
+  --color-paper-white: #ffffff;
+  --color-parchment: #fffdf9;
+  --color-fog-gray: #f5f5f5;
+  --color-linen: #f0f0f0;
+  --color-ash-gray: #a3a3a3;
+  --color-slate: #737373;
+  --color-graphite: #525252;
+  --color-stone: #8f7668;
+
+  /* Typography — Font Families */
+  --font-inter: 'Inter', ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --font-ui-monospace: 'ui-monospace', SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+
+  /* Typography — Weights */
+  --font-weight-regular: 400;
+  --font-weight-medium: 500;
+  --font-weight-semibold: 600;
+
+  /* Spacing */
+  --spacing-4: 4px;
+  --spacing-8: 8px;
+  --spacing-12: 12px;
+  --spacing-16: 16px;
+  --spacing-20: 20px;
+  --spacing-24: 24px;
+  --spacing-32: 32px;
+  --spacing-48: 48px;
+  --spacing-64: 64px;
+  --spacing-80: 80px;
+
+  /* Layout */
+  --page-max-width: 1200px;
+
+  /* Border Radius */
+  --radius-inputs: 8px;
+  --radius-cards: 12px;
+  --radius-full: 9999px;
+
+  /* Shadows */
+  --shadow-sm: rgba(0, 0, 0, 0.05) 0px 3px 6px -3px, rgba(0, 0, 0, 0.05) 0px 2px 4px -2px, rgba(0, 0, 0, 0.05) 0px 1px 2px -1px, rgba(0, 0, 0, 0.05) 0px 1px 1px -1px;
+  --shadow-subtle: rgba(0, 0, 0, 0.08) 0px 1px 1px -1px, rgba(0, 0, 0, 0.08) 0px 2px 2px -1px, rgba(0, 0, 0, 0.06) 0px 0px 0px 1px, #ffffff 0px 1px 0px 0px inset;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: var(--font-inter);
+  background-color: var(--color-parchment);
+  color: var(--color-midnight-ink);
+  min-height: 100vh;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+  overflow-x: hidden;
+}
+
+/* Hide scrollbars visually across all browsers */
+::-webkit-scrollbar {
+  display: none;
+  width: 0px;
+  height: 0px;
+}
+
+html, body {
+  -ms-overflow-style: none;  /* IE and Edge */
+  scrollbar-width: none;  /* Firefox */
+  overflow-x: hidden;
+}
+
+/* Typography Hierarchy */
+.text-display {
+  font-size: 58px;
+  font-weight: 600;
+  line-height: 1.00;
+  letter-spacing: -1.8px;
+  color: var(--color-midnight-ink);
+}
+
+.text-heading {
+  font-size: 29px;
+  font-weight: 600;
+  line-height: 1.20;
+  letter-spacing: -0.52px;
+  color: var(--color-midnight-ink);
+}
+
+.text-heading-sm {
+  font-size: 22px;
+  font-weight: 600;
+  line-height: 1.40;
+  letter-spacing: -0.37px;
+  color: var(--color-midnight-ink);
+}
+
+.text-subheading {
+  font-size: 18px;
+  font-weight: 500;
+  line-height: 1.56;
+  color: var(--color-slate);
+}
+
+.text-body {
+  font-size: 15px;
+  font-weight: 400;
+  line-height: 1.50;
+  color: var(--color-midnight-ink);
+}
+
+.text-caption {
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 1.2;
+  letter-spacing: 0.3px;
+}
+
+/* Layout Container - Fixed Full Width Consistency */
+.container {
+  width: 100%;
+  max-width: var(--page-max-width);
+  margin: 0 auto;
+  padding: 0 24px;
+  box-sizing: border-box;
+}
+
+/* Surfaces / Cards - Fixed Full Width Consistency */
+.campsite-card {
+  width: 100%;
+  box-sizing: border-box;
+  background: var(--color-paper-white);
+  border-radius: var(--radius-cards);
+  box-shadow: var(--shadow-sm);
+  border: 1px solid var(--color-linen);
+  padding: 20px 24px;
+  transition: all 0.2s ease;
+}
+
+.campsite-card:hover {
+  box-shadow: 0 6px 12px -4px rgba(0, 0, 0, 0.08);
+}
+
+/* Brand Logo Badge */
+.brand-logo-badge {
+  width: 38px;
+  height: 38px;
+  background-color: transparent;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+/* Notification Pill Banner */
+.notification-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 16px;
+  border-radius: var(--radius-full);
+  background-color: var(--color-campfire-orange);
+  color: #ffffff;
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.notification-pill .new-tag {
+  background: #ffffff;
+  color: var(--color-campfire-orange);
+  padding: 2px 8px;
+  border-radius: var(--radius-full);
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+}
+
+/* Buttons - Full 9999px Radius */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 8px 18px;
+  font-family: var(--font-inter);
+  font-weight: 500;
+  font-size: 14px;
+  border-radius: var(--radius-full);
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-decoration: none;
+}
+
+.btn-filled {
+  background-color: var(--color-midnight-ink);
+  color: #ffffff;
+  box-shadow: var(--shadow-subtle);
+}
+
+.btn-filled:hover:not(:disabled) {
+  background-color: #262626;
+  transform: translateY(-1px);
+}
+
+.btn-ghost {
+  background-color: transparent;
+  color: var(--color-slate);
+  border: 1px solid var(--color-linen);
+}
+
+.btn-ghost:hover:not(:disabled) {
+  background-color: var(--color-fog-gray);
+  color: var(--color-midnight-ink);
+}
+
+.btn-orange {
+  background-color: var(--color-campfire-orange);
+  color: #ffffff;
+}
+
+.btn-orange:hover:not(:disabled) {
+  background-color: #e55a0f;
+}
+
+.btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Inputs */
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 16px;
+}
+
+.form-label {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--color-graphite);
+}
+
+.form-control {
+  width: 100%;
+  padding: 10px 14px;
+  background: var(--color-fog-gray);
+  border: 1px solid var(--color-linen);
+  border-radius: var(--radius-inputs);
+  color: var(--color-midnight-ink);
+  font-family: var(--font-inter);
+  font-size: 14px;
+  transition: all 0.2s ease;
+}
+
+.form-control:focus {
+  outline: none;
+  background: #ffffff;
+  border-color: var(--color-midnight-ink);
+  box-shadow: 0 0 0 2px rgba(23, 23, 23, 0.1);
+}
+
+.form-control::placeholder {
+  color: var(--color-ash-gray);
+}
+
+/* Status / Metadata Tags (9999px Radius) */
+.tag-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  border-radius: var(--radius-full);
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.tag-sunlit {
+  background-color: var(--color-sunlit-cream);
+  color: var(--color-ember-brown);
+}
+
+.tag-success {
+  background-color: var(--color-forest-pulse);
+  color: #ffffff;
+}
+
+.tag-error {
+  background-color: var(--color-ember-alert);
+  color: #ffffff;
+}
+
+.tag-active {
+  background-color: var(--color-fog-gray);
+  color: var(--color-midnight-ink);
+  border: 1px solid var(--color-linen);
+}
+
+/* Navigation & Tabs Header */
+.tabs-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background-color: transparent;
+  border-bottom: 1px solid var(--color-linen);
+  padding-bottom: 12px;
+  overflow-x: auto;
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.tabs-header::-webkit-scrollbar {
+  display: none;
+  width: 0px;
+  height: 0px;
+}
+
+.tab-btn {
+  padding: 8px 16px;
+  border-radius: var(--radius-full);
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--color-slate);
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.2s ease;
+}
+
+.tab-btn:hover {
+  color: var(--color-midnight-ink);
+  background-color: var(--color-fog-gray);
+}
+
+.tab-btn.active {
+  color: var(--color-midnight-ink);
+  background-color: var(--color-sunlit-cream);
+  font-weight: 600;
+}
+
+/* Stats Metric Cards */
+.stat-card {
+  background: var(--color-paper-white);
+  border-radius: var(--radius-cards);
+  border: 1px solid var(--color-linen);
+  padding: 16px 20px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  box-shadow: var(--shadow-sm);
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.stat-icon {
+  width: 44px;
+  height: 44px;
+  border-radius: var(--radius-full);
+  background: var(--color-sunlit-cream);
+  color: var(--color-ember-brown);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.stat-number {
+  font-size: 24px;
+  font-weight: 600;
+  line-height: 1.1;
+  color: var(--color-midnight-ink);
+}
+
+.stat-label {
+  font-size: 12px;
+  color: var(--color-slate);
+  margin-top: 2px;
+}

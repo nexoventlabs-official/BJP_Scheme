@@ -1,0 +1,11 @@
+User-agent: *
+Allow: /
+
+# Keep private/authenticated and utility routes out of the index
+Disallow: /admin
+Disallow: /verify
+Disallow: /refer
+Disallow: /my-members
+Disallow: /api/
+
+Sitemap: https://tnbjp.org/sitemap.xml

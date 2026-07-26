@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<title>BJP Tamil Nadu — Back Card</title>
+<style>
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+html,body{width:1152px;height:768px;overflow:hidden;background:#0E1A2B}
+
+.back-card{
+  width:1152px;height:768px;
+  background:linear-gradient(145deg,#0E1A2B 0%,#1a2e4a 60%,#0E1A2B 100%);
+  position:relative;overflow:hidden;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+}
+
+/* Tricolor top bar */
+.top-bar{
+  position:absolute;top:0;left:0;right:0;height:14px;
+  display:flex;
+}
+.top-bar .saffron{flex:1;background:#FF9933}
+.top-bar .white{flex:1;background:#FFFFFF}
+.top-bar .green{flex:1;background:#138808}
+
+/* Tricolor bottom bar */
+.bottom-bar{
+  position:absolute;bottom:0;left:0;right:0;height:14px;
+  display:flex;
+}
+.bottom-bar .saffron{flex:1;background:#FF9933}
+.bottom-bar .white{flex:1;background:#FFFFFF}
+.bottom-bar .green{flex:1;background:#138808}
+
+/* Side accent lines */
+.left-accent{
+  position:absolute;left:0;top:14px;bottom:14px;width:6px;
+  background:linear-gradient(to bottom,#FF9933,#FFFFFF,#138808);
+}
+.right-accent{
+  position:absolute;right:0;top:14px;bottom:14px;width:6px;
+  background:linear-gradient(to bottom,#FF9933,#FFFFFF,#138808);
+}
+
+/* Background lotus watermark */
+.watermark{
+  position:absolute;
+  width:480px;height:480px;
+  opacity:0.04;
+  top:50%;left:50%;
+  transform:translate(-50%,-50%);
+}
+
+/* Center content */
+.center-content{
+  display:flex;flex-direction:column;align-items:center;gap:24px;
+  position:relative;z-index:2;
+}
+
+/* BJP Logo */
+.bjp-logo{
+  width:120px;height:120px;
+  object-fit:contain;
+  filter:drop-shadow(0 0 20px rgba(255,153,51,0.4));
+}
+
+/* Party name */
+.party-name{
+  text-align:center;
+  line-height:1;
+}
+.party-name .bjp{
+  font-family:'Arial Black',Arial,sans-serif;
+  font-size:72px;font-weight:900;
+  background:linear-gradient(135deg,#FF9933 0%,#FF6600 100%);
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;
+  background-clip:text;
+  letter-spacing:8px;
+  display:block;
+}
+.party-name .tamil-nadu{
+  font-family:Arial,sans-serif;
+  font-size:28px;font-weight:700;
+  color:#138808;
+  letter-spacing:6px;
+  display:block;
+  margin-top:6px;
+}
+
+/* Divider */
+.divider{
+  display:flex;align-items:center;gap:14px;
+  width:400px;
+}
+.divider-line{height:2px;flex:1;background:linear-gradient(to right,transparent,#FF9933)}
+.divider-line.right{background:linear-gradient(to left,transparent,#138808)}
+.divider-dot{width:8px;height:8px;border-radius:50%;background:#FFFFFF}
+
+/* Tagline */
+.tagline{
+  font-family:Arial,sans-serif;
+  font-size:18px;font-weight:600;
+  color:rgba(255,255,255,0.7);
+  letter-spacing:3px;
+  text-transform:uppercase;
+}
+
+/* Bottom info */
+.bottom-info{
+  position:absolute;bottom:30px;left:0;right:0;
+  text-align:center;
+  font-family:Arial,sans-serif;font-size:13px;
+  color:rgba(255,255,255,0.35);
+  letter-spacing:1px;
+  z-index:2;
+}
+
+/* Corner decorations */
+.corner{
+  position:absolute;
+  width:50px;height:50px;
+}
+.corner.tl{top:22px;left:14px;border-top:3px solid #FF9933;border-left:3px solid #FF9933}
+.corner.tr{top:22px;right:14px;border-top:3px solid #138808;border-right:3px solid #138808}
+.corner.bl{bottom:22px;left:14px;border-bottom:3px solid #FF9933;border-left:3px solid #FF9933}
+.corner.br{bottom:22px;right:14px;border-bottom:3px solid #138808;border-right:3px solid #138808}
+</style>
+</head>
+<body>
+<div class="back-card">
+  <div class="top-bar"><div class="saffron"></div><div class="white"></div><div class="green"></div></div>
+  <div class="bottom-bar"><div class="saffron"></div><div class="white"></div><div class="green"></div></div>
+  <div class="left-accent"></div>
+  <div class="right-accent"></div>
+
+  <div class="corner tl"></div>
+  <div class="corner tr"></div>
+  <div class="corner bl"></div>
+  <div class="corner br"></div>
+
+  <div class="center-content">
+    <img class="bjp-logo" src="/bjplogo.webp" alt="BJP Logo"
+         onerror="this.style.display='none'"/>
+
+    <div class="party-name">
+      <span class="bjp">BJP</span>
+      <span class="tamil-nadu">TAMIL NADU</span>
+    </div>
+
+    <div class="divider">
+      <div class="divider-line"></div>
+      <div class="divider-dot"></div>
+      <div class="divider-line right"></div>
+    </div>
+
+    <div class="tagline">Nation First · Party Next · Self Last</div>
+  </div>
+
+  <div class="bottom-info">Bharatiya Janata Party — Tamil Nadu Unit &nbsp;|&nbsp; Digital Member ID Card</div>
+</div>
+</body>
+</html>
