@@ -179,6 +179,7 @@ const getAssemblyBoothCredentials = async (req, res) => {
 const getDashboardStats = async (req, res) => {
   try {
     const admin = req.admin;
+    const { district, assemblyName, boothNo } = req.query || {};
     const scopeQuery = getAdminScopeQuery(admin);
 
     // Count from WRITE DB: users who registered/requested schemes
