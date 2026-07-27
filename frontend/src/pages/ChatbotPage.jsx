@@ -6364,8 +6364,11 @@ export default function ChatbotPage() {
         if (card.bjp_code) {
           fetchMemberStatus(card.bjp_code)
         }
-        await botSay(t('✅ You are already a registered member! Here is your Digital Member ID Card:'), 300)
-        addMsg('bot', 'generated_card', { card })
+        await botSay(t('👋 Welcome back! Mobile number verified.'), 300)
+        const refLink = card.referral_link || (card.bjp_code ? `${window.location.origin}/r/${card.bjp_code}` : '')
+        if (refLink) {
+          addMsg('bot', 'referral_link', { link: refLink })
+        }
         setChatState(S.DONE)
         return
       }
@@ -6394,8 +6397,11 @@ export default function ChatbotPage() {
         }
         cardRef.current = card
         saveCache(card, {})
-        await botSay(t('✅ You are already a registered member! Here is your Digital Member ID Card:'), 300)
-        addMsg('bot', 'generated_card', { card })
+        await botSay(t('👋 Welcome back! Mobile number verified.'), 300)
+        const refLink = card.referral_link || (card.bjp_code ? `${window.location.origin}/r/${card.bjp_code}` : '')
+        if (refLink) {
+          addMsg('bot', 'referral_link', { link: refLink })
+        }
         setChatState(S.DONE)
         return
       }
