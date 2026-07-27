@@ -536,14 +536,13 @@ const getMemberReferrals = async (req, res) => {
 
 // @desc    Get Scoped Applications List for Admin (Paginated by Voter)
 // @route   GET /api/admin/applications
-// @access  Private (Admin)
 const getApplicationsList = async (req, res) => {
   try {
     const admin = req.admin;
     const { search, status, schemeName, district, assemblyName, boothNo, page = 1, limit = 20, exportAll } = req.query;
-    const isExport = exportAll === 'true';
+    const isExport = req.query.isExport === 'true' || exportAll === 'true';
     const pageNum  = Math.max(1, parseInt(page)  || 1);
-    const limitNum = isExport ? 5000 : Math.min(500, Math.max(1, parseInt(limit) || 20));
+    const limitNum = isExport ? 500000 : Math.min(500, Math.max(1, parseInt(limit) || 20));
     const skip = isExport ? 0 : (pageNum - 1) * limitNum;
 
     // ── Build Scope Filter for SchemeApplications ──
@@ -596,7 +595,53 @@ const getApplicationsList = async (req, res) => {
       }
     }
 
-    // Aggregate distinct applicants from SchemeApplication matching filter
+    // ── Fast Path for Normal Paginated Display (e.g. Reports preview / App list) ──
+    if (!isExport) {
+      const [totalAppsCount, rawApps] = await Promise.all([
+        SchemeApplication.countDocuments(appScopeFilter),
+        SchemeApplication.find(appScopeFilter)
+          .sort({ appliedAt: -1, _id: -1 })
+          .skip(skip)
+          .limit(limitNum)
+          .lean()
+      ]);
+
+      const totalPages = Math.ceil(totalAppsCount / limitNum) || 1;
+
+      // Group paginated items by voter
+      const voterMap = {};
+      rawApps.forEach(app => {
+        const key = app.epicNo || (app.userId ? String(app.userId) : app.mobile);
+        if (!key) return;
+        if (!voterMap[key]) {
+          voterMap[key] = {
+            _id: app.userId || key,
+            epicNo: app.epicNo || 'N/A',
+            voterName: app.voterName || 'N/A',
+            mobile: app.mobile || 'N/A',
+            district: app.district || 'N/A',
+            assemblyName: app.assemblyName || 'N/A',
+            boothNo: app.boothNo || 'N/A',
+            userId: app.userId,
+            referralCode: app.referralCode,
+            applications: []
+          };
+        }
+        voterMap[key].applications.push(app);
+      });
+
+      return res.status(200).json({
+        success: true,
+        voters: Object.values(voterMap),
+        totalVoters: totalAppsCount,
+        totalPages,
+        currentPage: pageNum,
+        limit: limitNum,
+        applications: rawApps
+      });
+    }
+
+    // ── Aggregate distinct applicants for complete export ──
     const applicantAgg = await SchemeApplication.aggregate([
       { $match: appScopeFilter },
       {
@@ -615,10 +660,9 @@ const getApplicationsList = async (req, res) => {
       }
     ]);
 
-    const isExport = req.query.isExport === 'true' || req.query.exportAll === 'true';
     const totalVoters = applicantAgg.length;
     const totalPages  = Math.ceil(totalVoters / limitNum) || 1;
-    const paginatedApplicants = isExport ? applicantAgg : applicantAgg.slice(skip, skip + limitNum);
+    const paginatedApplicants = applicantAgg;
 
     if (paginatedApplicants.length === 0) {
       return res.status(200).json({ success: true, voters: [], totalVoters, totalPages, currentPage: pageNum, limit: limitNum, applications: [] });
