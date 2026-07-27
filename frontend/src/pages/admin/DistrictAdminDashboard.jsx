@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import API from '../../utils/api';
 import { useAuth } from '../../context/AuthContext';
 import StatusBadge from '../../components/StatusBadge';
@@ -28,6 +28,7 @@ const DistrictAdminDashboard = () => {
   const [booths, setBooths] = useState([]);
   const [loadingBooths, setLoadingBooths] = useState(false);
   const [selectedVoterTimeline, setSelectedVoterTimeline] = useState(null);
+  const skipFilterResetRef = useRef(false);
 
   // ── Sub-page Stats Pagination ──
   const [assStatsPage, setAssStatsPage] = useState(1);
@@ -123,6 +124,7 @@ const DistrictAdminDashboard = () => {
 
   // When assembly changes: clear booth filter and load new booths
   useEffect(() => {
+    if (skipFilterResetRef.current) { skipFilterResetRef.current = false; return; }
     setBoothFilter('');
     setBooths([]);
     fetchBooths(assemblyFilter);
@@ -704,7 +706,7 @@ const DistrictAdminDashboard = () => {
               <tbody>
                 {(statsData.boothStats || []).slice((boothStatsPage - 1) * 15, boothStatsPage * 15).map((row, idx) => (
                   <tr key={idx} style={{ borderBottom: '1px solid var(--color-linen)', cursor: 'pointer' }}
-                    onClick={() => { setAssemblyFilter(row._id.assemblyName); setBoothFilter(String(row._id.boothNo)); setStatusFilter(''); setSchemeFilter(''); navigateSubPage('applications'); }}
+                    onClick={() => { skipFilterResetRef.current = true; setAssemblyFilter(row._id.assemblyName); setBoothFilter(String(row._id.boothNo)); setStatusFilter(''); setSchemeFilter(''); navigateSubPage('applications'); }}
                     onMouseEnter={e => e.currentTarget.style.background = 'var(--color-fog-gray)'}
                     onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
                   >

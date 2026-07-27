@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import API from '../../utils/api';
 import { useAuth } from '../../context/AuthContext';
 import StatusBadge from '../../components/StatusBadge';
@@ -42,6 +42,7 @@ const StateAdminDashboard = () => {
   const [loadingBooths, setLoadingBooths] = useState(false);
 
   const [selectedVoterTimeline, setSelectedVoterTimeline] = useState(null);
+  const skipFilterResetRef = useRef(false);
 
   // ── Sub-page Pagination States ──
   const [distStatsPage, setDistStatsPage] = useState(1);
@@ -167,6 +168,7 @@ const StateAdminDashboard = () => {
 
   // Handle District change
   useEffect(() => {
+    if (skipFilterResetRef.current) return;
     setAssemblyFilter('');
     setBoothFilter('');
     setBooths([]);
@@ -175,6 +177,7 @@ const StateAdminDashboard = () => {
 
   // Handle Assembly change
   useEffect(() => {
+    if (skipFilterResetRef.current) { skipFilterResetRef.current = false; return; }
     setBoothFilter('');
     fetchBoothsForAssembly(assemblyFilter, districtFilter);
   }, [assemblyFilter]);
@@ -794,7 +797,7 @@ const StateAdminDashboard = () => {
               <tbody>
                 {(statsData.assemblyStats || []).slice((assStatsPage - 1) * 15, assStatsPage * 15).map((row, idx) => (
                   <tr key={idx} style={{ borderBottom: '1px solid var(--color-linen)', cursor: 'pointer' }}
-                    onClick={() => { setDistrictFilter(row._id.district); setAssemblyFilter(row._id.assemblyName); setBoothFilter(''); setStatusFilter(''); setSchemeFilter(''); navigateSubPage('applications'); }}
+                    onClick={() => { skipFilterResetRef.current = true; setDistrictFilter(row._id.district); setAssemblyFilter(row._id.assemblyName); setBoothFilter(''); setStatusFilter(''); setSchemeFilter(''); navigateSubPage('applications'); }}
                     onMouseEnter={e => e.currentTarget.style.background = 'var(--color-fog-gray)'}
                     onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
                   >
@@ -835,7 +838,7 @@ const StateAdminDashboard = () => {
               <tbody>
                 {(statsData.boothStats || []).slice((boothStatsPage - 1) * 15, boothStatsPage * 15).map((row, idx) => (
                   <tr key={idx} style={{ borderBottom: '1px solid var(--color-linen)', cursor: 'pointer' }}
-                    onClick={() => { setDistrictFilter(row._id.district); setAssemblyFilter(row._id.assemblyName); setBoothFilter(String(row._id.boothNo)); setStatusFilter(''); setSchemeFilter(''); navigateSubPage('applications'); }}
+                    onClick={() => { skipFilterResetRef.current = true; setDistrictFilter(row._id.district); setAssemblyFilter(row._id.assemblyName); setBoothFilter(String(row._id.boothNo)); setStatusFilter(''); setSchemeFilter(''); navigateSubPage('applications'); }}
                     onMouseEnter={e => e.currentTarget.style.background = 'var(--color-fog-gray)'}
                     onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
                   >
