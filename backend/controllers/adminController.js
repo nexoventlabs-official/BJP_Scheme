@@ -213,10 +213,109 @@ const getDashboardStats = async (req, res) => {
       console.error('[ReadDB VoterCount Error]:', rollErr.message);
     }
 
-    const statusCounts = await SchemeApplication.aggregate([
-      { $match: scopeQuery },
-      { $group: { _id: '$status', count: { $sum: 1 } } }
-    ], { allowDiskUse: true });
+    // ── Execute all aggregation queries in parallel (O(1) execution time) ──
+    const [
+      statusCounts,
+      rawDistrictStats,
+      rawAssemblyStats,
+      rawBoothStats,
+      rawPopularity,
+      topReferrersRaw
+    ] = await Promise.all([
+      SchemeApplication.aggregate([
+        { $match: scopeQuery },
+        { $group: { _id: '$status', count: { $sum: 1 } } }
+      ], { allowDiskUse: true }),
+
+      SchemeApplication.aggregate([
+        { $match: scopeQuery },
+        {
+          $group: {
+            _id: '$district',
+            totalApps: { $sum: 1 },
+            approved: { $sum: { $cond: [{ $eq: ['$status', 'Approved'] }, 1, 0] } },
+            pending: { $sum: { $cond: [{ $in: ['$status', ['Submitted', 'Pending', 'In Progress', 'Called']] }, 1, 0] } },
+            voterIds: { $addToSet: { $ifNull: ['$epicNo', '$mobile'] } }
+          }
+        },
+        {
+          $project: {
+            _id: 1,
+            totalApps: 1,
+            approved: 1,
+            pending: 1,
+            appliedVoters: { $size: '$voterIds' }
+          }
+        },
+        { $sort: { totalApps: -1 } }
+      ], { allowDiskUse: true }),
+
+      SchemeApplication.aggregate([
+        { $match: scopeQuery },
+        {
+          $group: {
+            _id: { district: '$district', assemblyName: '$assemblyName' },
+            totalApps: { $sum: 1 },
+            approved: { $sum: { $cond: [{ $eq: ['$status', 'Approved'] }, 1, 0] } },
+            pending: { $sum: { $cond: [{ $in: ['$status', ['Submitted', 'Pending', 'In Progress', 'Called']] }, 1, 0] } },
+            voterIds: { $addToSet: { $ifNull: ['$epicNo', '$mobile'] } }
+          }
+        },
+        {
+          $project: {
+            _id: 1,
+            totalApps: 1,
+            approved: 1,
+            pending: 1,
+            appliedVoters: { $size: '$voterIds' }
+          }
+        },
+        { $sort: { totalApps: -1 } },
+        { $limit: 50 }
+      ], { allowDiskUse: true }),
+
+      SchemeApplication.aggregate([
+        { $match: scopeQuery },
+        {
+          $group: {
+            _id: { district: '$district', assemblyName: '$assemblyName', boothNo: '$boothNo' },
+            totalApps: { $sum: 1 },
+            approved: { $sum: { $cond: [{ $eq: ['$status', 'Approved'] }, 1, 0] } },
+            pending: { $sum: { $cond: [{ $in: ['$status', ['Submitted', 'Pending', 'In Progress', 'Called']] }, 1, 0] } },
+            voterIds: { $addToSet: { $ifNull: ['$epicNo', '$mobile'] } }
+          }
+        },
+        {
+          $project: {
+            _id: 1,
+            totalApps: 1,
+            approved: 1,
+            pending: 1,
+            appliedVoters: { $size: '$voterIds' }
+          }
+        },
+        { $sort: { totalApps: -1 } },
+        { $limit: 100 }
+      ], { allowDiskUse: true }),
+
+      SchemeApplication.aggregate([
+        { $match: scopeQuery },
+        { $group: { _id: '$schemeName', count: { $sum: 1 }, cluster: { $first: '$clusterName' } } },
+        { $sort: { count: -1 } }
+      ], { allowDiskUse: true }),
+
+      User.aggregate([
+        {
+          $match: {
+            ...scopeQuery,
+            referredBy: { $nin: [null, '', 'null', 'undefined'] }
+          }
+        },
+        { $group: { _id: '$referredBy', referralCount: { $sum: 1 } } },
+        { $sort: { referralCount: -1 } },
+        { $limit: 5 }
+      ], { allowDiskUse: true })
+    ]);
 
     const statusMap = {
       Submitted: 0,
@@ -230,29 +329,6 @@ const getDashboardStats = async (req, res) => {
     statusCounts.forEach(item => {
       if (item._id) statusMap[item._id] = item.count;
     });
-
-    const rawDistrictStats = await SchemeApplication.aggregate([
-      { $match: scopeQuery },
-      {
-        $group: {
-          _id: '$district',
-          totalApps: { $sum: 1 },
-          approved: { $sum: { $cond: [{ $eq: ['$status', 'Approved'] }, 1, 0] } },
-          pending: { $sum: { $cond: [{ $in: ['$status', ['Submitted', 'Pending', 'In Progress', 'Called']] }, 1, 0] } },
-          voterIds: { $addToSet: { $ifNull: ['$epicNo', '$mobile'] } }
-        }
-      },
-      {
-        $project: {
-          _id: 1,
-          totalApps: 1,
-          approved: 1,
-          pending: 1,
-          appliedVoters: { $size: '$voterIds' }
-        }
-      },
-      { $sort: { totalApps: -1 } }
-    ], { allowDiskUse: true });
 
     const districtStats = await Promise.all(
       rawDistrictStats.map(async (d) => {
@@ -268,30 +344,6 @@ const getDashboardStats = async (req, res) => {
       })
     );
 
-    const rawAssemblyStats = await SchemeApplication.aggregate([
-      { $match: scopeQuery },
-      {
-        $group: {
-          _id: { district: '$district', assemblyName: '$assemblyName' },
-          totalApps: { $sum: 1 },
-          approved: { $sum: { $cond: [{ $eq: ['$status', 'Approved'] }, 1, 0] } },
-          pending: { $sum: { $cond: [{ $in: ['$status', ['Submitted', 'Pending', 'In Progress', 'Called']] }, 1, 0] } },
-          voterIds: { $addToSet: { $ifNull: ['$epicNo', '$mobile'] } }
-        }
-      },
-      {
-        $project: {
-          _id: 1,
-          totalApps: 1,
-          approved: 1,
-          pending: 1,
-          appliedVoters: { $size: '$voterIds' }
-        }
-      },
-      { $sort: { totalApps: -1 } },
-      { $limit: 50 }
-    ], { allowDiskUse: true });
-
     const assemblyStats = await Promise.all(
       rawAssemblyStats.map(async (a) => {
         const rollCount = await getAssemblyVoterRollCount(a._id.assemblyName);
@@ -305,30 +357,6 @@ const getDashboardStats = async (req, res) => {
         };
       })
     );
-
-    const rawBoothStats = await SchemeApplication.aggregate([
-      { $match: scopeQuery },
-      {
-        $group: {
-          _id: { district: '$district', assemblyName: '$assemblyName', boothNo: '$boothNo' },
-          totalApps: { $sum: 1 },
-          approved: { $sum: { $cond: [{ $eq: ['$status', 'Approved'] }, 1, 0] } },
-          pending: { $sum: { $cond: [{ $in: ['$status', ['Submitted', 'Pending', 'In Progress', 'Called']] }, 1, 0] } },
-          voterIds: { $addToSet: { $ifNull: ['$epicNo', '$mobile'] } }
-        }
-      },
-      {
-        $project: {
-          _id: 1,
-          totalApps: 1,
-          approved: 1,
-          pending: 1,
-          appliedVoters: { $size: '$voterIds' }
-        }
-      },
-      { $sort: { totalApps: -1 } },
-      { $limit: 100 }
-    ], { allowDiskUse: true });
 
     const assembliesMeta = await getAssemblyMetadata();
     const voterDb = await getVoterDbClient();
@@ -381,12 +409,6 @@ const getDashboardStats = async (req, res) => {
       };
     });
 
-    const rawPopularity = await SchemeApplication.aggregate([
-      { $match: scopeQuery },
-      { $group: { _id: '$schemeName', count: { $sum: 1 }, cluster: { $first: '$clusterName' } } },
-      { $sort: { count: -1 } }
-    ], { allowDiskUse: true });
-
     const schemeMap = {
       '1': { name: 'PMSBY', cluster: 'Cluster 1 — Insurance Trinity (Daily Wage Workers)' },
       '2': { name: 'PMJJBY', cluster: 'Cluster 1 — Insurance Trinity (Daily Wage Workers)' },
@@ -424,19 +446,6 @@ const getDashboardStats = async (req, res) => {
     });
 
     const schemePopularity = Object.values(popularityObj).sort((a, b) => b.count - a.count);
-
-    // Fast & Scalable Top 5 Referrers in Admin Scope using MongoDB Aggregation
-    const topReferrersRaw = await User.aggregate([
-      {
-        $match: {
-          ...scopeQuery,
-          referredBy: { $nin: [null, '', 'null', 'undefined'] }
-        }
-      },
-      { $group: { _id: '$referredBy', referralCount: { $sum: 1 } } },
-      { $sort: { referralCount: -1 } },
-      { $limit: 5 }
-    ], { allowDiskUse: true });
 
     const topReferrers = await Promise.all(
       topReferrersRaw.map(async (item) => {
@@ -658,7 +667,9 @@ const getApplicationsList = async (req, res) => {
         { epicNo: { $in: paginatedEpicNos } },
         { mobile: { $in: paginatedMobiles } }
       ]
-    }).sort({ appliedAt: -1 }).lean();
+    }).lean();
+
+    allApps.sort((a, b) => new Date(b.appliedAt || b.createdAt) - new Date(a.appliedAt || a.createdAt));
 
     const appMapByEpic = {};
     const appMapByUserId = {};
