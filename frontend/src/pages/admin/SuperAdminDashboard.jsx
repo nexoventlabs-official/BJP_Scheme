@@ -80,9 +80,10 @@ const SuperAdminDashboard = () => {
   // ── Fetch Initial Filter Metadata ──
   const fetchInitialMeta = async () => {
     try {
-      const res = await API.get('/admin/jurisdiction-districts');
+      const res = await API.get('/admin/filter-meta');
       if (res.data.success) {
         setDistricts(res.data.districts || []);
+        setAssemblies(res.data.assemblies || []);
       }
     } catch (err) {
       console.error('Error fetching filter meta:', err);
@@ -91,10 +92,10 @@ const SuperAdminDashboard = () => {
 
   // ── Fetch Assemblies for District ──
   const fetchAssembliesForDistrict = async (dist) => {
-    if (!dist) { setAssemblies([]); return; }
+    if (!dist) { fetchInitialMeta(); return; }
     try {
       setLoadingFilterAssemblies(true);
-      const res = await API.get(`/admin/jurisdiction-assemblies?district=${encodeURIComponent(dist)}`);
+      const res = await API.get(`/admin/filter-meta?district=${encodeURIComponent(dist)}`);
       if (res.data.success) setAssemblies(res.data.assemblies || []);
     } catch (err) {
       console.error('Error loading assemblies for district:', err);
@@ -109,7 +110,7 @@ const SuperAdminDashboard = () => {
     try {
       setLoadingFilterBooths(true);
       const params = new URLSearchParams({ assemblyName: ass, ...(dist && { district: dist }) });
-      const res = await API.get(`/admin/jurisdiction-booths?${params}`);
+      const res = await API.get(`/admin/filter-meta?${params}`);
       if (res.data.success) setBooths(res.data.booths || []);
     } catch (err) {
       console.error('Error loading booths for assembly:', err);
