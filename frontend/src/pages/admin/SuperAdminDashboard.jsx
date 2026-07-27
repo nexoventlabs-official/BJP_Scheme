@@ -86,6 +86,7 @@ const SuperAdminDashboard = () => {
       if (res.data.success) {
         setDistricts(res.data.districts || []);
         setAssemblies(res.data.assemblies || []);
+        setBooths(res.data.booths || []);
       }
     } catch (err) {
       console.error('Error fetching filter meta:', err);
@@ -98,7 +99,10 @@ const SuperAdminDashboard = () => {
     try {
       setLoadingFilterAssemblies(true);
       const res = await API.get(`/admin/filter-meta?district=${encodeURIComponent(dist)}`);
-      if (res.data.success) setAssemblies(res.data.assemblies || []);
+      if (res.data.success) {
+        setAssemblies(res.data.assemblies || []);
+        setBooths(res.data.booths || []);
+      }
     } catch (err) {
       console.error('Error loading assemblies for district:', err);
     } finally {
@@ -605,21 +609,22 @@ const SuperAdminDashboard = () => {
                 ))}
               </select>
 
-              {/* Booth Filter (shown when Assembly is selected) */}
-              {assemblyFilter && (
-                <select
-                  value={boothFilter}
-                  onChange={(e) => setBoothFilter(e.target.value)}
-                  className="form-control"
-                  disabled={loadingFilterBooths}
-                  style={{ flex: '1 1 130px', minWidth: '120px', background: '#fff' }}
-                >
-                  <option value="">{loadingFilterBooths ? 'Loading booths…' : 'All Booths'}</option>
-                  {booths.map(b => (
-                    <option key={b} value={b}>Booth {b}</option>
-                  ))}
-                </select>
-              )}
+              {/* Booth Filter (Always Available) */}
+              <select
+                value={boothFilter}
+                onChange={(e) => setBoothFilter(e.target.value)}
+                className="form-control"
+                disabled={loadingFilterBooths}
+                style={{ flex: '1 1 130px', minWidth: '120px', background: '#fff' }}
+              >
+                <option value="">{loadingFilterBooths ? 'Loading booths…' : 'All Booths'}</option>
+                {booths.map(b => (
+                  <option key={b} value={b}>Booth {b}</option>
+                ))}
+                {boothFilter && !booths.includes(boothFilter) && (
+                  <option key={boothFilter} value={boothFilter}>Booth {boothFilter}</option>
+                )}
+              </select>
 
               {/* Status Filter */}
               <select

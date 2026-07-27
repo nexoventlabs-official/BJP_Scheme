@@ -381,6 +381,9 @@ const AssemblyAdminDashboard = () => {
               >
                 <option value="">{loadingBooths ? 'Loading booths…' : 'All Booths'}</option>
                 {booths.map(b => <option key={b} value={b}>Booth {b}</option>)}
+                {boothFilter && !booths.includes(boothFilter) && (
+                  <option key={boothFilter} value={boothFilter}>Booth {boothFilter}</option>
+                )}
               </select>
 
               {/* Active filter chips */}

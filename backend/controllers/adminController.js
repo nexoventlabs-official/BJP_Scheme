@@ -770,20 +770,28 @@ const getFilterMeta = async (req, res) => {
     }
 
     if (district) {
-      // Return assemblies in the selected district
-      const assQuery = { ...scopeQuery, district: new RegExp('^' + district.trim() + '$', 'i') };
-      const assemblies = await SchemeApplication.distinct('assemblyName', assQuery);
+      // Return assemblies and booths in the selected district
+      const distQuery = { ...scopeQuery, district: new RegExp('^' + district.trim() + '$', 'i') };
+      const [assemblies, rawBooths] = await Promise.all([
+        SchemeApplication.distinct('assemblyName', distQuery),
+        SchemeApplication.distinct('boothNo', distQuery)
+      ]);
       assemblies.sort((a, b) => a.localeCompare(b));
-      return res.status(200).json({ success: true, assemblies });
+      const booths = rawBooths.filter(Boolean).sort((a, b) => parseInt(a) - parseInt(b));
+      return res.status(200).json({ success: true, assemblies, booths });
     }
 
-    // Return all districts and assemblies in scope
-    const districts = await SchemeApplication.distinct('district', scopeQuery);
+    // Return all districts, assemblies, and booths in scope
+    const [districts, assemblies, rawBooths] = await Promise.all([
+      SchemeApplication.distinct('district', scopeQuery),
+      SchemeApplication.distinct('assemblyName', scopeQuery),
+      SchemeApplication.distinct('boothNo', scopeQuery)
+    ]);
     districts.sort((a, b) => a.localeCompare(b));
-    const assemblies = await SchemeApplication.distinct('assemblyName', scopeQuery);
     assemblies.sort((a, b) => a.localeCompare(b));
+    const booths = rawBooths.filter(Boolean).sort((a, b) => parseInt(a) - parseInt(b));
 
-    return res.status(200).json({ success: true, districts, assemblies });
+    return res.status(200).json({ success: true, districts, assemblies, booths });
   } catch (err) {
     console.error('[getFilterMeta Error]:', err);
     return res.status(500).json({ success: false, message: err.message });

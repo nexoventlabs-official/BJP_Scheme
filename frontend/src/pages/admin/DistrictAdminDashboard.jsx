@@ -88,11 +88,14 @@ const DistrictAdminDashboard = () => {
     fetchVoters(1);
   };
 
-  // Fetch assemblies in district scope on mount
+  // Fetch assemblies and booths in district scope on mount
   const fetchAssemblies = async () => {
     try {
       const res = await API.get('/admin/filter-meta');
-      if (res.data.success) setAssemblies(res.data.assemblies || []);
+      if (res.data.success) {
+        setAssemblies(res.data.assemblies || []);
+        setBooths(res.data.booths || []);
+      }
     } catch (err) {
       console.error('Error loading assemblies:', err);
     }
@@ -473,21 +476,22 @@ const DistrictAdminDashboard = () => {
                 ))}
               </select>
 
-              {/* Booth Filter — only shown when assembly is selected */}
-              {assemblyFilter && (
-                <select
-                  value={boothFilter}
-                  onChange={(e) => setBoothFilter(e.target.value)}
-                  className="form-control"
-                  disabled={loadingBooths}
-                  style={{ minWidth: '140px', flex: '1 1 140px', maxWidth: '180px' }}
-                >
-                  <option value="">{loadingBooths ? 'Loading booths…' : 'All Booths'}</option>
-                  {booths.map(b => (
-                    <option key={b} value={b}>Booth {b}</option>
-                  ))}
-                </select>
-              )}
+              {/* Booth Filter (Always Available) */}
+              <select
+                value={boothFilter}
+                onChange={(e) => setBoothFilter(e.target.value)}
+                className="form-control"
+                disabled={loadingBooths}
+                style={{ minWidth: '140px', flex: '1 1 140px', maxWidth: '180px' }}
+              >
+                <option value="">{loadingBooths ? 'Loading booths…' : 'All Booths'}</option>
+                {booths.map(b => (
+                  <option key={b} value={b}>Booth {b}</option>
+                ))}
+                {boothFilter && !booths.includes(boothFilter) && (
+                  <option key={boothFilter} value={boothFilter}>Booth {boothFilter}</option>
+                )}
+              </select>
 
               {/* Active filter chips + Clear All */}
               {(statusFilter || schemeFilter || assemblyFilter || boothFilter || searchQuery) && (
