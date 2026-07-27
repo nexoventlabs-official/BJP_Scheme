@@ -3,6 +3,7 @@ const OtpSession = require('../models/OtpSession');
 const SchemeApplication = require('../models/SchemeApplication');
 const { getVoterDbClient } = require('../config/db');
 const { sendSmsOtp } = require('../services/smsService');
+const { findVoterByEpic } = require('../services/voterSearchService');
 const jwt = require('jsonwebtoken');
 
 const generateToken = (id) => {
@@ -143,30 +144,30 @@ const validateEpic = async (req, res) => {
 
     const cleanEpic = epicNo.trim().toUpperCase();
 
-    // Check if voter DB has document
-    const voterDb = await getVoterDbClient();
-    const collections = await voterDb.listCollections().toArray();
+    // Fast parallel batch search across assembly collections
+    const result = await findVoterByEpic(cleanEpic);
 
-    let foundDoc = null;
-    for (let col of collections) {
-      if (!col.name.startsWith('ass_')) continue;
-      const doc = await voterDb.collection(col.name).findOne({ EPIC_NO: cleanEpic });
-      if (doc) {
-        foundDoc = {
-          epic_no: doc.EPIC_NO,
-          name: doc.VOTER_NAME,
-          father_name: doc.RELATION_NAME || doc.FATHER_NAME || doc.VOTER_NAME,
-          district: doc.DISTRICT,
-          assembly_no: doc.ASSEMBLY_NO || col.name.replace('ass_', ''),
-          assembly: doc.ASSEMBLY_NAME || `Assembly ${doc.ASSEMBLY_NO}`,
-          part_no: doc.PART_NO || '1',
-          serial_no: doc.SL_NO || '1',
-          gender: doc.GENDER || 'Unspecified',
-          age: doc.AGE || 35
-        };
-        break;
-      }
+    if (!result || !result.doc) {
+      return res.status(404).json({
+        success: false,
+        message: `EPIC '${cleanEpic}' not found in Tamil Nadu Voter Roll. Please check your voter ID card.`
+      });
     }
+
+    const doc = result.doc;
+    const colName = result.colName || '';
+    const foundDoc = {
+      epic_no: doc.EPIC_NO,
+      name: doc.VOTER_NAME,
+      father_name: doc.RELATION_NAME || doc.FATHER_NAME || doc.VOTER_NAME,
+      district: doc.DISTRICT,
+      assembly_no: doc.ASSEMBLY_NO || colName.replace('ass_', ''),
+      assembly: doc.ASSEMBLY_NAME || `Assembly ${doc.ASSEMBLY_NO}`,
+      part_no: doc.PART_NO || '1',
+      serial_no: doc.SL_NO || '1',
+      gender: doc.GENDER || 'Unspecified',
+      age: doc.AGE || 35
+    };
 
     if (!foundDoc) {
       return res.status(404).json({

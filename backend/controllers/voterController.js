@@ -1,5 +1,6 @@
 const jwt = require('jsonwebtoken');
 const { getVoterDbClient } = require('../config/db');
+const { findVoterByEpic } = require('../services/voterSearchService');
 const User = require('../models/User');
 const OtpSession = require('../models/OtpSession');
 
@@ -30,28 +31,26 @@ const searchEpic = async (req, res) => {
       });
     }
 
-    const voterDb = await getVoterDbClient();
-    const collections = await voterDb.listCollections().toArray();
+    const result = await findVoterByEpic(cleanEpic);
 
-    let foundVoter = null;
-
-    // Search across assembly collections (ass_*)
-    for (let col of collections) {
-      if (!col.name.startsWith('ass_')) continue;
-      const voterDoc = await voterDb.collection(col.name).findOne({ EPIC_NO: cleanEpic });
-      if (voterDoc) {
-        foundVoter = {
-          epicNo: voterDoc.EPIC_NO,
-          voterName: voterDoc.VOTER_NAME,
-          district: voterDoc.DISTRICT,
-          assemblyNo: voterDoc.ASSEMBLY_NO || col.name.replace('ass_', ''),
-          assemblyName: voterDoc.ASSEMBLY_NAME || 'Assembly ' + voterDoc.ASSEMBLY_NO,
-          boothNo: voterDoc.PART_NO || '1',
-          gender: voterDoc.GENDER || 'Unspecified'
-        };
-        break;
-      }
+    if (!result || !result.doc) {
+      return res.status(404).json({
+        success: false,
+        message: `EPIC number '${cleanEpic}' was not found in voter database. Please double check your EPIC card number.`
+      });
     }
+
+    const voterDoc = result.doc;
+    const colName = result.colName || '';
+    const foundVoter = {
+      epicNo: voterDoc.EPIC_NO,
+      voterName: voterDoc.VOTER_NAME,
+      district: voterDoc.DISTRICT,
+      assemblyNo: voterDoc.ASSEMBLY_NO || colName.replace('ass_', ''),
+      assemblyName: voterDoc.ASSEMBLY_NAME || 'Assembly ' + voterDoc.ASSEMBLY_NO,
+      boothNo: voterDoc.PART_NO || '1',
+      gender: voterDoc.GENDER || 'Unspecified'
+    };
 
     if (!foundVoter) {
       return res.status(404).json({
