@@ -1145,14 +1145,14 @@ const exportApplicationsExcel = async (req, res) => {
     // Column definitions with widths
     sheet.columns = [
       { header: 'S.No',         key: 'sno',      width: 6  },
-      { header: 'Voter Name',   key: 'name',     width: 22 },
+      { header: 'Voter Name',   key: 'name',     width: 25 },
       { header: 'EPIC Number',  key: 'epic',     width: 16 },
       { header: 'Mobile No',    key: 'mobile',   width: 14 },
       { header: 'District',     key: 'district', width: 18 },
-      { header: 'Assembly',     key: 'assembly', width: 20 },
+      { header: 'Assembly',     key: 'assembly', width: 22 },
       { header: 'Booth No',     key: 'booth',    width: 9  },
-      { header: 'Scheme Name',  key: 'scheme',   width: 30 },
-      { header: 'Cluster',      key: 'cluster',  width: 16 },
+      { header: 'Scheme Name',  key: 'scheme',   width: 32 },
+      { header: 'Cluster',      key: 'cluster',  width: 45 },
       { header: 'Status',       key: 'status',   width: 13 },
       { header: 'Applied Date', key: 'date',     width: 14 },
     ];
