@@ -675,9 +675,64 @@ const getApplicationsList = async (req, res) => {
       });
 
       // Return voters in the same order as epicPage (latest first)
-      const voters = epicPage
+      let voters = epicPage
         .map(e => voterMap[e._id])
         .filter(Boolean);
+
+      // ── Enrich missing voter names from the voter roll DB (read DB) ──
+      const BAD_NAMES = new Set([null, undefined, '', 'N/A', 'n/a', 'null', 'undefined']);
+      const needsEnrichment = voters.filter(v => BAD_NAMES.has(v.voterName) && v.epicNo && v.epicNo !== 'N/A');
+
+      if (needsEnrichment.length > 0) {
+        try {
+          const voterDb = await getVoterDbClient();
+          const { getCollectionForAssembly } = require('../services/jurisdictionService');
+
+          // Group by assemblyName to minimize DB queries (1 query per unique assembly)
+          const byAssembly = {};
+          needsEnrichment.forEach(v => {
+            const key = v.assemblyName || '__unknown__';
+            if (!byAssembly[key]) byAssembly[key] = [];
+            byAssembly[key].push(v.epicNo);
+          });
+
+          const epicNameMap = {};
+
+          await Promise.all(
+            Object.entries(byAssembly).map(async ([assName, epicNos]) => {
+              try {
+                let colNames = assName !== '__unknown__' ? await getCollectionForAssembly(assName) : [];
+                // Fallback: scan all collections if assembly not found
+                if (!colNames.length) {
+                  const allCols = await voterDb.listCollections().toArray();
+                  colNames = allCols.filter(c => c.name.startsWith('ass_')).map(c => c.name);
+                }
+                for (const colName of colNames) {
+                  const found = await voterDb.collection(colName).find(
+                    { EPIC_NO: { $in: epicNos } },
+                    { projection: { EPIC_NO: 1, VOTER_NAME: 1, _id: 0 } }
+                  ).toArray();
+                  found.forEach(doc => {
+                    if (doc.EPIC_NO && doc.VOTER_NAME) epicNameMap[doc.EPIC_NO] = doc.VOTER_NAME;
+                  });
+                  if (epicNos.every(e => epicNameMap[e])) break;
+                }
+              } catch (e) { /* non-fatal */ }
+            })
+          );
+
+          // Patch names into voters array
+          voters = voters.map(v => {
+            if (BAD_NAMES.has(v.voterName) && v.epicNo && epicNameMap[v.epicNo]) {
+              return { ...v, voterName: epicNameMap[v.epicNo] };
+            }
+            return v;
+          });
+        } catch (enrichErr) {
+          console.error('[Name Enrichment Error]:', enrichErr.message);
+          // Non-fatal — continue with what we have
+        }
+      }
 
       return res.status(200).json({
         success: true,
