@@ -83,8 +83,8 @@ const verifyOtp = async (req, res) => {
 
     if (existingUser) {
       const token = generateToken(existingUser._id);
-      const host = req.get('host');
-      const referralLink = `${req.protocol}://${host}/r/${existingUser.referralCode}`;
+      const clientOrigin = process.env.FRONTEND_URL || process.env.CLIENT_URL || req.get('origin') || 'https://bjp-scheme.vercel.app';
+      const referralLink = `${clientOrigin.replace(/\/$/, '')}/r/${existingUser.referralCode}`;
       return res.status(200).json({
         success: true,
         message: 'OTP verified successfully. Welcome back!',

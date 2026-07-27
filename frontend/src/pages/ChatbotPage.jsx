@@ -6,6 +6,17 @@ import { FlipCard3D } from '../components/FlipCard3D'
 import '../styles/chatbot.css'
 import { useLang } from '../i18n/LanguageContext'
 
+// ── Always produce a frontend referral link (never the backend origin) ──
+const toFrontendReferralLink = (rawLink, bjpCode) => {
+  let code = bjpCode;
+  if (!code && rawLink && typeof rawLink === 'string') {
+    const match = rawLink.match(/\/r\/([^\/\?#]+)/);
+    if (match) code = match[1];
+  }
+  if (code) return `${window.location.origin}/r/${code}`;
+  return rawLink || '';
+};
+
 // ── Read referral params from landing URL (?ref=NT-XXXX)
 const getReferralParams = () => {
   try {
@@ -6197,8 +6208,9 @@ export default function ChatbotPage() {
         addMsg('bot', 'text', { text: t('👋 Welcome back to *Nalam Thittam!*') })
       }
       setTimeout(() => {
-        if (cache.card.referral_link) {
-          addMsg('bot', 'referral_link', { link: cache.card.referral_link })
+        const cachedRefLink = toFrontendReferralLink(cache.card.referral_link, cache.card.bjp_code)
+        if (cachedRefLink) {
+          addMsg('bot', 'referral_link', { link: cachedRefLink })
         }
         setChatState(S.DONE)
       }, 300)
@@ -6266,7 +6278,7 @@ export default function ChatbotPage() {
           combined_url:  res.combined_url || res.card_url || '',
           photo_url:     res.photo_url || u.photo || '',
           bjp_code:      res.bjp_code || u.referralCode || '',
-          referral_link: res.referral_link || (u.referralCode ? `${window.location.origin}/r/${u.referralCode}` : ''),
+          referral_link: toFrontendReferralLink(res.referral_link, res.bjp_code || u.referralCode),
         }
         cardRef.current = card
         profileRef.current = u
@@ -6278,7 +6290,7 @@ export default function ChatbotPage() {
           fetchMemberStatus(card.bjp_code)
         }
         await botSay(t('👋 Welcome back! Mobile number verified.'), 300)
-        const refLink = card.referral_link || (card.bjp_code ? `${window.location.origin}/r/${card.bjp_code}` : '')
+        const refLink = toFrontendReferralLink(card.referral_link, card.bjp_code)
         if (refLink) {
           addMsg('bot', 'referral_link', { link: refLink })
         }
@@ -6356,7 +6368,7 @@ export default function ChatbotPage() {
           combined_url: res.combined_url || '',
           photo_url:   res.photo_url   || '',
           bjp_code:    res.bjp_code    || res.ptc_code    || '',
-          referral_link: res.referral_link || '',
+          referral_link: toFrontendReferralLink(res.referral_link, res.bjp_code || res.ptc_code),
         }
         cardRef.current = card
         saveCache(card, {})
@@ -6364,7 +6376,7 @@ export default function ChatbotPage() {
           fetchMemberStatus(card.bjp_code)
         }
         await botSay(t('👋 Welcome back! Mobile number verified.'), 300)
-        const refLink = card.referral_link || (card.bjp_code ? `${window.location.origin}/r/${card.bjp_code}` : '')
+        const refLink = toFrontendReferralLink(card.referral_link, card.bjp_code)
         if (refLink) {
           addMsg('bot', 'referral_link', { link: refLink })
         }
@@ -6392,12 +6404,12 @@ export default function ChatbotPage() {
           combined_url: data.combined_url || '',
           photo_url:   data.photo_url   || '',
           bjp_code:    data.bjp_code    || data.ptc_code    || '',
-          referral_link: data.referral_link || '',
+          referral_link: toFrontendReferralLink(data.referral_link, data.bjp_code || data.ptc_code),
         }
         cardRef.current = card
         saveCache(card, {})
         await botSay(t('👋 Welcome back! Mobile number verified.'), 300)
-        const refLink = card.referral_link || (card.bjp_code ? `${window.location.origin}/r/${card.bjp_code}` : '')
+        const refLink = toFrontendReferralLink(card.referral_link, card.bjp_code)
         if (refLink) {
           addMsg('bot', 'referral_link', { link: refLink })
         }
@@ -6441,7 +6453,7 @@ export default function ChatbotPage() {
       })
       setIsTyping(false)
       const ntCode  = res.ntCode || res.nt_code || res.bjp_code || res.referral_code || ''
-      const refLink = res.referral_link || (ntCode ? `${window.location.origin}/r/${ntCode}` : '')
+      const refLink = toFrontendReferralLink(res.referral_link, ntCode)
       if (ntCode) {
         cardRef.current = {
           epic_no: epicRef.current,
@@ -6537,7 +6549,7 @@ export default function ChatbotPage() {
         combined_url:  res.combined_url,
         epic_no:       res.epic_no || epicRef.current,
         bjp_code:      res.bjp_code || res.ptc_code,
-        referral_link: res.referral_link || '',
+        referral_link: toFrontendReferralLink(res.referral_link, res.bjp_code || res.ptc_code),
         name:          voterRef.current?.name || voterRef.current?.VOTER_NAME || res.voter_name,
         assembly_name: voterRef.current?.assembly_name || voterRef.current?.assembly || voterRef.current?.ASSEMBLY_NAME,
         district:      voterRef.current?.district || voterRef.current?.DISTRICT || voterRef.current?.DISTRICT_NAME,
@@ -6556,7 +6568,7 @@ export default function ChatbotPage() {
       } catch {}
 
       await botSay(t('👋 Registration completed successfully! Here is your Referral Link & QR Code:'), 200)
-      const regRefLink = card.referral_link || (card.bjp_code ? `${window.location.origin}/r/${card.bjp_code}` : '')
+      const regRefLink = toFrontendReferralLink(card.referral_link, card.bjp_code)
       if (regRefLink) {
         addMsg('bot', 'referral_link', { link: regRefLink })
       }
@@ -6573,9 +6585,10 @@ export default function ChatbotPage() {
         : new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
       addMsg('bot', 'welcome_letter', { name: card.voter_name || card.name, date: regDate, ref: card.bjp_code || card.ptc_code, autoDownload: false })
 
-      if (card.referral_link) {
+      const dupRefLink = toFrontendReferralLink(card.referral_link, card.bjp_code)
+      if (dupRefLink) {
         await sleep(1200)
-        addMsg('bot', 'referral_link', { link: card.referral_link })
+        addMsg('bot', 'referral_link', { link: dupRefLink })
       }
 
       setChatState(S.DONE)
@@ -7185,7 +7198,7 @@ export default function ChatbotPage() {
             />
           ) : activeView === 'referral' ? (
             <FullReferralPanel
-              link={cardRef.current?.referral_link || ''}
+              link={toFrontendReferralLink(cardRef.current?.referral_link, cardRef.current?.bjp_code)}
               onBack={() => setActiveView('chat')}
             />
           ) : activeView === 'best_performers' ? (
