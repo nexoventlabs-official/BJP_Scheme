@@ -541,124 +541,14 @@ const getApplicationsList = async (req, res) => {
     const limitNum = isExport ? 5000 : Math.min(500, Math.max(1, parseInt(limit) || 20));
     const skip = isExport ? 0 : (pageNum - 1) * limitNum;
 
-    // ── Step 1: Build User scope filter (uses indexed fields: district, assemblyName, boothNo) ──
-    const adminScope = getAdminScopeQuery(admin); // e.g. { district: 'ARIYALUR' }
-    let userFilter = {};
+    // ── Build Scope Filter for SchemeApplications ──
+    const adminScope = getAdminScopeQuery(admin);
+    const appScopeFilter = { ...adminScope };
 
-    // Map the scope from apps to users (same field names)
-    if (adminScope.district)     userFilter.district     = adminScope.district;
-    if (adminScope.assemblyName) userFilter.assemblyName = adminScope.assemblyName;
-    if (adminScope.boothNo)      userFilter.boothNo      = adminScope.boothNo;
-
-    // Additional filters from query params
-    if (district)     userFilter.district     = new RegExp('^' + district + '$', 'i');
-    if (assemblyName) userFilter.assemblyName = new RegExp('^' + assemblyName + '$', 'i');
-    if (boothNo)      userFilter.boothNo      = String(boothNo);
-
-    if (search) {
-      const r = new RegExp(search.trim(), 'i');
-      userFilter.$or = [{ voterName: r }, { epicNo: r }, { mobile: r }];
-    }
-
-    // ── Step 1b: If status or schemeName filter is active, filter distinct epicNos/userIds/mobiles ──
-    if (status || schemeName) {
-      const appScopeFilter = { ...adminScope };
-      if (status) appScopeFilter.status = new RegExp('^' + status.trim() + '$', 'i');
-      if (schemeName) {
-        const clean = schemeName.trim();
-        const regexes = [new RegExp(clean, 'i')];
-        const numId = Number(clean);
-
-        // Common mapping for schemes
-        const schemeMap = {
-          'PMSBY': 1, 'PMJJBY': 2, 'APY': 3, 'PM SVANidhi': 4, 'PM Mudra Shishu': 5,
-          'PM Mudra Kishor': 6, 'Udyam': 7, 'Stand Up India': 8, 'Startup Seed Fund': 9,
-          'PM Kisan': 10, 'PM Fasal Bima': 11, 'PM Kisan Maan Dhan': 12, 'PM Ujjwala': 13,
-          'Sukanya Samridhi': 14, 'PM Matru Vandana': 15, 'Jan Dhan': 16, 'PM Vishwakarma': 17,
-          'PMKVY': 18, 'e-Shram': 19, 'NSP Scholarship': 20
-        };
-
-        let foundId = !isNaN(numId) && numId > 0 ? numId : null;
-        if (!foundId) {
-          for (const [sKey, sId] of Object.entries(schemeMap)) {
-            if (sKey.toLowerCase() === clean.toLowerCase() || clean.toLowerCase().includes(sKey.toLowerCase())) {
-              foundId = sId;
-              regexes.push(new RegExp('^' + sKey + '$', 'i'));
-              break;
-            }
-          }
-        }
-
-        const appMatchConds = [{ schemeName: { $in: regexes } }];
-        if (foundId) {
-          appMatchConds.push({ schemeName: String(foundId) });
-          appMatchConds.push({ schemeId: foundId });
-        }
-        appScopeFilter.$or = appMatchConds;
-      }
-      if (district)     appScopeFilter.district     = new RegExp('^' + district + '$', 'i');
-      if (assemblyName) appScopeFilter.assemblyName = new RegExp('^' + assemblyName + '$', 'i');
-      if (boothNo)      appScopeFilter.boothNo      = String(boothNo);
-
-      const [epicNosWithFilter, userIdsWithFilter, mobilesWithFilter] = await Promise.all([
-        SchemeApplication.distinct('epicNo', appScopeFilter),
-        SchemeApplication.distinct('userId', appScopeFilter),
-        SchemeApplication.distinct('mobile', appScopeFilter)
-      ]);
-
-      const validEpicNos = epicNosWithFilter.filter(Boolean);
-      const validUserIds = userIdsWithFilter.filter(Boolean);
-      const validMobiles = mobilesWithFilter.filter(Boolean);
-
-      if (validEpicNos.length === 0 && validUserIds.length === 0 && validMobiles.length === 0) {
-        return res.status(200).json({ success: true, voters: [], totalVoters: 0, totalPages: 0, currentPage: pageNum, limit: limitNum, applications: [] });
-      }
-
-      const matchingConditions = [];
-      if (validEpicNos.length > 0) matchingConditions.push({ epicNo: { $in: validEpicNos } });
-      if (validUserIds.length > 0) matchingConditions.push({ _id: { $in: validUserIds } });
-      if (validMobiles.length > 0) matchingConditions.push({ mobile: { $in: validMobiles } });
-
-      if (userFilter.$or) {
-        const searchOr = userFilter.$or;
-        delete userFilter.$or;
-        userFilter.$and = [
-          { $or: searchOr },
-          { $or: matchingConditions }
-        ];
-      } else {
-        userFilter.$or = matchingConditions;
-      }
-    }
-
-    // ── Step 2: Count total users matching filter ──
-    const totalVoters = await User.countDocuments(userFilter);
-    const totalPages  = Math.ceil(totalVoters / limitNum);
-
-    // ── Step 3: Paginate users ──
-    const users = await User.find(userFilter)
-      .sort({ createdAt: -1 })
-      .skip(skip)
-      .limit(limitNum)
-      .select('epicNo voterName mobile district assemblyName boothNo referralCode _id');
-
-    if (users.length === 0) {
-      return res.status(200).json({ success: true, voters: [], totalVoters, totalPages, currentPage: pageNum, limit: limitNum, applications: [] });
-    }
-
-    // ── Step 4: Fetch all applications for these users in ONE query ──
-    const userIds = users.map(u => u._id);
-    const epicNos = users.map(u => u.epicNo).filter(Boolean);
-    const mobiles = users.map(u => u.mobile).filter(Boolean);
-
-    const appFilter = {
-      $or: [
-        { userId: { $in: userIds } },
-        { epicNo: { $in: epicNos } },
-        { mobile: { $in: mobiles } }
-      ],
-      ...adminScope
-    };
+    if (district)     appScopeFilter.district     = new RegExp('^' + district.trim() + '$', 'i');
+    if (assemblyName) appScopeFilter.assemblyName = new RegExp('^' + assemblyName.trim() + '$', 'i');
+    if (boothNo)      appScopeFilter.boothNo      = String(boothNo);
+    if (status)       appScopeFilter.status       = new RegExp('^' + status.trim() + '$', 'i');
 
     if (schemeName) {
       const clean = schemeName.trim();
@@ -686,33 +576,107 @@ const getApplicationsList = async (req, res) => {
         appMatchConds.push({ schemeName: String(foundId) });
         appMatchConds.push({ schemeId: foundId });
       }
-      appFilter.$and = [{ $or: appFilter.$or }, { $or: appMatchConds }];
-      delete appFilter.$or;
+      appScopeFilter.$or = appMatchConds;
     }
 
-    if (status) appFilter.status = new RegExp('^' + status.trim() + '$', 'i');
+    if (search) {
+      const r = new RegExp(search.trim(), 'i');
+      const searchConds = [{ voterName: r }, { epicNo: r }, { mobile: r }, { schemeName: r }];
+      if (appScopeFilter.$or) {
+        const existingOr = appScopeFilter.$or;
+        delete appScopeFilter.$or;
+        appScopeFilter.$and = [{ $or: existingOr }, { $or: searchConds }];
+      } else {
+        appScopeFilter.$or = searchConds;
+      }
+    }
 
-    const allApps = await SchemeApplication.find(appFilter).sort({ appliedAt: -1 }).lean();
+    // Aggregate distinct applicants from SchemeApplication matching filter
+    const applicantAgg = await SchemeApplication.aggregate([
+      { $match: appScopeFilter },
+      {
+        $group: {
+          _id: { $ifNull: ['$epicNo', { $ifNull: ['$userId', '$mobile'] }] },
+          epicNo: { $first: '$epicNo' },
+          voterName: { $first: '$voterName' },
+          mobile: { $first: '$mobile' },
+          district: { $first: '$district' },
+          assemblyName: { $first: '$assemblyName' },
+          boothNo: { $first: '$boothNo' },
+          userId: { $first: '$userId' },
+          referralCode: { $first: '$referralCode' },
+          latestAppliedAt: { $max: '$appliedAt' }
+        }
+      },
+      { $sort: { latestAppliedAt: -1 } }
+    ]);
 
-    const voters = users
-      .map(u => {
-        const userApps = allApps.filter(app => 
-          (app.userId && String(app.userId) === String(u._id)) ||
-          (app.epicNo && u.epicNo && app.epicNo === u.epicNo) ||
-          (app.mobile && u.mobile && app.mobile === u.mobile)
-        );
-        return {
-          epicNo:       u.epicNo,
-          voterName:    u.voterName,
-          mobile:       u.mobile,
-          district:     u.district,
-          assemblyName: u.assemblyName,
-          boothNo:      u.boothNo,
-          userId:       u._id,
-          applications: userApps
-        };
-      })
-      .filter(v => v.applications.length > 0);
+    const totalVoters = applicantAgg.length;
+    const totalPages  = Math.ceil(totalVoters / limitNum) || 1;
+    const paginatedApplicants = applicantAgg.slice(skip, skip + limitNum);
+
+    if (paginatedApplicants.length === 0) {
+      return res.status(200).json({ success: true, voters: [], totalVoters, totalPages, currentPage: pageNum, limit: limitNum, applications: [] });
+    }
+
+    const paginatedUserIds = paginatedApplicants.map(a => a.userId).filter(Boolean);
+    const paginatedEpicNos = paginatedApplicants.map(a => a.epicNo).filter(Boolean);
+    const paginatedMobiles = paginatedApplicants.map(a => a.mobile).filter(Boolean);
+
+    const allApps = await SchemeApplication.find({
+      $or: [
+        { userId: { $in: paginatedUserIds } },
+        { epicNo: { $in: paginatedEpicNos } },
+        { mobile: { $in: paginatedMobiles } }
+      ]
+    }).sort({ appliedAt: -1 }).lean();
+
+    const appMapByEpic = {};
+    const appMapByUserId = {};
+    const appMapByMobile = {};
+
+    allApps.forEach(app => {
+      if (app.epicNo) {
+        if (!appMapByEpic[app.epicNo]) appMapByEpic[app.epicNo] = [];
+        appMapByEpic[app.epicNo].push(app);
+      }
+      if (app.userId) {
+        const uid = String(app.userId);
+        if (!appMapByUserId[uid]) appMapByUserId[uid] = [];
+        appMapByUserId[uid].push(app);
+      }
+      if (app.mobile) {
+        if (!appMapByMobile[app.mobile]) appMapByMobile[app.mobile] = [];
+        appMapByMobile[app.mobile].push(app);
+      }
+    });
+
+    const voters = paginatedApplicants.map(u => {
+      const userAppMap = new Map();
+      if (u.epicNo && appMapByEpic[u.epicNo]) {
+        appMapByEpic[u.epicNo].forEach(a => userAppMap.set(String(a._id), a));
+      }
+      if (u.userId && appMapByUserId[String(u.userId)]) {
+        appMapByUserId[String(u.userId)].forEach(a => userAppMap.set(String(a._id), a));
+      }
+      if (u.mobile && appMapByMobile[u.mobile]) {
+        appMapByMobile[u.mobile].forEach(a => userAppMap.set(String(a._id), a));
+      }
+
+      const apps = Array.from(userAppMap.values()).sort((a, b) => new Date(b.appliedAt || b.createdAt) - new Date(a.appliedAt || a.createdAt));
+
+      return {
+        id: u._id,
+        epicNo: u.epicNo,
+        voterName: u.voterName,
+        mobile: u.mobile,
+        district: u.district,
+        assemblyName: u.assemblyName,
+        boothNo: u.boothNo,
+        referralCode: u.referralCode,
+        applications: apps
+      };
+    });
 
     return res.status(200).json({
       success:      true,
