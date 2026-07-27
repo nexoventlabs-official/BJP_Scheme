@@ -3,6 +3,7 @@ const jwt = require('jsonwebtoken');
 const Admin = require('../models/Admin');
 const User = require('../models/User');
 const SchemeApplication = require('../models/SchemeApplication');
+const { BJP_SCHEMES } = require('../constants/schemes');
 const { getVoterDbClient } = require('../config/db');
 const {
   getAssemblyMetadata,
@@ -373,32 +374,15 @@ const getDashboardStats = async (req, res) => {
           totalApps: b.totalApps,
           approved: b.approved,
           pending: b.pending
-        };
       })
     );
 
-    const CANONICAL_SCHEMES = [
-      { id: '1', name: 'PMSBY', keys: ['pmsby', 'suraksha bima'], cluster: 'Cluster 1 — Insurance Trinity (Daily Wage Workers)' },
-      { id: '2', name: 'PMJJBY', keys: ['pmjjby', 'jeevan jyoti'], cluster: 'Cluster 1 — Insurance Trinity (Daily Wage Workers)' },
-      { id: '3', name: 'APY', keys: ['apy', 'atal pension'], cluster: 'Cluster 1 — Insurance Trinity (Daily Wage Workers)' },
-      { id: '4', name: 'PM SVANidhi', keys: ['svanidhi', 'street vendor'], cluster: 'Cluster 2 — Credit (Street Vendors & Small Business)' },
-      { id: '5', name: 'PM Mudra Shishu', keys: ['mudra shishu', 'shishu'], cluster: 'Cluster 2 — Credit (Street Vendors & Small Business)' },
-      { id: '6', name: 'PM Mudra Kishor', keys: ['mudra kishor', 'kishor'], cluster: 'Cluster 2 — Credit (Street Vendors & Small Business)' },
-      { id: '7', name: 'Udyam', keys: ['udyam', 'msme'], cluster: 'Cluster 2 — Credit (Street Vendors & Small Business)' },
-      { id: '8', name: 'Stand Up India', keys: ['stand up', 'standup'], cluster: 'Cluster 2 — Credit (Street Vendors & Small Business)' },
-      { id: '9', name: 'Startup Seed Fund', keys: ['startup', 'seed fund'], cluster: 'Cluster 2 — Credit (Street Vendors & Small Business)' },
-      { id: '10', name: 'PM Kisan', keys: ['pm kisan', 'kisan samman'], cluster: 'Cluster 3 — Farmers (Kisan)' },
-      { id: '11', name: 'PM Fasal Bima', keys: ['fasal bima', 'crop insurance'], cluster: 'Cluster 3 — Farmers (Kisan)' },
-      { id: '12', name: 'PM Kisan Maan Dhan', keys: ['maan dhan', 'farmer pension'], cluster: 'Cluster 3 — Farmers (Kisan)' },
-      { id: '13', name: 'PM Ujjwala', keys: ['ujjwala', 'lpg'], cluster: 'Cluster 4 — Women & Families' },
-      { id: '14', name: 'PM Matru Vandana', keys: ['matru vandana', 'maternity'], cluster: 'Cluster 4 — Women & Families' },
-      { id: '15', name: 'Sukanya Samridhi', keys: ['sukanya', 'girl child'], cluster: 'Cluster 4 — Women & Families' },
-      { id: '16', name: 'PMKVY', keys: ['pmkvy', 'kaushal vikas'], cluster: 'Cluster 5 — Youth & Skills (Future)' },
-      { id: '17', name: 'NSP Scholarship', keys: ['nsp', 'scholarship'], cluster: 'Cluster 5 — Youth & Skills (Future)' },
-      { id: '18', name: 'PM Vishwakarma', keys: ['vishwakarma'], cluster: 'Cluster 5 — Youth & Skills (Future)' },
-      { id: '19', name: 'Jan Dhan', keys: ['jan dhan', 'zero-balance', 'ayushman'], cluster: 'Foundation Layer (Prerequisite for all DBT)' },
-      { id: '20', name: 'e-Shram', keys: ['e-shram', 'eshram', 'unorganised'], cluster: 'Foundation Layer (Prerequisite for all DBT)' }
-    ];
+    const CANONICAL_SCHEMES = BJP_SCHEMES.map(s => ({
+      id: String(s.id),
+      name: s.name,
+      keys: s.keys || [s.name.toLowerCase()],
+      cluster: s.cluster
+    }));
 
     const popularityObj = {};
     rawPopularity.forEach(item => {
@@ -563,13 +547,8 @@ const getApplicationsList = async (req, res) => {
       const clean = schemeName.trim();
       const regexes = [new RegExp(clean, 'i')];
       const numId = Number(clean);
-      const schemeMap = {
-        'PMSBY': 1, 'PMJJBY': 2, 'APY': 3, 'PM SVANidhi': 4, 'PM Mudra Shishu': 5,
-        'PM Mudra Kishor': 6, 'Udyam': 7, 'Stand Up India': 8, 'Startup Seed Fund': 9,
-        'PM Kisan': 10, 'PM Fasal Bima': 11, 'PM Kisan Maan Dhan': 12, 'PM Ujjwala': 13,
-        'Sukanya Samridhi': 14, 'PM Matru Vandana': 15, 'Jan Dhan': 16, 'PM Vishwakarma': 17,
-        'PMKVY': 18, 'e-Shram': 19, 'NSP Scholarship': 20
-      };
+      const schemeMap = {};
+      BJP_SCHEMES.forEach(s => { schemeMap[s.name] = s.id; });
       let foundId = !isNaN(numId) && numId > 0 ? numId : null;
       if (!foundId) {
         for (const [sKey, sId] of Object.entries(schemeMap)) {
