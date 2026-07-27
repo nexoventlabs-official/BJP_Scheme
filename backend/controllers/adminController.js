@@ -422,10 +422,11 @@ const getMemberReferrals = async (req, res) => {
 const getApplicationsList = async (req, res) => {
   try {
     const admin = req.admin;
-    const { search, status, district, assemblyName, boothNo, page = 1, limit = 20 } = req.query;
+    const { search, status, schemeName, district, assemblyName, boothNo, page = 1, limit = 20, exportAll } = req.query;
+    const isExport = exportAll === 'true';
     const pageNum  = Math.max(1, parseInt(page)  || 1);
-    const limitNum = Math.min(100, Math.max(1, parseInt(limit) || 20));
-    const skip = (pageNum - 1) * limitNum;
+    const limitNum = isExport ? 5000 : Math.min(500, Math.max(1, parseInt(limit) || 20));
+    const skip = isExport ? 0 : (pageNum - 1) * limitNum;
 
     // ── Step 1: Build User scope filter (uses indexed fields: district, assemblyName, boothNo) ──
     const adminScope = getAdminScopeQuery(admin); // e.g. { district: 'ARIYALUR' }
@@ -446,22 +447,23 @@ const getApplicationsList = async (req, res) => {
       userFilter.$or = [{ voterName: r }, { epicNo: r }, { mobile: r }];
     }
 
-    // ── Step 1b: If status filter is active, we must find users who HAVE an app with that status ──
-    //    Get distinct epicNos matching status+scope from SchemeApplication, then filter users
-    let epicNosWithStatus = null;
-    if (status) {
-      const appScopeFilter = { ...adminScope, status };
+    // ── Step 1b: If status or schemeName filter is active, filter distinct epicNos ──
+    if (status || schemeName) {
+      const appScopeFilter = { ...adminScope };
+      if (status) appScopeFilter.status = status;
+      if (schemeName) appScopeFilter.schemeName = new RegExp(schemeName.trim(), 'i');
       if (district)     appScopeFilter.district     = new RegExp('^' + district + '$', 'i');
       if (assemblyName) appScopeFilter.assemblyName = new RegExp('^' + assemblyName + '$', 'i');
       if (boothNo)      appScopeFilter.boothNo      = String(boothNo);
-      epicNosWithStatus = await SchemeApplication.distinct('epicNo', appScopeFilter);
-      if (epicNosWithStatus.length === 0) {
+      
+      const epicNosWithFilter = await SchemeApplication.distinct('epicNo', appScopeFilter);
+      if (epicNosWithFilter.length === 0) {
         return res.status(200).json({ success: true, voters: [], totalVoters: 0, totalPages: 0, currentPage: pageNum, limit: limitNum, applications: [] });
       }
-      userFilter.epicNo = { $in: epicNosWithStatus };
+      userFilter.epicNo = { $in: epicNosWithFilter };
     }
 
-    // ── Step 2: Count total users matching filter (fast with index) ──
+    // ── Step 2: Count total users matching filter ──
     const totalVoters = await User.countDocuments(userFilter);
     const totalPages  = Math.ceil(totalVoters / limitNum);
 
@@ -490,6 +492,7 @@ const getApplicationsList = async (req, res) => {
       ...adminScope
     };
     if (status) appFilter.status = status;
+    if (schemeName) appFilter.schemeName = new RegExp(schemeName.trim(), 'i');
     const allApps = await SchemeApplication.find(appFilter).sort({ appliedAt: -1 }).lean();
 
     const voters = users.map(u => {
