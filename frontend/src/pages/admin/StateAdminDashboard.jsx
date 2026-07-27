@@ -170,19 +170,13 @@ const StateAdminDashboard = () => {
 
   // Handle District change
   useEffect(() => {
-    if (skipFilterResetRef.current) return;
-    setAssemblyFilter('');
-    setBoothFilter('');
-    setBooths([]);
     fetchAssembliesForDistrict(districtFilter);
   }, [districtFilter]);
 
   // Handle Assembly change
   useEffect(() => {
-    if (skipFilterResetRef.current) { skipFilterResetRef.current = false; return; }
-    setBoothFilter('');
     fetchBoothsForAssembly(assemblyFilter, districtFilter);
-  }, [assemblyFilter]);
+  }, [assemblyFilter, districtFilter]);
 
   const handleUpdateAppStatus = async (appId, updatePayload) => {
     try {
@@ -518,7 +512,12 @@ const StateAdminDashboard = () => {
               {/* District Filter */}
               <select
                 value={districtFilter}
-                onChange={(e) => setDistrictFilter(e.target.value)}
+                onChange={(e) => {
+                  const val = e.target.value;
+                  setDistrictFilter(val);
+                  setAssemblyFilter('');
+                  setBoothFilter('');
+                }}
                 className="form-control"
                 style={{ flex: '1 1 150px', minWidth: '140px', background: '#fff' }}
               >
@@ -531,7 +530,11 @@ const StateAdminDashboard = () => {
               {/* Assembly Filter */}
               <select
                 value={assemblyFilter}
-                onChange={(e) => setAssemblyFilter(e.target.value)}
+                onChange={(e) => {
+                  const val = e.target.value;
+                  setAssemblyFilter(val);
+                  setBoothFilter('');
+                }}
                 className="form-control"
                 disabled={loadingAssemblies}
                 style={{ flex: '1 1 150px', minWidth: '140px', background: '#fff' }}
@@ -800,7 +803,7 @@ const StateAdminDashboard = () => {
               <tbody>
                 {(statsData.assemblyStats || []).slice((assStatsPage - 1) * 15, assStatsPage * 15).map((row, idx) => (
                   <tr key={idx} style={{ borderBottom: '1px solid var(--color-linen)', cursor: 'pointer' }}
-                    onClick={() => { skipFilterResetRef.current = true; setDistrictFilter(row._id.district); setAssemblyFilter(row._id.assemblyName); setBoothFilter(''); setStatusFilter(''); setSchemeFilter(''); navigateSubPage('applications'); }}
+                    onClick={() => { setDistrictFilter(row._id.district); setAssemblyFilter(row._id.assemblyName); setBoothFilter(''); setStatusFilter(''); setSchemeFilter(''); navigateSubPage('applications'); }}
                     onMouseEnter={e => e.currentTarget.style.background = 'var(--color-fog-gray)'}
                     onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
                   >
@@ -841,7 +844,7 @@ const StateAdminDashboard = () => {
               <tbody>
                 {(statsData.boothStats || []).slice((boothStatsPage - 1) * 15, boothStatsPage * 15).map((row, idx) => (
                   <tr key={idx} style={{ borderBottom: '1px solid var(--color-linen)', cursor: 'pointer' }}
-                    onClick={() => { skipFilterResetRef.current = true; setDistrictFilter(row._id.district); setAssemblyFilter(row._id.assemblyName); setBoothFilter(String(row._id.boothNo)); setStatusFilter(''); setSchemeFilter(''); navigateSubPage('applications'); }}
+                    onClick={() => { setDistrictFilter(row._id.district); setAssemblyFilter(row._id.assemblyName); setBoothFilter(String(row._id.boothNo)); setStatusFilter(''); setSchemeFilter(''); navigateSubPage('applications'); }}
                     onMouseEnter={e => e.currentTarget.style.background = 'var(--color-fog-gray)'}
                     onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
                   >

@@ -125,11 +125,8 @@ const DistrictAdminDashboard = () => {
     setCurrentPage(1);
   }, [searchQuery, statusFilter, schemeFilter, assemblyFilter, boothFilter]);
 
-  // When assembly changes: clear booth filter and load new booths
+  // When assembly changes: load booths for selected assembly
   useEffect(() => {
-    if (skipFilterResetRef.current) { skipFilterResetRef.current = false; return; }
-    setBoothFilter('');
-    setBooths([]);
     fetchBooths(assemblyFilter);
   }, [assemblyFilter]);
 
@@ -466,7 +463,11 @@ const DistrictAdminDashboard = () => {
               {/* Assembly Filter */}
               <select
                 value={assemblyFilter}
-                onChange={(e) => setAssemblyFilter(e.target.value)}
+                onChange={(e) => {
+                  const val = e.target.value;
+                  setAssemblyFilter(val);
+                  setBoothFilter('');
+                }}
                 className="form-control"
                 style={{ minWidth: '180px', flex: '2 1 180px', maxWidth: '260px' }}
               >
@@ -710,7 +711,7 @@ const DistrictAdminDashboard = () => {
               <tbody>
                 {(statsData.boothStats || []).slice((boothStatsPage - 1) * 15, boothStatsPage * 15).map((row, idx) => (
                   <tr key={idx} style={{ borderBottom: '1px solid var(--color-linen)', cursor: 'pointer' }}
-                    onClick={() => { skipFilterResetRef.current = true; setAssemblyFilter(row._id.assemblyName); setBoothFilter(String(row._id.boothNo)); setStatusFilter(''); setSchemeFilter(''); navigateSubPage('applications'); }}
+                    onClick={() => { setAssemblyFilter(row._id.assemblyName); setBoothFilter(String(row._id.boothNo)); setStatusFilter(''); setSchemeFilter(''); navigateSubPage('applications'); }}
                     onMouseEnter={e => e.currentTarget.style.background = 'var(--color-fog-gray)'}
                     onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
                   >
