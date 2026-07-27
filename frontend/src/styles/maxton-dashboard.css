@@ -1,0 +1,582 @@
+/* ============================================================
+   MAXTON DARK ANALYTICS DASHBOARD THEME — BJP NALAM THITTAM
+   ============================================================ */
+
+.maxton-wrapper {
+  --mx-bg-root: #0f131d;
+  --mx-bg-sidebar: #141824;
+  --mx-bg-topbar: #141824;
+  --mx-bg-card: #1a1f2c;
+  --mx-bg-card-hover: #222838;
+  --mx-bg-input: #121622;
+  --mx-border: #232a3b;
+  --mx-border-glow: rgba(255, 153, 51, 0.2);
+  
+  --mx-text-title: #ffffff;
+  --mx-text-body: #a0aec0;
+  --mx-text-muted: #64748b;
+  
+  --mx-primary: #FF9933; /* Saffron */
+  --mx-primary-gradient: linear-gradient(135deg, #FF9933 0%, #f26522 100%);
+  --mx-secondary: #00a040; /* BJP Green */
+  --mx-accent-blue: #3b82f6;
+  --mx-accent-cyan: #06b6d4;
+  --mx-accent-purple: #8b5cf6;
+  --mx-accent-pink: #ec4899;
+  --mx-accent-green: #10b981;
+  --mx-accent-orange: #f59e0b;
+
+  min-height: 100vh;
+  background-color: var(--mx-bg-root);
+  color: var(--mx-text-body);
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  display: flex;
+  width: 100%;
+}
+
+/* ── Left Sidebar ─────────────────────────────────────────── */
+.maxton-sidebar {
+  width: 260px;
+  background-color: var(--mx-bg-sidebar);
+  border-right: 1px solid var(--mx-border);
+  display: flex;
+  flex-direction: column;
+  flex-shrink: 0;
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  overflow-y: auto;
+  z-index: 100;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.maxton-sidebar-brand {
+  padding: 20px 24px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  border-bottom: 1px solid var(--mx-border);
+}
+
+.maxton-logo-icon {
+  width: 38px;
+  height: 38px;
+  border-radius: 12px;
+  background: linear-gradient(135deg, #FF9933 0%, #ec4899 50%, #8b5cf6 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  font-weight: 900;
+  font-size: 20px;
+  box-shadow: 0 4px 14px rgba(255, 153, 51, 0.3);
+}
+
+.maxton-brand-text {
+  font-size: 18px;
+  font-weight: 800;
+  color: #ffffff;
+  letter-spacing: -0.5px;
+}
+
+.maxton-sidebar-search {
+  padding: 16px 20px;
+}
+
+.maxton-sidebar-search-input {
+  width: 100%;
+  background-color: var(--mx-bg-input);
+  border: 1px solid var(--mx-border);
+  border-radius: 10px;
+  padding: 8px 12px 8px 36px;
+  color: #fff;
+  font-size: 13px;
+  outline: none;
+  transition: border-color 0.2s;
+}
+
+.maxton-sidebar-search-input:focus {
+  border-color: var(--mx-primary);
+}
+
+.maxton-menu-section {
+  padding: 12px 16px;
+}
+
+.maxton-menu-label {
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--mx-text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  margin-bottom: 8px;
+  padding-left: 10px;
+}
+
+.maxton-nav-item {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 14px;
+  border-radius: 10px;
+  border: none;
+  background: transparent;
+  color: var(--mx-text-body);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  margin-bottom: 4px;
+  transition: all 0.2s ease;
+  text-align: left;
+}
+
+.maxton-nav-item:hover {
+  background-color: rgba(255, 255, 255, 0.05);
+  color: #ffffff;
+}
+
+.maxton-nav-item.active {
+  background: var(--mx-primary-gradient);
+  color: #ffffff;
+  box-shadow: 0 4px 16px rgba(255, 153, 51, 0.3);
+}
+
+.maxton-nav-item-content {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.maxton-nav-badge {
+  background: rgba(255, 255, 255, 0.15);
+  color: #ffffff;
+  padding: 2px 8px;
+  border-radius: 20px;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.maxton-user-profile-footer {
+  margin-top: auto;
+  padding: 16px 20px;
+  border-top: 1px solid var(--mx-border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background-color: rgba(0, 0, 0, 0.15);
+}
+
+/* ── Main Content Area ────────────────────────────────────── */
+.maxton-main {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+/* ── Topbar ──────────────────────────────────────────────── */
+.maxton-topbar {
+  height: 70px;
+  background-color: var(--mx-bg-topbar);
+  border-bottom: 1px solid var(--mx-border);
+  padding: 0 28px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  position: sticky;
+  top: 0;
+  z-index: 90;
+}
+
+.maxton-topbar-left {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+
+.maxton-global-search {
+  position: relative;
+  width: 320px;
+}
+
+.maxton-global-search input {
+  width: 100%;
+  background-color: var(--mx-bg-input);
+  border: 1px solid var(--mx-border);
+  border-radius: 12px;
+  padding: 9px 14px 9px 38px;
+  color: #ffffff;
+  font-size: 13px;
+  outline: none;
+}
+
+.maxton-global-search input:focus {
+  border-color: var(--mx-primary);
+  box-shadow: 0 0 0 3px rgba(255, 153, 51, 0.15);
+}
+
+.maxton-topbar-right {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.maxton-icon-btn {
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  background-color: var(--mx-bg-card);
+  border: 1px solid var(--mx-border);
+  color: var(--mx-text-body);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  position: relative;
+  transition: all 0.2s;
+}
+
+.maxton-icon-btn:hover {
+  background-color: var(--mx-bg-card-hover);
+  color: #ffffff;
+}
+
+.maxton-badge-dot {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  width: 8px;
+  height: 8px;
+  background-color: #ef4444;
+  border-radius: 50%;
+  border: 2px solid var(--mx-bg-topbar);
+}
+
+/* ── Dashboard Page Canvas ────────────────────────────────── */
+.maxton-content-padding {
+  padding: 28px;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+/* ── Hero Congratulations Card ────────────────────────────── */
+.maxton-hero-card {
+  background: linear-gradient(135deg, #1e2436 0%, #171c2a 100%);
+  border: 1px solid var(--mx-border);
+  border-radius: 16px;
+  padding: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  position: relative;
+  overflow: hidden;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+}
+
+.maxton-hero-card::before {
+  content: '';
+  position: absolute;
+  top: -50%;
+  right: -20%;
+  width: 300px;
+  height: 300px;
+  background: radial-gradient(circle, rgba(255, 153, 51, 0.15) 0%, transparent 70%);
+  pointer-events: none;
+}
+
+.maxton-hero-title {
+  font-size: 22px;
+  font-weight: 800;
+  color: #ffffff;
+  margin: 0 0 6px 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.maxton-hero-sub {
+  font-size: 13px;
+  color: var(--mx-text-body);
+  margin: 0 0 18px 0;
+}
+
+.maxton-hero-metric {
+  font-size: 32px;
+  font-weight: 900;
+  color: #ffffff;
+  letter-spacing: -1px;
+}
+
+.maxton-hero-btn {
+  background: var(--mx-primary-gradient);
+  color: #ffffff;
+  border: none;
+  padding: 10px 22px;
+  border-radius: 10px;
+  font-weight: 700;
+  font-size: 13px;
+  cursor: pointer;
+  box-shadow: 0 4px 14px rgba(255, 153, 51, 0.35);
+  transition: transform 0.2s, box-shadow 0.2s;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.maxton-hero-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(255, 153, 51, 0.5);
+}
+
+.maxton-gift-icon-container {
+  width: 110px;
+  height: 110px;
+  background: rgba(255, 153, 51, 0.1);
+  border-radius: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 54px;
+  border: 1px solid rgba(255, 153, 51, 0.2);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+}
+
+/* ── 4 Stat Metric Cards Grid ────────────────────────────── */
+.maxton-stats-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 20px;
+}
+
+@media (max-width: 1280px) {
+  .maxton-stats-grid { grid-template-columns: repeat(2, 1fr); }
+}
+
+@media (max-width: 640px) {
+  .maxton-stats-grid { grid-template-columns: 1fr; }
+}
+
+.maxton-stat-card {
+  background-color: var(--mx-bg-card);
+  border: 1px solid var(--mx-border);
+  border-radius: 16px;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  position: relative;
+  transition: transform 0.2s, border-color 0.2s;
+}
+
+.maxton-stat-card:hover {
+  transform: translateY(-3px);
+  border-color: rgba(255, 255, 255, 0.15);
+}
+
+.maxton-stat-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+}
+
+.maxton-stat-icon-box {
+  width: 42px;
+  height: 42px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 20px;
+}
+
+.maxton-stat-growth {
+  font-size: 12px;
+  font-weight: 700;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 8px;
+  border-radius: 20px;
+}
+
+.maxton-stat-growth.up {
+  background: rgba(16, 185, 129, 0.15);
+  color: #10b981;
+}
+
+.maxton-stat-growth.down {
+  background: rgba(239, 68, 68, 0.15);
+  color: #ef4444;
+}
+
+.maxton-stat-value {
+  font-size: 26px;
+  font-weight: 900;
+  color: #ffffff;
+  letter-spacing: -0.5px;
+  margin: 4px 0 2px 0;
+}
+
+.maxton-stat-label {
+  font-size: 13px;
+  color: var(--mx-text-muted);
+  font-weight: 600;
+}
+
+.maxton-sparkline-svg {
+  width: 100%;
+  height: 36px;
+  margin-top: 12px;
+}
+
+/* ── Middle Analytics Cards Grid ─────────────────────────── */
+.maxton-analytics-grid {
+  display: grid;
+  grid-template-columns: 1fr 1.6fr;
+  gap: 20px;
+}
+
+@media (max-width: 1024px) {
+  .maxton-analytics-grid { grid-template-columns: 1fr; }
+}
+
+.maxton-card {
+  background-color: var(--mx-bg-card);
+  border: 1px solid var(--mx-border);
+  border-radius: 16px;
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+}
+
+.maxton-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 20px;
+}
+
+.maxton-card-title {
+  font-size: 16px;
+  font-weight: 700;
+  color: #ffffff;
+  margin: 0;
+}
+
+/* Donut Chart Legend List */
+.maxton-legend-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: 20px;
+}
+
+.maxton-legend-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 13px;
+}
+
+.maxton-legend-left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.maxton-legend-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+}
+
+/* ── Data Tables ─────────────────────────────────────────── */
+.maxton-table-container {
+  width: 100%;
+  overflow-x: auto;
+  border-radius: 12px;
+  border: 1px solid var(--mx-border);
+}
+
+.maxton-table {
+  width: 100%;
+  border-collapse: collapse;
+  text-align: left;
+  font-size: 13px;
+}
+
+.maxton-table th {
+  background-color: #141824;
+  color: var(--mx-text-muted);
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  padding: 14px 16px;
+  border-bottom: 1px solid var(--mx-border);
+}
+
+.maxton-table td {
+  padding: 14px 16px;
+  border-bottom: 1px solid var(--mx-border);
+  color: #ffffff;
+}
+
+.maxton-table tr:hover {
+  background-color: rgba(255, 255, 255, 0.03);
+}
+
+/* Status Pill Badges */
+.maxton-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.maxton-pill.approved { background: rgba(16, 185, 129, 0.15); color: #10b981; border: 1px solid rgba(16, 185, 129, 0.3); }
+.maxton-pill.pending { background: rgba(245, 158, 11, 0.15); color: #f59e0b; border: 1px solid rgba(245, 158, 11, 0.3); }
+.maxton-pill.in-progress { background: rgba(6, 182, 212, 0.15); color: #06b6d4; border: 1px solid rgba(6, 182, 212, 0.3); }
+.maxton-pill.rejected { background: rgba(239, 68, 68, 0.15); color: #ef4444; border: 1px solid rgba(239, 68, 68, 0.3); }
+
+/* Buttons */
+.maxton-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 16px;
+  border-radius: 10px;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  border: none;
+  transition: all 0.2s;
+}
+
+.maxton-btn-primary {
+  background: var(--mx-primary-gradient);
+  color: #ffffff;
+  box-shadow: 0 4px 12px rgba(255, 153, 51, 0.3);
+}
+
+.maxton-btn-primary:hover {
+  box-shadow: 0 6px 18px rgba(255, 153, 51, 0.45);
+  transform: translateY(-1px);
+}
+
+.maxton-btn-secondary {
+  background: var(--mx-bg-input);
+  color: var(--mx-text-body);
+  border: 1px solid var(--mx-border);
+}
+
+.maxton-btn-secondary:hover {
+  background: var(--mx-bg-card-hover);
+  color: #ffffff;
+}
