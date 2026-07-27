@@ -42,16 +42,22 @@ const STATUS_OPTIONS = [
   'Rejected'
 ];
 
-const ReportsView = () => {
+const ReportsView = ({
+  initialDistrict = '',
+  initialAssembly = '',
+  initialBooth = '',
+  initialStatus = '',
+  initialScheme = ''
+}) => {
   const { admin } = useAuth();
   const role = admin?.role || 'SUPER_ADMIN';
 
   // Filters State
-  const [districtFilter, setDistrictFilter] = useState(admin?.district || '');
-  const [assemblyFilter, setAssemblyFilter] = useState(admin?.assemblyName || '');
-  const [boothFilter, setBoothFilter] = useState(admin?.boothNo ? String(admin.boothNo) : '');
-  const [statusFilter, setStatusFilter] = useState('');
-  const [schemeFilter, setSchemeFilter] = useState('');
+  const [districtFilter, setDistrictFilter] = useState(initialDistrict || admin?.district || '');
+  const [assemblyFilter, setAssemblyFilter] = useState(initialAssembly || admin?.assemblyName || '');
+  const [boothFilter, setBoothFilter] = useState(initialBooth || (admin?.boothNo ? String(admin.boothNo) : ''));
+  const [statusFilter, setStatusFilter] = useState(initialStatus || '');
+  const [schemeFilter, setSchemeFilter] = useState(initialScheme || '');
   const [searchQuery, setSearchQuery] = useState('');
 
   // Dropdowns Meta

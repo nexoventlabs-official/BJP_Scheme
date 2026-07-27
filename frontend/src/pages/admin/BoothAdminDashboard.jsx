@@ -556,7 +556,15 @@ const BoothAdminDashboard = () => {
       )}
 
       {/* PAGE: REPORTS & EXCEL EXPORT */}
-      {subPage === 'reports' && <ReportsView />}
+      {subPage === 'reports' && (
+        <ReportsView
+          initialDistrict={admin?.district}
+          initialAssembly={admin?.assemblyName}
+          initialBooth={String(admin?.boothNo || '')}
+          initialStatus={selectedStatus}
+          initialScheme={selectedScheme}
+        />
+      )}
     </div>
   );
 };

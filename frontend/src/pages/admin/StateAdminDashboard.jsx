@@ -878,7 +878,15 @@ const StateAdminDashboard = () => {
       {/* ══════════════════════════════════════════ */}
       {/* PAGE 6: REPORTS & EXCEL EXPORT             */}
       {/* ══════════════════════════════════════════ */}
-      {subPage === 'reports' && <ReportsView />}
+      {subPage === 'reports' && (
+        <ReportsView
+          initialDistrict={selectedDistrict}
+          initialAssembly={selectedAssembly}
+          initialBooth={selectedBooth}
+          initialStatus={selectedStatus}
+          initialScheme={selectedScheme}
+        />
+      )}
     </div>
   );
 };

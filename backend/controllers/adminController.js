@@ -615,11 +615,10 @@ const getApplicationsList = async (req, res) => {
       }
     ]);
 
-    applicantAgg.sort((a, b) => new Date(b.latestAppliedAt || 0) - new Date(a.latestAppliedAt || 0));
-
+    const isExport = req.query.isExport === 'true' || req.query.exportAll === 'true';
     const totalVoters = applicantAgg.length;
     const totalPages  = Math.ceil(totalVoters / limitNum) || 1;
-    const paginatedApplicants = applicantAgg.slice(skip, skip + limitNum);
+    const paginatedApplicants = isExport ? applicantAgg : applicantAgg.slice(skip, skip + limitNum);
 
     if (paginatedApplicants.length === 0) {
       return res.status(200).json({ success: true, voters: [], totalVoters, totalPages, currentPage: pageNum, limit: limitNum, applications: [] });

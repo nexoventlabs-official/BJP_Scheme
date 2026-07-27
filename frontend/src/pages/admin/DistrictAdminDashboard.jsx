@@ -738,7 +738,15 @@ const DistrictAdminDashboard = () => {
       )}
 
       {/* PAGE: REPORTS & EXCEL EXPORT */}
-      {subPage === 'reports' && <ReportsView />}
+      {subPage === 'reports' && (
+        <ReportsView
+          initialDistrict={admin?.district || selectedDistrict}
+          initialAssembly={selectedAssembly}
+          initialBooth={selectedBooth}
+          initialStatus={selectedStatus}
+          initialScheme={selectedScheme}
+        />
+      )}
     </div>
   );
 };

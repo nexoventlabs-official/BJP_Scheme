@@ -1109,7 +1109,15 @@ const SuperAdminDashboard = () => {
       {/* ══════════════════════════════════════════ */}
       {/* PAGE 7: REPORTS & EXCEL EXPORT             */}
       {/* ══════════════════════════════════════════ */}
-      {subPage === 'reports' && <ReportsView />}
+      {subPage === 'reports' && (
+        <ReportsView
+          initialDistrict={selectedDistrict}
+          initialAssembly={selectedAssembly}
+          initialBooth={selectedBooth}
+          initialStatus={selectedStatus}
+          initialScheme={selectedScheme}
+        />
+      )}
     </div>
   );
 };

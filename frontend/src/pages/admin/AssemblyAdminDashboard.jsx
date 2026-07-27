@@ -577,7 +577,15 @@ const AssemblyAdminDashboard = () => {
       )}
 
       {/* PAGE: REPORTS & EXCEL EXPORT */}
-      {subPage === 'reports' && <ReportsView />}
+      {subPage === 'reports' && (
+        <ReportsView
+          initialDistrict={admin?.district}
+          initialAssembly={admin?.assemblyName}
+          initialBooth={selectedBooth}
+          initialStatus={selectedStatus}
+          initialScheme={selectedScheme}
+        />
+      )}
     </div>
   );
 };
