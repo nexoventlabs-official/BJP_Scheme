@@ -680,8 +680,18 @@ const getApplicationsList = async (req, res) => {
         .filter(Boolean);
 
       // ── Enrich missing voter names from the voter roll DB (read DB) ──
-      const BAD_NAMES = new Set([null, undefined, '', 'N/A', 'n/a', 'null', 'undefined']);
-      const needsEnrichment = voters.filter(v => BAD_NAMES.has(v.voterName) && v.epicNo && v.epicNo !== 'N/A');
+      // Detect any bad/placeholder voter name — always enrich from voter DB if name looks fake
+      const PLACEHOLDER_NAMES = new Set([
+        null, undefined, '', 'N/A', 'n/a', 'null', 'undefined',
+        'voter', 'Voter', 'VOTER',
+        'user', 'User', 'USER',
+        'member', 'Member', 'MEMBER',
+        'name', 'Name', 'NAME',
+        'unknown', 'Unknown', 'UNKNOWN',
+        'test', 'Test', 'TEST'
+      ]);
+      const isBadName = (name) => !name || PLACEHOLDER_NAMES.has(name) || String(name).trim().length < 2;
+      const needsEnrichment = voters.filter(v => isBadName(v.voterName) && v.epicNo && v.epicNo !== 'N/A');
 
       if (needsEnrichment.length > 0) {
         try {
@@ -723,7 +733,7 @@ const getApplicationsList = async (req, res) => {
 
           // Patch names into voters array
           voters = voters.map(v => {
-            if (BAD_NAMES.has(v.voterName) && v.epicNo && epicNameMap[v.epicNo]) {
+            if (isBadName(v.voterName) && v.epicNo && epicNameMap[v.epicNo]) {
               return { ...v, voterName: epicNameMap[v.epicNo] };
             }
             return v;
