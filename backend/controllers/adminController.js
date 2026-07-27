@@ -909,6 +909,82 @@ const getFilterMeta = async (req, res) => {
   }
 };
 
+// @desc    Stream CSV export of applications (server-side, fast)
+// @route   GET /api/admin/export-csv
+// @access  Private (Admin)
+const exportApplicationsCsv = async (req, res) => {
+  try {
+    const { district, assemblyName, boothNo, status, schemeName, search, format } = req.query;
+    const admin = req.admin;
+
+    // ── Build scope filter (same as getApplicationsList) ──
+    const appScopeFilter = {};
+    if (admin.role === 'DISTRICT_ADMIN')    appScopeFilter.district     = admin.district;
+    if (admin.role === 'ASSEMBLY_ADMIN')   appScopeFilter.assemblyName = admin.assemblyName;
+    if (admin.role === 'BOOTH_ADMIN') { appScopeFilter.assemblyName = admin.assemblyName; appScopeFilter.boothNo = admin.boothNo; }
+    if (district)     appScopeFilter.district     = district;
+    if (assemblyName) appScopeFilter.assemblyName = assemblyName;
+    if (boothNo)      appScopeFilter.boothNo      = boothNo;
+    if (status)       appScopeFilter.status        = status;
+    if (schemeName)   appScopeFilter.schemeName    = schemeName;
+    if (search) {
+      const re = new RegExp(search, 'i');
+      appScopeFilter.$or = [{ voterName: re }, { epicNo: re }, { mobile: re }];
+    }
+
+    const scopeLabel = boothNo ? `Booth_${boothNo}` : assemblyName ? assemblyName.replace(/\s+/g, '_') : district ? district.replace(/\s+/g, '_') : 'Statewide';
+    const timestamp  = new Date().toISOString().slice(0, 10);
+    const filename   = `BJP_Report_${scopeLabel}_${timestamp}.csv`;
+
+    res.setHeader('Content-Type', 'text/csv; charset=utf-8');
+    res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+
+    // UTF-8 BOM so Excel opens it correctly without encoding issues
+    res.write('\uFEFF');
+
+    // Header row
+    const headers = ['S.No', 'Voter Name', 'EPIC Number', 'Mobile Number', 'District', 'Assembly Name', 'Booth No', 'Scheme Name', 'Cluster / Benefit', 'Status', 'Applied Date'];
+    res.write(headers.map(h => `"${h}"`).join(',') + '\n');
+
+    // Stream cursor — never loads all docs into memory
+    const cursor = SchemeApplication.find(
+      appScopeFilter,
+      { voterName: 1, epicNo: 1, mobile: 1, district: 1, assemblyName: 1, boothNo: 1, schemeName: 1, clusterName: 1, status: 1, appliedAt: 1 }
+    ).sort({ appliedAt: -1 }).lean().cursor();
+
+    let idx = 0;
+    const esc = v => `"${String(v == null ? '' : v).replace(/"/g, '""')}"`;
+
+    for await (const doc of cursor) {
+      idx++;
+      const appliedDate = doc.appliedAt ? new Date(doc.appliedAt).toLocaleDateString('en-IN') : '—';
+      const row = [
+        idx,
+        esc(doc.voterName),
+        esc(doc.epicNo),
+        esc(doc.mobile),
+        esc(doc.district),
+        esc(doc.assemblyName),
+        esc(doc.boothNo),
+        esc(doc.schemeName),
+        esc(doc.clusterName),
+        esc(doc.status),
+        esc(appliedDate)
+      ];
+      res.write(row.join(',') + '\n');
+    }
+
+    res.end();
+  } catch (error) {
+    console.error('[exportApplicationsCsv Error]:', error);
+    if (!res.headersSent) {
+      res.status(500).json({ success: false, message: error.message });
+    } else {
+      res.end();
+    }
+  }
+};
+
 module.exports = {
   adminLogin,
   getAssembliesList,
@@ -918,6 +994,7 @@ module.exports = {
   getDashboardStats,
   getMemberReferrals,
   getApplicationsList,
+  exportApplicationsCsv,
   getFilterMeta,
   updateApplicationStatus,
   createAdminCredential,

@@ -9,6 +9,7 @@ const {
   getDashboardStats,
   getMemberReferrals,
   getApplicationsList,
+  exportApplicationsCsv,
   getFilterMeta,
   updateApplicationStatus,
   createAdminCredential,
@@ -28,6 +29,7 @@ router.get('/dashboard-stats', protectAdmin, getDashboardStats);
 router.get('/filter-meta', protectAdmin, getFilterMeta);
 router.get('/member-referrals', protectAdmin, getMemberReferrals);
 router.get('/applications', protectAdmin, getApplicationsList);
+router.get('/export-csv', protectAdmin, exportApplicationsCsv);
 router.put('/applications/:id/status', protectAdmin, updateApplicationStatus);
 router.post('/create-credential', protectAdmin, authorizeRoles('SUPER_ADMIN'), createAdminCredential);
 router.get('/credentials', protectAdmin, authorizeRoles('SUPER_ADMIN'), getAllAdmins);

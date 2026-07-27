@@ -213,209 +213,45 @@ const ReportsView = ({
   const pendingCount = (statusCounts.Submitted || 0) + (statusCounts.Pending || 0) + (statusCounts.Processing || 0) + (statusCounts.Called || 0) + (statusCounts.Verified || 0);
   const rejectedCount = statusCounts.Rejected || 0;
 
-  // ── Download Styled Excel Report ──
-  const handleDownloadExcel = async () => {
+  // ── Fast CSV Download via backend streaming ──
+  const handleDownloadCsv = () => {
+    const token = localStorage.getItem('adminToken');
+    const params = new URLSearchParams({
+      ...(searchQuery    && { search: searchQuery }),
+      ...(statusFilter   && { status: statusFilter }),
+      ...(schemeFilter   && { schemeName: schemeFilter }),
+      ...(districtFilter && { district: districtFilter }),
+      ...(assemblyFilter && { assemblyName: assemblyFilter }),
+      ...(boothFilter    && { boothNo: boothFilter })
+    });
+
+    // Use a hidden anchor with Authorization via fetch-blob trick
     setIsExporting(true);
-    try {
-      // 1. Fetch FULL list of matching applications for complete export
-      const params = new URLSearchParams({
-        exportAll: 'true',
-        ...(searchQuery    && { search: searchQuery }),
-        ...(statusFilter   && { status: statusFilter }),
-        ...(schemeFilter   && { schemeName: schemeFilter }),
-        ...(districtFilter && { district: districtFilter }),
-        ...(assemblyFilter && { assemblyName: assemblyFilter }),
-        ...(boothFilter    && { boothNo: boothFilter })
-      });
-
-      const res = await API.get(`/admin/applications?${params}`);
-      const exportVoters = res.data.success ? (res.data.voters || []) : reportVoters;
-
-      const exportRows = exportVoters.flatMap(v => {
-        if (!v.applications || v.applications.length === 0) {
-          return [{
-            voterName: v.voterName || 'N/A',
-            epicNo: v.epicNo || 'N/A',
-            mobile: v.mobile || 'N/A',
-            district: v.district || 'N/A',
-            assemblyName: v.assemblyName || 'N/A',
-            boothNo: v.boothNo || 'N/A',
-            schemeName: 'No Scheme Selected',
-            clusterName: '—',
-            status: 'Unregistered',
-            appliedAt: '—'
-          }];
-        }
-        return v.applications.map(app => ({
-          voterName: v.voterName || app.voterName || 'N/A',
-          epicNo: v.epicNo || app.epicNo || 'N/A',
-          mobile: v.mobile || app.mobile || 'N/A',
-          district: v.district || app.district || 'N/A',
-          assemblyName: v.assemblyName || app.assemblyName || 'N/A',
-          boothNo: v.boothNo || app.boothNo || 'N/A',
-          schemeName: app.schemeName || app.schemeId || 'General Scheme',
-          clusterName: app.clusterName || 'BJP Welfare',
-          status: app.status || 'Submitted',
-          appliedAt: app.appliedAt ? new Date(app.appliedAt).toLocaleString() : '—'
-        }));
-      });
-
-      // 2. Create ExcelJS Workbook
-      const workbook = new ExcelJS.Workbook();
-      workbook.creator = 'BJP Nalam Thittam Admin Portal';
-      workbook.created = new Date();
-
-      const worksheet = workbook.addWorksheet('BJP Schemes Report');
-
-      // Page Setup for Printing
-      worksheet.pageSetup.orientation = 'landscape';
-      worksheet.pageSetup.paperSize = 9; // A4
-
-      // Title Banner (Row 1 to 2)
-      worksheet.mergeCells('A1:K2');
-      const titleCell = worksheet.getCell('A1');
-      titleCell.value = 'BJP NALAM THITTAM — SCHEME APPLICATIONS & MEMBER REPORT';
-      titleCell.font = { name: 'Calibri', size: 16, bold: true, color: { argb: 'FFFFFFFF' } };
-      titleCell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFFF9933' } }; // BJP Saffron
-      titleCell.alignment = { vertical: 'middle', horizontal: 'center' };
-
-      // Subtitle / Scope Metadata (Row 3)
-      worksheet.mergeCells('A3:K3');
-      const subCell = worksheet.getCell('A3');
-      const scopeDesc = boothFilter
-        ? `Booth ${boothFilter} (${assemblyFilter}, ${districtFilter})`
-        : assemblyFilter
-        ? `Assembly ${assemblyFilter} (${districtFilter})`
-        : districtFilter
-        ? `District ${districtFilter}`
-        : 'Statewide Tamil Nadu';
-      
-      subCell.value = `Report Scope: ${scopeDesc} | Generated On: ${new Date().toLocaleString()} | Role: ${role} | Total Records: ${exportRows.length}`;
-      subCell.font = { name: 'Calibri', size: 11, italic: true, color: { argb: 'FF334155' } };
-      subCell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFF1F5F9' } };
-      subCell.alignment = { vertical: 'middle', horizontal: 'center' };
-
-      // Empty Row 4
-      worksheet.getRow(4).height = 10;
-
-      // Table Header Columns (Row 5)
-      const headers = [
-        'S.No',
-        'Voter Name',
-        'EPIC Number',
-        'Mobile Number',
-        'District',
-        'Assembly Name',
-        'Booth No',
-        'Scheme Name',
-        'Cluster / Benefit',
-        'Status',
-        'Applied Date'
-      ];
-
-      const headerRow = worksheet.getRow(5);
-      headerRow.height = 28;
-      headers.forEach((h, idx) => {
-        const cell = headerRow.getCell(idx + 1);
-        cell.value = h;
-        cell.font = { name: 'Calibri', size: 11, bold: true, color: { argb: 'FFFFFFFF' } };
-        cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF1E293B' } }; // Dark Slate Blue
-        cell.alignment = { vertical: 'middle', horizontal: 'center' };
-        cell.border = {
-          top: { style: 'thin', color: { argb: 'FF94A3B8' } },
-          bottom: { style: 'medium', color: { argb: 'FF0F172A' } },
-          left: { style: 'thin', color: { argb: 'FF94A3B8' } },
-          right: { style: 'thin', color: { argb: 'FF94A3B8' } }
-        };
-      });
-
-      // Populate Data Rows (Row 6 onwards)
-      exportRows.forEach((item, index) => {
-        const rowIndex = 6 + index;
-        const row = worksheet.getRow(rowIndex);
-        row.height = 22;
-
-        const isEven = index % 2 === 0;
-        const rowBgColor = isEven ? 'FFFFFFFF' : 'FFF8FAFC'; // Zebra striping
-
-        row.values = [
-          index + 1,
-          item.voterName,
-          item.epicNo,
-          item.mobile,
-          item.district,
-          item.assemblyName,
-          item.boothNo,
-          item.schemeName,
-          item.clusterName,
-          item.status,
-          item.appliedAt
-        ];
-
-        // Format Cells
-        for (let colIdx = 1; colIdx <= 11; colIdx++) {
-          const cell = row.getCell(colIdx);
-          cell.font = { name: 'Calibri', size: 10, color: { argb: 'FF1E293B' } };
-          cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: rowBgColor } };
-          cell.border = {
-            top: { style: 'thin', color: { argb: 'FFE2E8F0' } },
-            bottom: { style: 'thin', color: { argb: 'FFE2E8F0' } },
-            left: { style: 'thin', color: { argb: 'FFE2E8F0' } },
-            right: { style: 'thin', color: { argb: 'FFE2E8F0' } }
-          };
-
-          // Alignment
-          if ([1, 3, 4, 7, 10, 11].includes(colIdx)) {
-            cell.alignment = { vertical: 'middle', horizontal: 'center' };
-          } else {
-            cell.alignment = { vertical: 'middle', horizontal: 'left' };
-          }
-
-          // Custom Status Cell Highlighting
-          if (colIdx === 10) {
-            const st = String(item.status).toLowerCase();
-            if (st === 'approved') {
-              cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFDCFCE7' } }; // Soft Green
-              cell.font = { name: 'Calibri', size: 10, bold: true, color: { argb: 'FF15803D' } };
-            } else if (['submitted', 'pending', 'in progress', 'processing', 'called'].includes(st)) {
-              cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFFEF3C7' } }; // Soft Amber
-              cell.font = { name: 'Calibri', size: 10, bold: true, color: { argb: 'FFB45309' } };
-            } else if (st === 'rejected') {
-              cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFFEE2E2' } }; // Soft Red
-              cell.font = { name: 'Calibri', size: 10, bold: true, color: { argb: 'FFB91C1C' } };
-            }
-          }
-        }
-      });
-
-      // Auto-fit Column Widths dynamically
-      worksheet.columns.forEach((column) => {
-        let maxLen = 12;
-        column.eachCell({ includeEmpty: true }, (cell) => {
-          const cellValue = cell.value ? String(cell.value) : '';
-          if (cellValue.length > maxLen) {
-            maxLen = cellValue.length;
-          }
-        });
-        column.width = Math.min(Math.max(maxLen + 3, 12), 45);
-      });
-
-      // Generate Buffer and Trigger Download
-      const buffer = await workbook.xlsx.writeBuffer();
-      const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
-      const url = window.URL.createObjectURL(blob);
-      const anchor = document.createElement('a');
-      anchor.href = url;
-      const cleanFileName = `BJP_Schemes_Report_${(districtFilter || 'TN').replace(/\s+/g, '_')}_${new Date().toISOString().slice(0,10)}.xlsx`;
-      anchor.download = cleanFileName;
-      anchor.click();
-      window.URL.revokeObjectURL(url);
-    } catch (err) {
-      console.error('Error generating Excel report:', err);
-    } finally {
-      setIsExporting(false);
-    }
+    fetch(`/api/admin/export-csv?${params}`, {
+      headers: { Authorization: `Bearer ${token}` }
+    })
+      .then(res => {
+        if (!res.ok) throw new Error('Export failed');
+        // Get filename from Content-Disposition header
+        const cd = res.headers.get('Content-Disposition') || '';
+        const match = cd.match(/filename="?([^"]+)"?/);
+        const filename = match ? match[1] : `BJP_Report_${new Date().toISOString().slice(0,10)}.csv`;
+        return res.blob().then(blob => ({ blob, filename }));
+      })
+      .then(({ blob, filename }) => {
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = filename;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        window.URL.revokeObjectURL(url);
+      })
+      .catch(err => console.error('CSV download error:', err))
+      .finally(() => setIsExporting(false));
   };
+
 
   return (
     <div style={{ width: '100%', boxSizing: 'border-box' }}>
@@ -441,7 +277,7 @@ const ReportsView = ({
           </div>
 
           <button
-            onClick={handleDownloadExcel}
+            onClick={handleDownloadCsv}
             disabled={isExporting || totalRecords === 0}
             className="btn btn-primary"
             style={{
@@ -456,7 +292,7 @@ const ReportsView = ({
             }}
           >
             {isExporting ? <RefreshCw size={16} className="spin-icon" /> : <Download size={16} />}
-            {isExporting ? 'Generating Excel...' : 'Download Excel Report'}
+            {isExporting ? 'Downloading CSV...' : 'Download CSV Report'}
           </button>
         </div>
       </div>
@@ -665,12 +501,12 @@ const ReportsView = ({
           </div>
 
           <button
-            onClick={handleDownloadExcel}
+            onClick={handleDownloadCsv}
             disabled={isExporting || totalRecords === 0}
             className="btn btn-secondary"
             style={{ padding: '6px 14px', fontSize: '13px', display: 'inline-flex', alignItems: 'center', gap: '6px' }}
           >
-            <Download size={14} /> Export Excel
+            <Download size={14} /> Export CSV
           </button>
         </div>
 
