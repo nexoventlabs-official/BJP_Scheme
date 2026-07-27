@@ -64,7 +64,7 @@ const UserHome = () => {
   });
 
   const getCleanClusterTitle = (clusterName) => {
-    if (clusterName === 'All Schemes') return 'All 20 Schemes';
+    if (clusterName === 'All Schemes') return 'All 23 Schemes';
     return clusterName.replace(/^Cluster \d+ — /, '');
   };
 

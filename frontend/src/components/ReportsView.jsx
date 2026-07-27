@@ -395,7 +395,7 @@ const ReportsView = ({
               className="form-control"
               style={{ marginTop: '4px' }}
             >
-              <option value="">All 20 Central BJP Schemes</option>
+              <option value="">All 23 Central BJP Schemes</option>
               {BJP_SCHEMES.map(s => (
                 <option key={s.id} value={s.name}>
                   {s.name} ({s.fullTitle})

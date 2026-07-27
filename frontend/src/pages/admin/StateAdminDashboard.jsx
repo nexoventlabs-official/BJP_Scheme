@@ -587,7 +587,7 @@ const StateAdminDashboard = () => {
                 className="form-control"
                 style={{ flex: '1 1 160px', minWidth: '150px', background: '#fff' }}
               >
-                <option value="">All 20 Central BJP Schemes</option>
+                <option value="">All 23 Central BJP Schemes</option>
                 {BJP_SCHEMES.map(s => (
                   <option key={s.id} value={s.name}>
                     {s.name} ({s.fullTitle})

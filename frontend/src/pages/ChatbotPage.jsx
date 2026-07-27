@@ -4025,7 +4025,7 @@ function BrochurePanel({ epicNo, mobile, onBack }) {
                 className={`category-pill ${activeCategory === cat ? 'active' : ''}`}
                 onClick={() => { setActiveCategory(cat); setExpandedId(null); }}
               >
-                {cat === 'All' ? t('All 20 Schemes') : t(cat)}
+                {cat === 'All' ? t('All 23 Schemes') : t(cat)}
               </button>
             ))}
           </div>
