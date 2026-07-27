@@ -213,7 +213,7 @@ const ReportsView = ({
   const pendingCount = (statusCounts.Submitted || 0) + (statusCounts.Pending || 0) + (statusCounts.Processing || 0) + (statusCounts.Called || 0) + (statusCounts.Verified || 0);
   const rejectedCount = statusCounts.Rejected || 0;
 
-  // ── Fast CSV Download via backend streaming ──
+  // ── Styled Excel Download via backend (server-side ExcelJS, fast) ──
   const handleDownloadCsv = () => {
     const token = localStorage.getItem('bjp_admin_token');
     const params = new URLSearchParams({
@@ -225,17 +225,15 @@ const ReportsView = ({
       ...(boothFilter    && { boothNo: boothFilter })
     });
 
-    // Use a hidden anchor with Authorization via fetch-blob trick
     setIsExporting(true);
-    fetch(`/api/admin/export-csv?${params}`, {
+    fetch(`/api/admin/export-excel?${params}`, {
       headers: { Authorization: `Bearer ${token}` }
     })
       .then(res => {
         if (!res.ok) throw new Error('Export failed');
-        // Get filename from Content-Disposition header
         const cd = res.headers.get('Content-Disposition') || '';
         const match = cd.match(/filename="?([^"]+)"?/);
-        const filename = match ? match[1] : `BJP_Report_${new Date().toISOString().slice(0,10)}.csv`;
+        const filename = match ? match[1] : `BJP_Report_${new Date().toISOString().slice(0,10)}.xlsx`;
         return res.blob().then(blob => ({ blob, filename }));
       })
       .then(({ blob, filename }) => {
@@ -248,7 +246,7 @@ const ReportsView = ({
         document.body.removeChild(a);
         window.URL.revokeObjectURL(url);
       })
-      .catch(err => console.error('CSV download error:', err))
+      .catch(err => console.error('Excel download error:', err))
       .finally(() => setIsExporting(false));
   };
 

@@ -1,3 +1,4 @@
+const ExcelJS = require('exceljs');
 const jwt = require('jsonwebtoken');
 const Admin = require('../models/Admin');
 const User = require('../models/User');
@@ -1086,6 +1087,150 @@ const exportApplicationsCsv = async (req, res) => {
   }
 };
 
+// @desc  Export styled Excel file (server-side, fast streaming)
+// @route GET /api/admin/export-excel
+// @access Private
+const exportApplicationsExcel = async (req, res) => {
+  try {
+    const {
+      district, assemblyName, boothNo, status, schemeId,
+      startDate, endDate, search
+    } = req.query;
+    const user = req.admin;
+
+    // ── Build scope filter (same as CSV export) ──
+    const appScopeFilter = {};
+    if (user.role === 'DISTRICT_ADMIN' && user.district)
+      appScopeFilter.district = user.district;
+    else if (user.role === 'ASSEMBLY_ADMIN' && user.assemblyName)
+      appScopeFilter.assemblyName = user.assemblyName;
+    else if (user.role === 'BOOTH_ADMIN' && user.assemblyName && user.boothNo) {
+      appScopeFilter.assemblyName = user.assemblyName;
+      appScopeFilter.boothNo = String(user.boothNo);
+    }
+    if (district)      appScopeFilter.district     = district;
+    if (assemblyName) appScopeFilter.assemblyName  = assemblyName;
+    if (boothNo)      appScopeFilter.boothNo       = String(boothNo);
+    if (status)       appScopeFilter.status        = status;
+    if (schemeId)     appScopeFilter.schemeId      = schemeId;
+    if (startDate || endDate) {
+      appScopeFilter.appliedAt = {};
+      if (startDate) appScopeFilter.appliedAt.$gte = new Date(startDate);
+      if (endDate)   appScopeFilter.appliedAt.$lte = new Date(new Date(endDate).setHours(23, 59, 59, 999));
+    }
+    if (search) {
+      const re = { $regex: search, $options: 'i' };
+      appScopeFilter.$or = [{ voterName: re }, { epicNo: re }, { mobile: re }];
+    }
+
+    // ── Status colour map ──
+    const STATUS_COLORS = {
+      Approved:   { bg: 'FF16a34a', fg: 'FFFFFFFF' },
+      Completed:  { bg: 'FF15803d', fg: 'FFFFFFFF' },
+      Rejected:   { bg: 'FFdc2626', fg: 'FFFFFFFF' },
+      Submitted:  { bg: 'FF2563eb', fg: 'FFFFFFFF' },
+      Pending:    { bg: 'FFf59e0b', fg: 'FFFFFFFF' },
+      Processing: { bg: 'FF7c3aed', fg: 'FFFFFFFF' },
+      Called:     { bg: 'FF0891b2', fg: 'FFFFFFFF' },
+      Verified:   { bg: 'FF059669', fg: 'FFFFFFFF' },
+    };
+
+    // ── Create workbook ──
+    const workbook  = new ExcelJS.Workbook();
+    workbook.creator = 'BJP Nalam Thittam';
+    const sheet = workbook.addWorksheet('Applications', {
+      views: [{ state: 'frozen', ySplit: 1 }]
+    });
+
+    // Column definitions with widths
+    sheet.columns = [
+      { header: 'S.No',         key: 'sno',      width: 6  },
+      { header: 'Voter Name',   key: 'name',     width: 22 },
+      { header: 'EPIC Number',  key: 'epic',     width: 16 },
+      { header: 'Mobile No',    key: 'mobile',   width: 14 },
+      { header: 'District',     key: 'district', width: 18 },
+      { header: 'Assembly',     key: 'assembly', width: 20 },
+      { header: 'Booth No',     key: 'booth',    width: 9  },
+      { header: 'Scheme Name',  key: 'scheme',   width: 30 },
+      { header: 'Cluster',      key: 'cluster',  width: 16 },
+      { header: 'Status',       key: 'status',   width: 13 },
+      { header: 'Applied Date', key: 'date',     width: 14 },
+    ];
+
+    // Style header row — saffron BJP orange
+    const headerRow = sheet.getRow(1);
+    headerRow.eachCell(cell => {
+      cell.fill   = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFFF6B00' } };
+      cell.font   = { bold: true, color: { argb: 'FFFFFFFF' }, size: 11, name: 'Calibri' };
+      cell.alignment = { vertical: 'middle', horizontal: 'center', wrapText: false };
+      cell.border = {
+        bottom: { style: 'medium', color: { argb: 'FFCC5500' } }
+      };
+    });
+    headerRow.height = 22;
+
+    // Stream rows from MongoDB cursor
+    const cursor = SchemeApplication.find(appScopeFilter)
+      .sort({ appliedAt: -1 })
+      .select('voterName epicNo mobile district assemblyName boothNo schemeName clusterName status appliedAt')
+      .lean()
+      .cursor();
+
+    let idx = 0;
+    for await (const doc of cursor) {
+      idx++;
+      const appliedDate = doc.appliedAt ? new Date(doc.appliedAt).toLocaleDateString('en-IN') : '—';
+      const statusColors = STATUS_COLORS[doc.status] || { bg: 'FFe5e7eb', fg: 'FF374151' };
+
+      const row = sheet.addRow({
+        sno:      idx,
+        name:     doc.voterName  || '—',
+        epic:     doc.epicNo     || '—',
+        mobile:   doc.mobile     || '—',
+        district: doc.district   || '—',
+        assembly: doc.assemblyName || '—',
+        booth:    doc.boothNo    || '—',
+        scheme:   doc.schemeName || '—',
+        cluster:  doc.clusterName || '—',
+        status:   doc.status     || '—',
+        date:     appliedDate,
+      });
+
+      // Alternate row banding
+      const rowBg = idx % 2 === 0 ? 'FFF9FAFB' : 'FFFFFFFF';
+      row.eachCell({ includeEmpty: true }, (cell, colNum) => {
+        cell.alignment = { vertical: 'middle', wrapText: false };
+        if (colNum !== 10) {
+          // Non-status cells — alternate banding
+          cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: rowBg } };
+        }
+      });
+
+      // Mobile as text — prevent scientific notation
+      const mobileCell = row.getCell('mobile');
+      mobileCell.numFmt = '@';
+
+      // Status cell — coloured pill
+      const statusCell = row.getCell('status');
+      statusCell.fill  = { type: 'pattern', pattern: 'solid', fgColor: { argb: statusColors.bg } };
+      statusCell.font  = { bold: true, color: { argb: statusColors.fg }, size: 10 };
+      statusCell.alignment = { horizontal: 'center', vertical: 'middle' };
+    }
+
+    // Send as .xlsx download
+    const filename = `BJP_Applications_${Date.now()}.xlsx`;
+    res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+    res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+    await workbook.xlsx.write(res);
+    res.end();
+
+  } catch (error) {
+    console.error('[exportApplicationsExcel Error]:', error);
+    if (!res.headersSent) res.status(500).json({ success: false, message: error.message });
+    else res.end();
+  }
+};
+
 module.exports = {
   adminLogin,
   getAssembliesList,
@@ -1096,6 +1241,7 @@ module.exports = {
   getMemberReferrals,
   getApplicationsList,
   exportApplicationsCsv,
+  exportApplicationsExcel,
   getFilterMeta,
   updateApplicationStatus,
   createAdminCredential,

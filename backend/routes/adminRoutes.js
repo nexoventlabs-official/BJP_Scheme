@@ -10,6 +10,7 @@ const {
   getMemberReferrals,
   getApplicationsList,
   exportApplicationsCsv,
+  exportApplicationsExcel,
   getFilterMeta,
   updateApplicationStatus,
   createAdminCredential,
@@ -30,6 +31,7 @@ router.get('/filter-meta', protectAdmin, getFilterMeta);
 router.get('/member-referrals', protectAdmin, getMemberReferrals);
 router.get('/applications', protectAdmin, getApplicationsList);
 router.get('/export-csv', protectAdmin, exportApplicationsCsv);
+router.get('/export-excel', protectAdmin, exportApplicationsExcel);
 router.put('/applications/:id/status', protectAdmin, updateApplicationStatus);
 router.post('/create-credential', protectAdmin, authorizeRoles('SUPER_ADMIN'), createAdminCredential);
 router.get('/credentials', protectAdmin, authorizeRoles('SUPER_ADMIN'), getAllAdmins);
