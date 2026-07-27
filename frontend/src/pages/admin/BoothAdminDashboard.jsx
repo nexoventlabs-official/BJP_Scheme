@@ -36,15 +36,11 @@ const BoothAdminDashboard = () => {
     try { window.history.pushState({}, '', `/admin/booth/${pageKey}`); } catch (e) {}
   };
 
-  // ── Fetch stats ──
+  // ── Fetch stats (unfiltered for Booth Overview) ──
   const fetchStats = async () => {
     try {
       setLoadingStats(true);
-      const params = new URLSearchParams({
-        ...(statusFilter && { status: statusFilter }),
-        ...(searchQuery  && { search: searchQuery })
-      });
-      const res = await API.get(`/admin/dashboard-stats?${params}`);
+      const res = await API.get('/admin/dashboard-stats');
       if (res.data.success) setStatsData(res.data);
     } catch (err) {
       console.error('Error loading stats:', err);

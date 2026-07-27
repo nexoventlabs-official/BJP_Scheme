@@ -40,17 +40,11 @@ const DistrictAdminDashboard = () => {
     } catch (e) {}
   };
 
-  // Fetch dashboard stats
+  // Fetch dashboard stats (unfiltered for District Overview)
   const fetchStats = async () => {
     try {
       setLoadingStats(true);
-      const params = new URLSearchParams({
-        ...(assemblyFilter && { assemblyName: assemblyFilter }),
-        ...(boothFilter    && { boothNo: boothFilter }),
-        ...(statusFilter   && { status: statusFilter }),
-        ...(searchQuery    && { search: searchQuery })
-      });
-      const res = await API.get(`/admin/dashboard-stats?${params}`);
+      const res = await API.get('/admin/dashboard-stats');
       if (res.data.success) setStatsData(res.data);
     } catch (err) {
       console.error('Error loading stats:', err);

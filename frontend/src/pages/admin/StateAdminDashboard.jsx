@@ -107,18 +107,11 @@ const StateAdminDashboard = () => {
     }
   };
 
-  // ── Fetch Stats (incorporating active jurisdiction filters) ──
+  // ── Fetch Overall Stats (Unfiltered for Overview Dashboard) ──
   const fetchStats = async () => {
     try {
       setLoadingStats(true);
-      const params = new URLSearchParams({
-        ...(districtFilter && { district: districtFilter }),
-        ...(assemblyFilter && { assemblyName: assemblyFilter }),
-        ...(boothFilter    && { boothNo: boothFilter }),
-        ...(statusFilter   && { status: statusFilter }),
-        ...(searchQuery    && { search: searchQuery })
-      });
-      const res = await API.get(`/admin/dashboard-stats?${params}`);
+      const res = await API.get('/admin/dashboard-stats');
       if (res.data.success) setStatsData(res.data);
     } catch (err) {
       console.error('Error loading stats:', err);
@@ -160,11 +153,11 @@ const StateAdminDashboard = () => {
 
   useEffect(() => {
     fetchInitialMeta();
+    fetchStats();
   }, []);
 
-  // Re-fetch stats & voters whenever any filter changes
+  // Re-fetch voters whenever any filter changes
   useEffect(() => {
-    fetchStats();
     fetchVoters(1);
     setCurrentPage(1);
   }, [districtFilter, assemblyFilter, boothFilter, statusFilter, searchQuery]);
@@ -279,13 +272,7 @@ const StateAdminDashboard = () => {
     );
   };
 
-  const activeScopeText = boothFilter
-    ? `Booth ${boothFilter} (${assemblyFilter}, ${districtFilter})`
-    : assemblyFilter
-    ? `${assemblyFilter} Assembly (${districtFilter || 'All Districts'})`
-    : districtFilter
-    ? `${districtFilter} District`
-    : 'All Districts across Tamil Nadu';
+  const activeScopeText = 'All Districts across Tamil Nadu';
 
   return (
     <div style={{ width: '100%', paddingBottom: '60px', boxSizing: 'border-box' }}>

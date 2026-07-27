@@ -118,18 +118,11 @@ const SuperAdminDashboard = () => {
     }
   };
 
-  // ── Fetch Stats ──
+  // ── Fetch Overall Stats (Unfiltered for Overview Dashboard) ──
   const fetchStats = async () => {
     try {
       setLoadingStats(true);
-      const params = new URLSearchParams({
-        ...(districtFilter && { district: districtFilter }),
-        ...(assemblyFilter && { assemblyName: assemblyFilter }),
-        ...(boothFilter    && { boothNo: boothFilter }),
-        ...(statusFilter   && { status: statusFilter }),
-        ...(searchQuery    && { search: searchQuery })
-      });
-      const res = await API.get(`/admin/dashboard-stats?${params}`);
+      const res = await API.get('/admin/dashboard-stats');
       if (res.data.success) setStatsData(res.data);
     } catch (err) {
       console.error('Error loading stats:', err);
@@ -202,11 +195,11 @@ const SuperAdminDashboard = () => {
 
   useEffect(() => {
     fetchInitialMeta();
+    fetchStats();
     fetchLoginsAndCreds();
   }, []);
 
   useEffect(() => {
-    fetchStats();
     fetchVoters(1);
     setCurrentPage(1);
   }, [districtFilter, assemblyFilter, boothFilter, statusFilter, searchQuery]);
@@ -345,13 +338,7 @@ const SuperAdminDashboard = () => {
     );
   };
 
-  const activeScopeText = boothFilter
-    ? `Booth ${boothFilter} (${assemblyFilter}, ${districtFilter})`
-    : assemblyFilter
-    ? `${assemblyFilter} Assembly (${districtFilter || 'All Districts'})`
-    : districtFilter
-    ? `${districtFilter} District`
-    : 'Full Statewide Governance';
+  const activeScopeText = 'Full Statewide Governance';
 
   return (
     <div style={{ width: '100%', paddingBottom: '60px', boxSizing: 'border-box' }}>

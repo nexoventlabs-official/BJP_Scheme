@@ -41,16 +41,11 @@ const AssemblyAdminDashboard = () => {
     try { window.history.pushState({}, '', `/admin/assembly/${pageKey}`); } catch (e) {}
   };
 
-  // ── Fetch stats ──
+  // ── Fetch stats (unfiltered for Assembly Overview) ──
   const fetchStats = async () => {
     try {
       setLoadingStats(true);
-      const params = new URLSearchParams({
-        ...(boothFilter  && { boothNo: boothFilter }),
-        ...(statusFilter && { status: statusFilter }),
-        ...(searchQuery  && { search: searchQuery })
-      });
-      const res = await API.get(`/admin/dashboard-stats?${params}`);
+      const res = await API.get('/admin/dashboard-stats');
       if (res.data.success) setStatsData(res.data);
     } catch (err) {
       console.error('Error loading stats:', err);

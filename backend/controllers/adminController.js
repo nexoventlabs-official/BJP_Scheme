@@ -178,32 +178,10 @@ const getAssemblyBoothCredentials = async (req, res) => {
 const getDashboardStats = async (req, res) => {
   try {
     const admin = req.admin;
-    const { district, assemblyName, boothNo, status, search, schemeName } = req.query;
-    let scopeQuery = getAdminScopeQuery(admin);
+    const scopeQuery = getAdminScopeQuery(admin);
 
-    if (district)     scopeQuery.district = new RegExp('^' + district.trim() + '$', 'i');
-    if (assemblyName) scopeQuery.assemblyName = new RegExp('^' + assemblyName.trim() + '$', 'i');
-    if (boothNo)      scopeQuery.boothNo = String(boothNo).trim();
-    if (status)       scopeQuery.status = status;
-    if (schemeName)   scopeQuery.schemeName = new RegExp(schemeName.trim(), 'i');
-
-    if (search) {
-      const r = new RegExp(search.trim(), 'i');
-      scopeQuery.$or = [{ voterName: r }, { epicNo: r }, { mobile: r }, { schemeName: r }];
-    }
-
-    // Build userScopeQuery for User document count
-    let userScopeQuery = { ...scopeQuery };
-    delete userScopeQuery.status;
-    delete userScopeQuery.schemeName;
-
-    if (status || schemeName) {
-      const filteredEpicNos = await SchemeApplication.distinct('epicNo', scopeQuery);
-      userScopeQuery.epicNo = { $in: filteredEpicNos };
-    }
-
-    // Count from WRITE DB: users who registered/requested schemes matching filter
-    const totalVotersRequested = await User.countDocuments(userScopeQuery);
+    // Count from WRITE DB: users who registered/requested schemes
+    const totalVotersRequested = await User.countDocuments(scopeQuery);
     const totalApplications = await SchemeApplication.countDocuments(scopeQuery);
 
     // Count from READ DB: instant from in-memory cache
