@@ -385,6 +385,11 @@ const getDashboardStats = async (req, res) => {
     }));
 
     const popularityObj = {};
+    // Pre-populate all 23 schemes with count 0 so every scheme is dynamically visible
+    CANONICAL_SCHEMES.forEach(s => {
+      popularityObj[s.name] = { _id: s.name, count: 0, cluster: s.cluster };
+    });
+
     rawPopularity.forEach(item => {
       const rawStr = String(item._id || '').trim().toLowerCase();
       let matched = CANONICAL_SCHEMES.find(s => String(s.id) === String(item._id) || s.name.toLowerCase() === rawStr);
