@@ -480,6 +480,7 @@ const StateAdminDashboard = () => {
             onBack={() => setSelectedVoterTimeline(null)}
             onUpdateAppStatus={handleUpdateAppStatus}
             onSelectVoter={(voter) => setSelectedVoterTimeline(voter)}
+            targetSchemeName={schemeFilter}
           />
         ) : (
           <div className="campsite-card" style={{ width: '100%', padding: '24px', boxSizing: 'border-box' }}>

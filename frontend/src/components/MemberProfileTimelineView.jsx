@@ -5,13 +5,22 @@ import {
   ArrowLeft, User, Phone, MapPin, Award, Calendar, CheckCircle2, Clock, PhoneCall, RefreshCw, AlertCircle, Share2, ChevronRight, Users
 } from 'lucide-react';
 
-const MemberProfileTimelineView = ({ voterData, onBack, onUpdateAppStatus, onSelectVoter }) => {
+const MemberProfileTimelineView = ({ voterData, onBack, onUpdateAppStatus, onSelectVoter, targetSchemeName }) => {
   if (!voterData) return null;
 
   const { voterName, epicNo, mobile, district, assemblyName, boothNo, referralCode, applications = [] } = voterData;
 
   const [appsState, setAppsState] = useState(applications);
-  const [selectedAppId, setSelectedAppId] = useState(applications[0]?._id);
+  const [selectedAppId, setSelectedAppId] = useState(() => {
+    if (targetSchemeName && applications?.length) {
+      const match = applications.find(a => 
+        a.schemeName && a.schemeName.toLowerCase().includes(targetSchemeName.toLowerCase())
+      );
+      if (match) return match._id;
+    }
+    return applications[0]?._id;
+  });
+
   const [notesState, setNotesState] = useState({});
   const [savingAppId, setSavingAppId] = useState(null);
   const [toastMsg, setToastMsg] = useState('');
@@ -21,6 +30,19 @@ const MemberProfileTimelineView = ({ voterData, onBack, onUpdateAppStatus, onSel
   const [loadingReferrals, setLoadingReferrals] = useState(true);
 
   const statusOptions = ['Pending', 'Submitted', 'Processing', 'Completed', 'Called', 'Verified', 'Rejected'];
+
+  useEffect(() => {
+    setAppsState(applications);
+    if (targetSchemeName && applications?.length) {
+      const match = applications.find(a => 
+        a.schemeName && a.schemeName.toLowerCase().includes(targetSchemeName.toLowerCase())
+      );
+      if (match) setSelectedAppId(match._id);
+      else if (applications[0]) setSelectedAppId(applications[0]._id);
+    } else if (applications[0]) {
+      setSelectedAppId(applications[0]._id);
+    }
+  }, [targetSchemeName, voterData]);
 
   useEffect(() => {
     const fetchReferrals = async () => {
