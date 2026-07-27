@@ -21,53 +21,64 @@ const getAssemblyMetadata = async () => {
 
     const list = [];
     const distMap = {};
+    const assCols = collections.filter(c => c.name.startsWith('ass_'));
 
-    for (let col of collections) {
-      if (!col.name.startsWith('ass_')) continue;
-      const sample = await voterDb.collection(col.name).findOne({}, { projection: { DISTRICT: 1, ASSEMBLY_NO: 1, ASSEMBLY_NAME: 1 } });
-      if (sample) {
-        const assemblyNo = String(sample.ASSEMBLY_NO || col.name.replace('ass_', ''));
-        const assemblyName = sample.ASSEMBLY_NAME || (`Assembly ${assemblyNo}`);
-        const district = sample.DISTRICT || 'TAMIL NADU';
-        const slug = cleanSlug(assemblyName);
-
-        if (!distMap[district]) {
-          distMap[district] = {
-            district,
-            slug: cleanSlug(district),
-            assembliesCount: 0
-          };
-        }
-        distMap[district].assembliesCount++;
-
-        // Build district -> collections map for fast voter roll counting
-        if (!districtCollectionMap[district]) districtCollectionMap[district] = [];
-        districtCollectionMap[district].push(col.name);
-
-        // Count total voters using $collStats (reads from metadata — O(1), no full scan)
-        let voterCount = 0;
+    const items = await Promise.all(
+      assCols.map(async (col) => {
         try {
-          const statsResult = await voterDb.collection(col.name).aggregate([
-            { $collStats: { count: {} } }
-          ]).toArray();
-          voterCount = (statsResult[0] && statsResult[0].count) ? statsResult[0].count : 0;
-        } catch {
-          // fallback: countDocuments if $collStats not supported
-          voterCount = await voterDb.collection(col.name).countDocuments({});
-        }
-        assemblyVoterCount[assemblyName.toUpperCase()] = (assemblyVoterCount[assemblyName.toUpperCase()] || 0) + voterCount;
-        districtVoterCount[district] = (districtVoterCount[district] || 0) + voterCount;
+          const sample = await voterDb.collection(col.name).findOne({}, { projection: { DISTRICT: 1, ASSEMBLY_NO: 1, ASSEMBLY_NAME: 1 } });
+          if (!sample) return null;
 
-        list.push({
-          colName: col.name,
-          assemblyNo,
-          assemblyName,
+          const assemblyNo = String(sample.ASSEMBLY_NO || col.name.replace('ass_', ''));
+          const assemblyName = sample.ASSEMBLY_NAME || (`Assembly ${assemblyNo}`);
+          const district = sample.DISTRICT || 'TAMIL NADU';
+          const slug = cleanSlug(assemblyName);
+
+          let voterCount = 0;
+          try {
+            const statsResult = await voterDb.collection(col.name).aggregate([
+              { $collStats: { count: {} } }
+            ]).toArray();
+            voterCount = (statsResult[0] && statsResult[0].count) ? statsResult[0].count : 0;
+          } catch {
+            voterCount = await voterDb.collection(col.name).countDocuments({});
+          }
+
+          return {
+            colName: col.name,
+            assemblyNo,
+            assemblyName,
+            district,
+            slug,
+            label: `${assemblyNo} - ${assemblyName}`,
+            voterCount
+          };
+        } catch {
+          return null;
+        }
+      })
+    );
+
+    items.filter(Boolean).forEach(item => {
+      const { colName, assemblyNo, assemblyName, district, slug, label, voterCount } = item;
+
+      if (!distMap[district]) {
+        distMap[district] = {
           district,
-          slug,
-          label: `${assemblyNo} - ${assemblyName}`
-        });
+          slug: cleanSlug(district),
+          assembliesCount: 0
+        };
       }
-    }
+      distMap[district].assembliesCount++;
+
+      if (!districtCollectionMap[district]) districtCollectionMap[district] = [];
+      districtCollectionMap[district].push(colName);
+
+      assemblyVoterCount[assemblyName.toUpperCase()] = (assemblyVoterCount[assemblyName.toUpperCase()] || 0) + voterCount;
+      districtVoterCount[district] = (districtVoterCount[district] || 0) + voterCount;
+
+      list.push({ colName, assemblyNo, assemblyName, district, slug, label });
+    });
 
     list.sort((a, b) => parseInt(a.assemblyNo) - parseInt(b.assemblyNo));
     assemblyCache = list;
