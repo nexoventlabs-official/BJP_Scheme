@@ -599,41 +599,34 @@ const getApplicationsList = async (req, res) => {
       }
     }
 
-    // ── Fast Path: Voter-based pagination (guarantees exactly limitNum voters per page) ──
+    // ── Fast Path: Two-step voter-based pagination (avoids MongoDB 32MB sort limit) ──
     if (!isExport) {
       const voterSkip = (pageNum - 1) * limitNum;
 
-      // Run in parallel: counts + status breakdown + paginated voter groups
-      const [totalAppsCount, rawEpicList, statusGroup, voterAgg] = await Promise.all([
+      // Step 1: Lightweight aggregation — only epicNo + latestAt (tiny memory, no $$ROOT)
+      // Run in parallel with counts and status breakdown
+      const [totalAppsCount, rawEpicList, statusGroup, epicPage] = await Promise.all([
         SchemeApplication.countDocuments(appScopeFilter),
         SchemeApplication.distinct('epicNo', appScopeFilter),
         SchemeApplication.aggregate([
           { $match: appScopeFilter },
           { $group: { _id: '$status', count: { $sum: 1 } } }
-        ]),
+        ], { allowDiskUse: true }),
         SchemeApplication.aggregate([
           { $match: appScopeFilter },
-          { $sort: { appliedAt: -1, _id: -1 } },
-          // Group by voter key — collect all their apps
+          // Group by voter — only keep the 3 tiny fields needed for sorting + identity
           {
             $group: {
-              _id: { $ifNull: ['$epicNo', { $ifNull: [{ $toString: '$userId' }, '$mobile'] }] },
-              epicNo:      { $first: '$epicNo' },
-              voterName:   { $first: '$voterName' },
-              mobile:      { $first: '$mobile' },
-              district:    { $first: '$district' },
-              assemblyName:{ $first: '$assemblyName' },
-              boothNo:     { $first: '$boothNo' },
-              userId:      { $first: '$userId' },
-              referralCode:{ $first: '$referralCode' },
-              latestAt:    { $max: '$appliedAt' },
-              applications:{ $push: '$$ROOT' }
+              _id:      { $ifNull: ['$epicNo', { $ifNull: [{ $toString: '$userId' }, '$mobile'] }] },
+              epicNo:   { $first: '$epicNo' },
+              latestAt: { $max: '$appliedAt' }
             }
           },
           { $sort: { latestAt: -1 } },
-          { $skip: voterSkip },
-          { $limit: limitNum }
-        ])
+          { $skip:  voterSkip },
+          { $limit: limitNum },
+          { $project: { _id: 1, epicNo: 1 } }
+        ], { allowDiskUse: true })
       ]);
 
       const distinctVoterCount = rawEpicList.length || totalAppsCount;
@@ -642,18 +635,49 @@ const getApplicationsList = async (req, res) => {
       const statusCounts = { Approved: 0, Pending: 0, Submitted: 0, Processing: 0, Called: 0, Verified: 0, Completed: 0, Rejected: 0 };
       statusGroup.forEach(g => { if (g._id) statusCounts[g._id] = g.count; });
 
-      const voters = voterAgg.map(v => ({
-        _id:          v.userId || v._id,
-        epicNo:       v.epicNo || 'N/A',
-        voterName:    v.voterName || 'N/A',
-        mobile:       v.mobile || 'N/A',
-        district:     v.district || 'N/A',
-        assemblyName: v.assemblyName || 'N/A',
-        boothNo:      v.boothNo || 'N/A',
-        userId:       v.userId,
-        referralCode: v.referralCode,
-        applications: v.applications
-      }));
+      // Step 2: Fetch full application docs for just these 20 voter EPICs
+      const pageEpicNos  = epicPage.map(e => e.epicNo).filter(Boolean);
+      const pageVoterIds = epicPage.map(e => e._id).filter(id => id && !pageEpicNos.includes(id));
+
+      const rawApps = await SchemeApplication.find({
+        $and: [
+          appScopeFilter,
+          { $or: [
+            { epicNo: { $in: pageEpicNos } },
+            { mobile: { $in: pageVoterIds } }
+          ]}
+        ]
+      }).sort({ appliedAt: -1 }).lean();
+
+      // Group apps by voter key
+      const voterMap = {};
+      // Preserve the sorted order from epicPage
+      epicPage.forEach(e => { voterMap[e._id] = null; });
+
+      rawApps.forEach(app => {
+        const key = app.epicNo || (app.userId ? String(app.userId) : app.mobile);
+        if (!key) return;
+        if (!voterMap[key]) {
+          voterMap[key] = {
+            _id:          app.userId || key,
+            epicNo:       app.epicNo || 'N/A',
+            voterName:    app.voterName || 'N/A',
+            mobile:       app.mobile || 'N/A',
+            district:     app.district || 'N/A',
+            assemblyName: app.assemblyName || 'N/A',
+            boothNo:      app.boothNo || 'N/A',
+            userId:       app.userId,
+            referralCode: app.referralCode,
+            applications: []
+          };
+        }
+        voterMap[key].applications.push(app);
+      });
+
+      // Return voters in the same order as epicPage (latest first)
+      const voters = epicPage
+        .map(e => voterMap[e._id])
+        .filter(Boolean);
 
       return res.status(200).json({
         success: true,
@@ -685,7 +709,7 @@ const getApplicationsList = async (req, res) => {
           latestAppliedAt: { $max: '$appliedAt' }
         }
       }
-    ]);
+    ], { allowDiskUse: true });
 
     const totalVoters = applicantAgg.length;
     const totalPages  = Math.ceil(totalVoters / limitNum) || 1;
