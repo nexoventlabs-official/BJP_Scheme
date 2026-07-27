@@ -543,13 +543,15 @@ const getApplicationsList = async (req, res) => {
     const adminScope = getAdminScopeQuery(admin);
     const appScopeFilter = { ...adminScope };
 
-    if (district)     appScopeFilter.district     = new RegExp('^' + district.trim() + '$', 'i');
-    if (assemblyName) appScopeFilter.assemblyName = new RegExp('^' + assemblyName.trim() + '$', 'i');
-    if (boothNo)      appScopeFilter.boothNo      = String(boothNo);
-    if (status)       appScopeFilter.status       = new RegExp('^' + status.trim() + '$', 'i');
+    const isValidFilterVal = (val) => val && val !== 'undefined' && val !== 'null' && val !== 'all' && String(val).trim() !== '';
 
-    const targetScheme = schemeName || scheme || req.query.schemeId;
-    if (targetScheme) {
+    if (isValidFilterVal(district))     appScopeFilter.district     = new RegExp('^' + district.trim() + '$', 'i');
+    if (isValidFilterVal(assemblyName)) appScopeFilter.assemblyName = new RegExp('^' + assemblyName.trim() + '$', 'i');
+    if (isValidFilterVal(boothNo))      appScopeFilter.boothNo      = String(boothNo).trim();
+    if (isValidFilterVal(status))       appScopeFilter.status       = new RegExp('^' + status.trim() + '$', 'i');
+
+    const targetScheme = schemeName || req.query.scheme || req.query.schemeId;
+    if (isValidFilterVal(targetScheme)) {
       const clean = String(targetScheme).trim();
       let matchedScheme = BJP_SCHEMES.find(s =>
         String(s.id) === clean ||
@@ -1007,12 +1009,13 @@ const exportApplicationsCsv = async (req, res) => {
     if (admin.role === 'DISTRICT_ADMIN')    appScopeFilter.district     = admin.district;
     if (admin.role === 'ASSEMBLY_ADMIN')   appScopeFilter.assemblyName = admin.assemblyName;
     if (admin.role === 'BOOTH_ADMIN') { appScopeFilter.assemblyName = admin.assemblyName; appScopeFilter.boothNo = admin.boothNo; }
-    if (district)     appScopeFilter.district     = district;
-    if (assemblyName) appScopeFilter.assemblyName = assemblyName;
-    if (boothNo)      appScopeFilter.boothNo      = boothNo;
-    if (status)       appScopeFilter.status        = status;
+    const isValidFilterVal = (val) => val && val !== 'undefined' && val !== 'null' && val !== 'all' && String(val).trim() !== '';
+    if (isValidFilterVal(district))     appScopeFilter.district     = district;
+    if (isValidFilterVal(assemblyName)) appScopeFilter.assemblyName = assemblyName;
+    if (isValidFilterVal(boothNo))      appScopeFilter.boothNo      = boothNo;
+    if (isValidFilterVal(status))       appScopeFilter.status        = status;
     const targetScheme = schemeName || req.query.scheme || req.query.schemeId;
-    if (targetScheme) {
+    if (isValidFilterVal(targetScheme)) {
       const clean = String(targetScheme).trim();
       let matchedScheme = BJP_SCHEMES.find(s =>
         String(s.id) === clean ||
@@ -1110,12 +1113,13 @@ const exportApplicationsExcel = async (req, res) => {
       appScopeFilter.assemblyName = user.assemblyName;
       appScopeFilter.boothNo = String(user.boothNo);
     }
-    if (district)      appScopeFilter.district     = district;
-    if (assemblyName) appScopeFilter.assemblyName  = assemblyName;
-    if (boothNo)      appScopeFilter.boothNo       = String(boothNo);
-    if (status)       appScopeFilter.status        = status;
+    const isValidFilterVal = (val) => val && val !== 'undefined' && val !== 'null' && val !== 'all' && String(val).trim() !== '';
+    if (isValidFilterVal(district))      appScopeFilter.district     = district;
+    if (isValidFilterVal(assemblyName)) appScopeFilter.assemblyName  = assemblyName;
+    if (isValidFilterVal(boothNo))      appScopeFilter.boothNo       = String(boothNo);
+    if (isValidFilterVal(status))       appScopeFilter.status        = status;
     const targetSchemeExcel = req.query.schemeName || req.query.scheme || schemeId;
-    if (targetSchemeExcel) {
+    if (isValidFilterVal(targetSchemeExcel)) {
       const clean = String(targetSchemeExcel).trim();
       let matchedScheme = BJP_SCHEMES.find(s =>
         String(s.id) === clean ||
