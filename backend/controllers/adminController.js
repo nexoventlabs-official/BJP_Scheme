@@ -599,60 +599,72 @@ const getApplicationsList = async (req, res) => {
       }
     }
 
-    // ── Fast Path for Normal Paginated Display (e.g. Reports preview / App list) ──
+    // ── Fast Path: Voter-based pagination (guarantees exactly limitNum voters per page) ──
     if (!isExport) {
-      const [totalAppsCount, rawEpicList, statusGroup, rawApps] = await Promise.all([
+      const voterSkip = (pageNum - 1) * limitNum;
+
+      // Run in parallel: counts + status breakdown + paginated voter groups
+      const [totalAppsCount, rawEpicList, statusGroup, voterAgg] = await Promise.all([
         SchemeApplication.countDocuments(appScopeFilter),
         SchemeApplication.distinct('epicNo', appScopeFilter),
         SchemeApplication.aggregate([
           { $match: appScopeFilter },
           { $group: { _id: '$status', count: { $sum: 1 } } }
         ]),
-        SchemeApplication.find(appScopeFilter)
-          .sort({ appliedAt: -1, _id: -1 })
-          .skip(skip)
-          .limit(limitNum)
-          .lean()
+        SchemeApplication.aggregate([
+          { $match: appScopeFilter },
+          { $sort: { appliedAt: -1, _id: -1 } },
+          // Group by voter key — collect all their apps
+          {
+            $group: {
+              _id: { $ifNull: ['$epicNo', { $ifNull: [{ $toString: '$userId' }, '$mobile'] }] },
+              epicNo:      { $first: '$epicNo' },
+              voterName:   { $first: '$voterName' },
+              mobile:      { $first: '$mobile' },
+              district:    { $first: '$district' },
+              assemblyName:{ $first: '$assemblyName' },
+              boothNo:     { $first: '$boothNo' },
+              userId:      { $first: '$userId' },
+              referralCode:{ $first: '$referralCode' },
+              latestAt:    { $max: '$appliedAt' },
+              applications:{ $push: '$$ROOT' }
+            }
+          },
+          { $sort: { latestAt: -1 } },
+          { $skip: voterSkip },
+          { $limit: limitNum }
+        ])
       ]);
 
-      const totalPages = Math.ceil(totalAppsCount / limitNum) || 1;
-      const statusCounts = { Approved: 0, Pending: 0, Submitted: 0, Processing: 0, Called: 0, Verified: 0, Completed: 0, Rejected: 0 };
-      statusGroup.forEach(g => {
-        if (g._id) statusCounts[g._id] = g.count;
-      });
+      const distinctVoterCount = rawEpicList.length || totalAppsCount;
+      const totalPages = Math.ceil(distinctVoterCount / limitNum) || 1;
 
-      // Group paginated items by voter
-      const voterMap = {};
-      rawApps.forEach(app => {
-        const key = app.epicNo || (app.userId ? String(app.userId) : app.mobile);
-        if (!key) return;
-        if (!voterMap[key]) {
-          voterMap[key] = {
-            _id: app.userId || key,
-            epicNo: app.epicNo || 'N/A',
-            voterName: app.voterName || 'N/A',
-            mobile: app.mobile || 'N/A',
-            district: app.district || 'N/A',
-            assemblyName: app.assemblyName || 'N/A',
-            boothNo: app.boothNo || 'N/A',
-            userId: app.userId,
-            referralCode: app.referralCode,
-            applications: []
-          };
-        }
-        voterMap[key].applications.push(app);
-      });
+      const statusCounts = { Approved: 0, Pending: 0, Submitted: 0, Processing: 0, Called: 0, Verified: 0, Completed: 0, Rejected: 0 };
+      statusGroup.forEach(g => { if (g._id) statusCounts[g._id] = g.count; });
+
+      const voters = voterAgg.map(v => ({
+        _id:          v.userId || v._id,
+        epicNo:       v.epicNo || 'N/A',
+        voterName:    v.voterName || 'N/A',
+        mobile:       v.mobile || 'N/A',
+        district:     v.district || 'N/A',
+        assemblyName: v.assemblyName || 'N/A',
+        boothNo:      v.boothNo || 'N/A',
+        userId:       v.userId,
+        referralCode: v.referralCode,
+        applications: v.applications
+      }));
 
       return res.status(200).json({
         success: true,
-        voters: Object.values(voterMap),
+        voters,
         totalApplications: totalAppsCount,
-        totalVoters: rawEpicList.length || totalAppsCount,
+        totalVoters: distinctVoterCount,
         statusCounts,
         totalPages,
         currentPage: pageNum,
         limit: limitNum,
-        applications: rawApps
+        applications: voters.flatMap(v => v.applications)
       });
     }
 
