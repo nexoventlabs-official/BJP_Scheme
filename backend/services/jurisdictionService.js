@@ -271,6 +271,29 @@ const getCollectionForAssembly = async (assemblyName) => {
   return match ? [match.colName] : [];
 };
 
+// Get cached voter roll count for a booth
+const getBoothVoterRollCount = async (assemblyName, boothNo) => {
+  if (!assemblyName || !boothNo) return null;
+  const cacheKey = `${assemblyName.toUpperCase()}::${String(boothNo)}`;
+  if (boothVoterCountCache[cacheKey] !== undefined) {
+    return boothVoterCountCache[cacheKey];
+  }
+
+  try {
+    const assemblies = await getAssemblyMetadata();
+    const match = assemblies.find(a => a.assemblyName.toUpperCase() === assemblyName.toUpperCase());
+    if (!match) return null;
+
+    const voterDb = await getVoterDbClient();
+    const count = await voterDb.collection(match.colName).countDocuments({ PART_NO: String(boothNo) });
+    boothVoterCountCache[cacheKey] = count;
+    return count;
+  } catch (err) {
+    console.error('[getBoothVoterRollCount Error]:', err.message);
+    return null;
+  }
+};
+
 module.exports = {
   getAssemblyMetadata,
   getDistrictCredentialsList,
@@ -281,6 +304,7 @@ module.exports = {
   getCollectionForAssembly,
   getDistrictVoterRollCount,
   getAssemblyVoterRollCount,
+  getBoothVoterRollCount,
   getStateVoterRollCount
 };
 

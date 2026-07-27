@@ -13,6 +13,7 @@ const {
   getCollectionForAssembly,
   getDistrictVoterRollCount,
   getAssemblyVoterRollCount,
+  getBoothVoterRollCount,
   getStateVoterRollCount
 } = require('../services/jurisdictionService');
 
@@ -215,7 +216,7 @@ const getDashboardStats = async (req, res) => {
     const statusCounts = await SchemeApplication.aggregate([
       { $match: scopeQuery },
       { $group: { _id: '$status', count: { $sum: 1 } } }
-    ]);
+    ], { allowDiskUse: true });
 
     const statusMap = {
       Submitted: 0,
@@ -251,7 +252,7 @@ const getDashboardStats = async (req, res) => {
         }
       },
       { $sort: { totalApps: -1 } }
-    ]);
+    ], { allowDiskUse: true });
 
     const districtStats = await Promise.all(
       rawDistrictStats.map(async (d) => {
@@ -289,7 +290,7 @@ const getDashboardStats = async (req, res) => {
       },
       { $sort: { totalApps: -1 } },
       { $limit: 50 }
-    ]);
+    ], { allowDiskUse: true });
 
     const assemblyStats = await Promise.all(
       rawAssemblyStats.map(async (a) => {
@@ -327,36 +328,64 @@ const getDashboardStats = async (req, res) => {
       },
       { $sort: { totalApps: -1 } },
       { $limit: 100 }
-    ]);
+    ], { allowDiskUse: true });
 
     const assembliesMeta = await getAssemblyMetadata();
     const voterDb = await getVoterDbClient();
 
-    const boothStats = await Promise.all(
-      rawBoothStats.map(async (b) => {
-        let rollCount = null;
-        if (b._id.assemblyName && b._id.boothNo) {
-          const match = assembliesMeta.find(a => a.assemblyName.toLowerCase() === b._id.assemblyName.toLowerCase());
-          if (match) {
-            rollCount = await voterDb.collection(match.colName).countDocuments({ PART_NO: String(b._id.boothNo) });
-          }
+    const boothByCol = {};
+    rawBoothStats.forEach(b => {
+      if (b._id.assemblyName && b._id.boothNo) {
+        const match = assembliesMeta.find(a => a.assemblyName.toLowerCase() === b._id.assemblyName.toLowerCase());
+        if (match) {
+          if (!boothByCol[match.colName]) boothByCol[match.colName] = new Set();
+          boothByCol[match.colName].add(String(b._id.boothNo));
         }
-        return {
-          _id: b._id,
-          totalVoters: rollCount || null,
-          appliedVoters: b.appliedVoters || 0,
-          totalApps: b.totalApps,
-          approved: b.approved,
-          pending: b.pending
-        };
+      }
+    });
+
+    const boothRollCountMap = {};
+    await Promise.all(
+      Object.entries(boothByCol).map(async ([colName, boothSet]) => {
+        try {
+          const boothNos = Array.from(boothSet);
+          const counts = await voterDb.collection(colName).aggregate([
+            { $match: { PART_NO: { $in: boothNos } } },
+            { $group: { _id: '$PART_NO', count: { $sum: 1 } } }
+          ], { allowDiskUse: true }).toArray();
+
+          counts.forEach(c => {
+            boothRollCountMap[`${colName}_${c._id}`] = c.count;
+          });
+        } catch (e) {
+          console.error('[Batch Booth Count Error]:', e.message);
+        }
       })
     );
+
+    const boothStats = rawBoothStats.map(b => {
+      let rollCount = null;
+      if (b._id.assemblyName && b._id.boothNo) {
+        const match = assembliesMeta.find(a => a.assemblyName.toLowerCase() === b._id.assemblyName.toLowerCase());
+        if (match) {
+          rollCount = boothRollCountMap[`${match.colName}_${b._id.boothNo}`] || null;
+        }
+      }
+      return {
+        _id: b._id,
+        totalVoters: rollCount,
+        appliedVoters: b.appliedVoters || 0,
+        totalApps: b.totalApps,
+        approved: b.approved,
+        pending: b.pending
+      };
+    });
 
     const rawPopularity = await SchemeApplication.aggregate([
       { $match: scopeQuery },
       { $group: { _id: '$schemeName', count: { $sum: 1 }, cluster: { $first: '$clusterName' } } },
       { $sort: { count: -1 } }
-    ]);
+    ], { allowDiskUse: true });
 
     const schemeMap = {
       '1': { name: 'PMSBY', cluster: 'Cluster 1 — Insurance Trinity (Daily Wage Workers)' },
@@ -407,7 +436,7 @@ const getDashboardStats = async (req, res) => {
       { $group: { _id: '$referredBy', referralCount: { $sum: 1 } } },
       { $sort: { referralCount: -1 } },
       { $limit: 5 }
-    ]);
+    ], { allowDiskUse: true });
 
     const topReferrers = await Promise.all(
       topReferrersRaw.map(async (item) => {
@@ -609,7 +638,7 @@ const getApplicationsList = async (req, res) => {
         }
       },
       { $sort: { latestAppliedAt: -1 } }
-    ]);
+    ], { allowDiskUse: true });
 
     const totalVoters = applicantAgg.length;
     const totalPages  = Math.ceil(totalVoters / limitNum) || 1;
