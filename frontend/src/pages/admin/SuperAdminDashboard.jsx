@@ -31,6 +31,14 @@ const SuperAdminDashboard = () => {
   const [boothSearchQuery, setBoothSearchQuery] = useState('');
   const [loadingBooths, setLoadingBooths] = useState(false);
 
+  // ── Sub-page Pagination States ──
+  const [distCredPage, setDistCredPage] = useState(1);
+  const [assCredPage, setAssCredPage] = useState(1);
+  const [boothCredPage, setBoothCredPage] = useState(1);
+  const [distStatsPage, setDistStatsPage] = useState(1);
+  const [assStatsPage, setAssStatsPage] = useState(1);
+  const [boothStatsPage, setBoothStatsPage] = useState(1);
+
   // ── Paginated Voters (Applications) ──
   const [voters, setVoters] = useState([]);
   const [loadingVoters, setLoadingVoters] = useState(false);
@@ -272,6 +280,67 @@ const SuperAdminDashboard = () => {
     for (let i = left; i <= right; i++) range.push(i);
     if (right < totalPages) { if (right < totalPages - 1) range.push('...'); range.push(totalPages); }
     return range;
+  };
+
+  const renderPagination = (page, totalItems, itemsPerPage, onPageChange) => {
+    const totalP = Math.ceil(totalItems / itemsPerPage);
+    if (totalP <= 1) return null;
+
+    const startItem = (page - 1) * itemsPerPage + 1;
+    const endItem = Math.min(page * itemsPerPage, totalItems);
+
+    const range = [];
+    const delta = 2;
+    const left = Math.max(1, page - delta);
+    const right = Math.min(totalP, page + delta);
+    if (left > 1) { range.push(1); if (left > 2) range.push('...'); }
+    for (let i = left; i <= right; i++) range.push(i);
+    if (right < totalP) { if (right < totalP - 1) range.push('...'); range.push(totalP); }
+
+    return (
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '12px', marginTop: '16px', paddingTop: '12px', borderTop: '1px solid var(--color-linen)', fontSize: '13px', color: 'var(--color-slate)' }}>
+        <div>
+          Showing <strong>{startItem}</strong> – <strong>{endItem}</strong> of <strong>{totalItems}</strong> entries
+        </div>
+
+        <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+          <button
+            onClick={() => onPageChange(page - 1)}
+            disabled={page === 1}
+            className="btn btn-ghost"
+            style={{ padding: '4px 10px', fontSize: '12px', opacity: page === 1 ? 0.4 : 1 }}
+          >
+            ← Prev
+          </button>
+
+          {range.map((p, idx) => (
+            <button
+              key={idx}
+              disabled={p === '...'}
+              onClick={() => typeof p === 'number' && onPageChange(p)}
+              className={`btn ${p === page ? 'btn-primary' : 'btn-ghost'}`}
+              style={{
+                padding: '4px 10px',
+                fontSize: '12px',
+                fontWeight: p === page ? '700' : '500',
+                minWidth: '32px'
+              }}
+            >
+              {p}
+            </button>
+          ))}
+
+          <button
+            onClick={() => onPageChange(page + 1)}
+            disabled={page === totalP}
+            className="btn btn-ghost"
+            style={{ padding: '4px 10px', fontSize: '12px', opacity: page === totalP ? 0.4 : 1 }}
+          >
+            Next →
+          </button>
+        </div>
+      </div>
+    );
   };
 
   const activeScopeText = boothFilter
@@ -711,7 +780,7 @@ const SuperAdminDashboard = () => {
                     </tr>
                   </thead>
                   <tbody>
-                    {districtCredentials.map((dist) => (
+                    {districtCredentials.slice((distCredPage - 1) * 10, distCredPage * 10).map((dist) => (
                       <tr key={dist.username} style={{ borderBottom: '1px solid var(--color-linen)' }}>
                         <td style={{ padding: '12px', fontWeight: '700', color: 'var(--color-midnight-ink)' }}>{dist.district}</td>
                         <td style={{ padding: '12px', fontWeight: '600' }}>{dist.assembliesCount} Assemblies</td>
@@ -727,6 +796,7 @@ const SuperAdminDashboard = () => {
                   </tbody>
                 </table>
               </div>
+              {renderPagination(distCredPage, districtCredentials.length, 10, setDistCredPage)}
             </div>
           )}
 
@@ -749,7 +819,7 @@ const SuperAdminDashboard = () => {
                     </tr>
                   </thead>
                   <tbody>
-                    {assemblyCredentials.map((ass) => (
+                    {assemblyCredentials.slice((assCredPage - 1) * 15, assCredPage * 15).map((ass) => (
                       <tr key={ass.username} style={{ borderBottom: '1px solid var(--color-linen)' }}>
                         <td style={{ padding: '12px', fontWeight: '700', color: 'var(--color-slate)' }}>#{ass.assemblyNo}</td>
                         <td style={{ padding: '12px', fontWeight: '700', color: 'var(--color-midnight-ink)' }}>{ass.assemblyName}</td>
@@ -766,6 +836,7 @@ const SuperAdminDashboard = () => {
                   </tbody>
                 </table>
               </div>
+              {renderPagination(assCredPage, assemblyCredentials.length, 15, setAssCredPage)}
             </div>
           )}
 
@@ -777,7 +848,7 @@ const SuperAdminDashboard = () => {
                   <label style={{ fontSize: '12px', fontWeight: '700', color: 'var(--color-slate)', display: 'block', marginBottom: '6px' }}>Select Assembly Constituency:</label>
                   <select
                     value={selectedAssemblyNo}
-                    onChange={(e) => setSelectedAssemblyNo(e.target.value)}
+                    onChange={(e) => { setSelectedAssemblyNo(e.target.value); setBoothCredPage(1); }}
                     className="form-control"
                   >
                     {assembliesList.map(a => (
@@ -794,7 +865,7 @@ const SuperAdminDashboard = () => {
                     type="text"
                     placeholder="Search booth number..."
                     value={boothSearchQuery}
-                    onChange={(e) => setBoothSearchQuery(e.target.value)}
+                    onChange={(e) => { setBoothSearchQuery(e.target.value); setBoothCredPage(1); }}
                     className="form-control"
                   />
                 </div>
@@ -816,7 +887,7 @@ const SuperAdminDashboard = () => {
                       </tr>
                     </thead>
                     <tbody>
-                      {filteredBooths.map((b) => (
+                      {filteredBooths.slice((boothCredPage - 1) * 15, boothCredPage * 15).map((b) => (
                         <tr key={b.username} style={{ borderBottom: '1px solid var(--color-linen)' }}>
                           <td style={{ padding: '10px 12px', fontWeight: '700', color: 'var(--color-midnight-ink)' }}>Booth {b.boothNo}</td>
                           <td style={{ padding: '10px 12px' }}>{boothCredentialsData.assemblyName}</td>
@@ -832,6 +903,7 @@ const SuperAdminDashboard = () => {
                       ))}
                     </tbody>
                   </table>
+                  {renderPagination(boothCredPage, filteredBooths.length, 15, setBoothCredPage)}
                 </div>
               )}
             </div>
@@ -858,7 +930,7 @@ const SuperAdminDashboard = () => {
                 </tr>
               </thead>
               <tbody>
-                {statsData.districtStats?.map((row) => (
+                {(statsData.districtStats || []).slice((distStatsPage - 1) * 10, distStatsPage * 10).map((row) => (
                   <tr key={row._id} style={{ borderBottom: '1px solid var(--color-linen)' }}
                     onMouseEnter={e => e.currentTarget.style.background = 'var(--color-fog-gray)'}
                     onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
@@ -872,6 +944,7 @@ const SuperAdminDashboard = () => {
               </tbody>
             </table>
           </div>
+          {renderPagination(distStatsPage, statsData.districtStats?.length || 0, 10, setDistStatsPage)}
         </div>
       )}
 
@@ -895,7 +968,7 @@ const SuperAdminDashboard = () => {
                 </tr>
               </thead>
               <tbody>
-                {statsData.assemblyStats?.map((row, idx) => (
+                {(statsData.assemblyStats || []).slice((assStatsPage - 1) * 15, assStatsPage * 15).map((row, idx) => (
                   <tr key={idx} style={{ borderBottom: '1px solid var(--color-linen)' }}
                     onMouseEnter={e => e.currentTarget.style.background = 'var(--color-fog-gray)'}
                     onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
@@ -910,6 +983,7 @@ const SuperAdminDashboard = () => {
               </tbody>
             </table>
           </div>
+          {renderPagination(assStatsPage, statsData.assemblyStats?.length || 0, 15, setAssStatsPage)}
         </div>
       )}
 
@@ -934,7 +1008,7 @@ const SuperAdminDashboard = () => {
                 </tr>
               </thead>
               <tbody>
-                {statsData.boothStats?.map((row, idx) => (
+                {(statsData.boothStats || []).slice((boothStatsPage - 1) * 15, boothStatsPage * 15).map((row, idx) => (
                   <tr key={idx} style={{ borderBottom: '1px solid var(--color-linen)' }}
                     onMouseEnter={e => e.currentTarget.style.background = 'var(--color-fog-gray)'}
                     onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
@@ -950,6 +1024,7 @@ const SuperAdminDashboard = () => {
               </tbody>
             </table>
           </div>
+          {renderPagination(boothStatsPage, statsData.boothStats?.length || 0, 15, setBoothStatsPage)}
         </div>
       )}
 

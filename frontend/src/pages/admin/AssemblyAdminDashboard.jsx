@@ -33,6 +33,7 @@ const AssemblyAdminDashboard = () => {
   const [loadingBooths, setLoadingBooths] = useState(false);
 
   const [selectedVoterTimeline, setSelectedVoterTimeline] = useState(null);
+  const [boothStatsPage, setBoothStatsPage] = useState(1);
 
   const navigateSubPage = (pageKey) => {
     setSubPage(pageKey);
@@ -481,7 +482,7 @@ const AssemblyAdminDashboard = () => {
           <div style={{ width: '100%', overflowX: 'auto' }}>
             <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '13px' }}>
               <thead>
-                <tr style={{ borderBottom: '2px solid var(--color-linen)', color: 'var(--color-slate)', textAlign: 'left', background: 'var(--color-fog-gray)' }}>
+                <tr style={{ borderBottom: '1px solid var(--color-linen)', color: 'var(--color-slate)', textAlign: 'left', background: 'var(--color-fog-gray)' }}>
                   <th style={{ padding: '10px' }}>Booth / Part No</th>
                   <th style={{ padding: '10px' }}>Total Applications</th>
                   <th style={{ padding: '10px' }}>Approved</th>
@@ -492,7 +493,7 @@ const AssemblyAdminDashboard = () => {
                 {statsData.boothStats?.length === 0 && (
                   <tr><td colSpan={4} style={{ padding: '24px', textAlign: 'center', color: 'var(--color-slate)' }}>No booth data available.</td></tr>
                 )}
-                {statsData.boothStats?.map((row, idx) => (
+                {(statsData.boothStats || []).slice((boothStatsPage - 1) * 15, boothStatsPage * 15).map((row, idx) => (
                   <tr key={idx} style={{ borderBottom: '1px solid var(--color-linen)' }}
                     onMouseEnter={e => e.currentTarget.style.background = 'var(--color-fog-gray)'}
                     onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
@@ -506,6 +507,7 @@ const AssemblyAdminDashboard = () => {
               </tbody>
             </table>
           </div>
+          {renderPagination(boothStatsPage, statsData.boothStats?.length || 0, 15, setBoothStatsPage)}
         </div>
       )}
 

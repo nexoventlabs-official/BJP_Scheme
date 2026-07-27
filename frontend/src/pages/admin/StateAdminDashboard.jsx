@@ -41,6 +41,11 @@ const StateAdminDashboard = () => {
 
   const [selectedVoterTimeline, setSelectedVoterTimeline] = useState(null);
 
+  // ── Sub-page Pagination States ──
+  const [distStatsPage, setDistStatsPage] = useState(1);
+  const [assStatsPage, setAssStatsPage] = useState(1);
+  const [boothStatsPage, setBoothStatsPage] = useState(1);
+
   const navigateSubPage = (pageKey) => {
     setSubPage(pageKey);
     setSelectedVoterTimeline(null);
@@ -209,6 +214,67 @@ const StateAdminDashboard = () => {
     for (let i = left; i <= right; i++) range.push(i);
     if (right < totalPages) { if (right < totalPages - 1) range.push('...'); range.push(totalPages); }
     return range;
+  };
+
+  const renderPagination = (page, totalItems, itemsPerPage, onPageChange) => {
+    const totalP = Math.ceil(totalItems / itemsPerPage);
+    if (totalP <= 1) return null;
+
+    const startItem = (page - 1) * itemsPerPage + 1;
+    const endItem = Math.min(page * itemsPerPage, totalItems);
+
+    const range = [];
+    const delta = 2;
+    const left = Math.max(1, page - delta);
+    const right = Math.min(totalP, page + delta);
+    if (left > 1) { range.push(1); if (left > 2) range.push('...'); }
+    for (let i = left; i <= right; i++) range.push(i);
+    if (right < totalP) { if (right < totalP - 1) range.push('...'); range.push(totalP); }
+
+    return (
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '12px', marginTop: '16px', paddingTop: '12px', borderTop: '1px solid var(--color-linen)', fontSize: '13px', color: 'var(--color-slate)' }}>
+        <div>
+          Showing <strong>{startItem}</strong> – <strong>{endItem}</strong> of <strong>{totalItems}</strong> entries
+        </div>
+
+        <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+          <button
+            onClick={() => onPageChange(page - 1)}
+            disabled={page === 1}
+            className="btn btn-ghost"
+            style={{ padding: '4px 10px', fontSize: '12px', opacity: page === 1 ? 0.4 : 1 }}
+          >
+            ← Prev
+          </button>
+
+          {range.map((p, idx) => (
+            <button
+              key={idx}
+              disabled={p === '...'}
+              onClick={() => typeof p === 'number' && onPageChange(p)}
+              className={`btn ${p === page ? 'btn-primary' : 'btn-ghost'}`}
+              style={{
+                padding: '4px 10px',
+                fontSize: '12px',
+                fontWeight: p === page ? '700' : '500',
+                minWidth: '32px'
+              }}
+            >
+              {p}
+            </button>
+          ))}
+
+          <button
+            onClick={() => onPageChange(page + 1)}
+            disabled={page === totalP}
+            className="btn btn-ghost"
+            style={{ padding: '4px 10px', fontSize: '12px', opacity: page === totalP ? 0.4 : 1 }}
+          >
+            Next →
+          </button>
+        </div>
+      </div>
+    );
   };
 
   const activeScopeText = boothFilter
@@ -636,7 +702,7 @@ const StateAdminDashboard = () => {
                 </tr>
               </thead>
               <tbody>
-                {statsData.districtStats?.map((row) => (
+                {(statsData.districtStats || []).slice((distStatsPage - 1) * 10, distStatsPage * 10).map((row) => (
                   <tr key={row._id} style={{ borderBottom: '1px solid var(--color-linen)' }}
                     onMouseEnter={e => e.currentTarget.style.background = 'var(--color-fog-gray)'}
                     onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
@@ -650,6 +716,7 @@ const StateAdminDashboard = () => {
               </tbody>
             </table>
           </div>
+          {renderPagination(distStatsPage, statsData.districtStats?.length || 0, 10, setDistStatsPage)}
         </div>
       )}
 
@@ -673,7 +740,7 @@ const StateAdminDashboard = () => {
                 </tr>
               </thead>
               <tbody>
-                {statsData.assemblyStats?.map((row, idx) => (
+                {(statsData.assemblyStats || []).slice((assStatsPage - 1) * 15, assStatsPage * 15).map((row, idx) => (
                   <tr key={idx} style={{ borderBottom: '1px solid var(--color-linen)' }}
                     onMouseEnter={e => e.currentTarget.style.background = 'var(--color-fog-gray)'}
                     onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
@@ -688,6 +755,7 @@ const StateAdminDashboard = () => {
               </tbody>
             </table>
           </div>
+          {renderPagination(assStatsPage, statsData.assemblyStats?.length || 0, 15, setAssStatsPage)}
         </div>
       )}
 
@@ -712,7 +780,7 @@ const StateAdminDashboard = () => {
                 </tr>
               </thead>
               <tbody>
-                {statsData.boothStats?.map((row, idx) => (
+                {(statsData.boothStats || []).slice((boothStatsPage - 1) * 15, boothStatsPage * 15).map((row, idx) => (
                   <tr key={idx} style={{ borderBottom: '1px solid var(--color-linen)' }}
                     onMouseEnter={e => e.currentTarget.style.background = 'var(--color-fog-gray)'}
                     onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
@@ -728,6 +796,7 @@ const StateAdminDashboard = () => {
               </tbody>
             </table>
           </div>
+          {renderPagination(boothStatsPage, statsData.boothStats?.length || 0, 15, setBoothStatsPage)}
         </div>
       )}
 
