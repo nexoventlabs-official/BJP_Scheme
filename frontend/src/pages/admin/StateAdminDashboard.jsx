@@ -4,6 +4,7 @@ import { useAuth } from '../../context/AuthContext';
 import StatusBadge from '../../components/StatusBadge';
 import MemberProfileTimelineView, { formatSchemeName } from '../../components/MemberProfileTimelineView';
 import ReportsView from '../../components/ReportsView';
+import { BJP_SCHEMES } from '../../utils/constants';
 import {
   Shield, Users, Building, PhoneCall, RefreshCw, Search, Eye, Award, FileText
 } from 'lucide-react';
@@ -577,17 +578,12 @@ const StateAdminDashboard = () => {
                 className="form-control"
                 style={{ flex: '1 1 160px', minWidth: '150px', background: '#fff' }}
               >
-                <option value="">All BJP Schemes</option>
-                <option value="PMSBY">PMSBY</option>
-                <option value="PM SVANidhi">PM SVANidhi</option>
-                <option value="Stand Up India">Stand Up India</option>
-                <option value="Udyam">Udyam Registration</option>
-                <option value="APY">APY (Atal Pension)</option>
-                <option value="PMJJBY">PMJJBY</option>
-                <option value="PMKVY">PMKVY (Kaushal Vikas)</option>
-                <option value="PM Mudra Kishor">PM Mudra Kishor</option>
-                <option value="Sukanya Samridhi">Sukanya Samriddhi</option>
-                <option value="PM Matru Vandana">PM Matru Vandana</option>
+                <option value="">All 20 Central BJP Schemes</option>
+                {BJP_SCHEMES.map(s => (
+                  <option key={s.id} value={s.name}>
+                    {s.name} ({s.fullTitle})
+                  </option>
+                ))}
               </select>
 
               {/* Clear All button */}

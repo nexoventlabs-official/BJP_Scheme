@@ -3,6 +3,7 @@ import ExcelJS from 'exceljs';
 import API from '../utils/api';
 import { useAuth } from '../context/AuthContext';
 import StatusBadge from './StatusBadge';
+import { BJP_SCHEMES } from '../utils/constants';
 import {
   FileSpreadsheet, Filter, Search, RefreshCw, Download, Users, FileText, CheckCircle2, Clock, XCircle, Shield
 } from 'lucide-react';
@@ -541,9 +542,11 @@ const ReportsView = () => {
               className="form-control"
               style={{ marginTop: '4px' }}
             >
-              <option value="">All 20 BJP Schemes</option>
-              {SCHEME_OPTIONS.map(sch => (
-                <option key={sch} value={sch}>{sch}</option>
+              <option value="">All 20 Central BJP Schemes</option>
+              {BJP_SCHEMES.map(s => (
+                <option key={s.id} value={s.name}>
+                  {s.name} ({s.fullTitle})
+                </option>
               ))}
             </select>
           </div>
