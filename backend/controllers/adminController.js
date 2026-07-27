@@ -271,12 +271,49 @@ const getDashboardStats = async (req, res) => {
       { $limit: 100 }
     ]);
 
-    const schemePopularity = await SchemeApplication.aggregate([
+    const rawPopularity = await SchemeApplication.aggregate([
       { $match: scopeQuery },
       { $group: { _id: '$schemeName', count: { $sum: 1 }, cluster: { $first: '$clusterName' } } },
-      { $sort: { count: -1 } },
-      { $limit: 10 }
+      { $sort: { count: -1 } }
     ]);
+
+    const schemeMap = {
+      '1': { name: 'PMSBY', cluster: 'Cluster 1 — Insurance Trinity (Daily Wage Workers)' },
+      '2': { name: 'PMJJBY', cluster: 'Cluster 1 — Insurance Trinity (Daily Wage Workers)' },
+      '3': { name: 'APY', cluster: 'Cluster 1 — Insurance Trinity (Daily Wage Workers)' },
+      '4': { name: 'PM SVANidhi', cluster: 'Cluster 2 — Credit (Street Vendors & Small Business)' },
+      '5': { name: 'PM Mudra Shishu', cluster: 'Cluster 2 — Credit (Street Vendors & Small Business)' },
+      '6': { name: 'PM Mudra Kishor', cluster: 'Cluster 2 — Credit (Street Vendors & Small Business)' },
+      '7': { name: 'Udyam', cluster: 'Cluster 2 — Credit (Street Vendors & Small Business)' },
+      '8': { name: 'Stand Up India', cluster: 'Cluster 2 — Credit (Street Vendors & Small Business)' },
+      '9': { name: 'Startup Seed Fund', cluster: 'Cluster 2 — Credit (Street Vendors & Small Business)' },
+      '10': { name: 'PM Kisan', cluster: 'Cluster 3 — Farmers (Kisan)' },
+      '11': { name: 'PM Fasal Bima', cluster: 'Cluster 3 — Farmers (Kisan)' },
+      '12': { name: 'PM Kisan Maan Dhan', cluster: 'Cluster 3 — Farmers (Kisan)' },
+      '13': { name: 'PM Ujjwala', cluster: 'Cluster 4 — Women & Families' },
+      '14': { name: 'PM Matru Vandana', cluster: 'Cluster 4 — Women & Families' },
+      '15': { name: 'Sukanya Samridhi', cluster: 'Cluster 4 — Women & Families' },
+      '16': { name: 'PMKVY', cluster: 'Cluster 5 — Youth & Skills (Future)' },
+      '17': { name: 'NSP Scholarship', cluster: 'Cluster 5 — Youth & Skills (Future)' },
+      '18': { name: 'PM Vishwakarma', cluster: 'Cluster 5 — Youth & Skills (Future)' },
+      '19': { name: 'Jan Dhan', cluster: 'Foundation Layer (Prerequisite for all DBT)' },
+      '20': { name: 'e-Shram', cluster: 'Foundation Layer (Prerequisite for all DBT)' }
+    };
+
+    const popularityObj = {};
+    rawPopularity.forEach(item => {
+      const key = String(item._id).trim();
+      const mapped = schemeMap[key];
+      const displayName = mapped ? mapped.name : key;
+      const clusterName = mapped ? mapped.cluster : (item.cluster || 'BJP Nalam Thittam Welfare');
+
+      if (!popularityObj[displayName]) {
+        popularityObj[displayName] = { _id: displayName, count: 0, cluster: clusterName };
+      }
+      popularityObj[displayName].count += item.count;
+    });
+
+    const schemePopularity = Object.values(popularityObj).sort((a, b) => b.count - a.count);
 
     // Fast & Scalable Top 5 Referrers in Admin Scope using MongoDB Aggregation
     const topReferrersRaw = await User.aggregate([
