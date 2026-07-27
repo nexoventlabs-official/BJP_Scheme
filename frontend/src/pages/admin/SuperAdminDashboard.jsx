@@ -155,6 +155,7 @@ const SuperAdminDashboard = () => {
       if (res.data.success) {
         setVoters(res.data.voters || []);
         setTotalVoters(res.data.totalVoters || 0);
+        setTotalApplications(res.data.totalApplications || res.data.totalVoters || 0);
         setTotalPages(res.data.totalPages || 1);
         setCurrentPage(res.data.currentPage || 1);
       }
@@ -376,7 +377,7 @@ const SuperAdminDashboard = () => {
           Overview Dashboard
         </button>
         <button onClick={() => navigateSubPage('applications')} className={`tab-btn ${subPage === 'applications' ? 'active' : ''}`}>
-          Scheme Applications ({totalVoters} Members)
+          Scheme Applications ({totalApplications > 0 && totalApplications !== totalVoters ? `${totalApplications.toLocaleString()} Apps · ${totalVoters.toLocaleString()} Members` : `${totalVoters.toLocaleString()} Members`})
         </button>
         <button onClick={() => navigateSubPage('logins')} className={`tab-btn ${subPage === 'logins' ? 'active' : ''}`}>
           District, Assembly &amp; Booth Logins
@@ -520,9 +521,9 @@ const SuperAdminDashboard = () => {
                       <div style={{ fontSize: '14px', fontWeight: '700', color: 'var(--color-midnight-ink)' }}>{formatSchemeName(item._id)}</div>
                       <span style={{ fontSize: '11px', color: 'var(--color-saffron)', fontWeight: '600' }}>View →</span>
                     </div>
-                    <div style={{ fontSize: '11px', color: 'var(--color-slate)', marginTop: '2px' }}>{item.cluster}</div>
-                    <div style={{ fontSize: '20px', fontWeight: '700', color: 'var(--color-midnight-ink)', marginTop: '8px' }}>
-                      {item.count} <span style={{ fontSize: '12px', color: 'var(--color-slate)', fontWeight: 'normal' }}>applications</span>
+                    <div style={{ fontSize: '11px', color: 'var(--color-slate)', marginTop: '2px', marginBottom: '8px' }}>{item.cluster || 'BJP Scheme'}</div>
+                    <div style={{ fontSize: '18px', fontWeight: '800', color: 'var(--color-midnight-ink)' }}>
+                      {item.count.toLocaleString()} <span style={{ fontSize: '12px', fontWeight: '500', color: 'var(--color-slate)' }}>applications</span>
                     </div>
                   </div>
                 ))}
@@ -531,16 +532,12 @@ const SuperAdminDashboard = () => {
 
           </div>
         ) : (
-          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '80px 24px', gap: '12px' }}>
-            <div style={{ fontSize: '32px' }}>⚠️</div>
-            <div style={{ fontSize: '16px', fontWeight: '600', color: 'var(--color-midnight-ink)' }}>Could not load stats</div>
-            <button onClick={fetchStats} className="btn btn-primary" style={{ marginTop: '8px' }}>Retry</button>
-          </div>
+          <div style={{ padding: '40px', textAlign: 'center', color: 'var(--color-slate)' }}>No dashboard data available.</div>
         )
       )}
 
       {/* ══════════════════════════════════════════ */}
-      {/* PAGE 2: APPLICATIONS LIST (Paginated)     */}
+      {/* PAGE 2: SCHEME APPLICATIONS                */}
       {/* ══════════════════════════════════════════ */}
       {subPage === 'applications' && (
         selectedVoterTimeline ? (
@@ -554,10 +551,10 @@ const SuperAdminDashboard = () => {
         ) : (
           <div className="campsite-card" style={{ width: '100%', padding: '24px', boxSizing: 'border-box' }}>
 
-            {/* ── Search + Summary Row ── */}
-            <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap', marginBottom: '12px', width: '100%', alignItems: 'center' }}>
-              <div style={{ flex: 1, minWidth: '240px', position: 'relative' }}>
-                <Search size={16} style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: 'var(--color-ash-gray)' }} />
+            {/* ── Filters Row 1: Search + Header Stats ── */}
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '12px', marginBottom: '14px' }}>
+              <div style={{ flex: '1 1 300px', minWidth: '240px', position: 'relative' }}>
+                <Search style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: 'var(--color-slate)' }} size={16} />
                 <input
                   type="text"
                   placeholder="Search by Member Name, EPIC, Mobile, or Scheme..."
@@ -570,7 +567,13 @@ const SuperAdminDashboard = () => {
               <div style={{ fontSize: '13px', color: 'var(--color-slate)', whiteSpace: 'nowrap' }}>
                 {loadingVoters
                   ? <span style={{ opacity: 0.6 }}>Loading…</span>
-                  : <><strong style={{ color: 'var(--color-midnight-ink)' }}>{totalVoters.toLocaleString()}</strong> voters · Page {currentPage} of {totalPages}</>
+                  : <>
+                      <strong style={{ color: 'var(--color-midnight-ink)' }}>
+                        {totalApplications > 0 && totalApplications !== totalVoters
+                          ? `${totalApplications.toLocaleString()} Applications (${totalVoters.toLocaleString()} Members)`
+                          : `${totalVoters.toLocaleString()} voters`}
+                      </strong> · Page {currentPage} of {totalPages}
+                    </>
                 }
               </div>
             </div>
