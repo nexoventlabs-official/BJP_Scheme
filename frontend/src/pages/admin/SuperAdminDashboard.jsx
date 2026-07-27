@@ -325,9 +325,6 @@ const SuperAdminDashboard = () => {
         <button onClick={() => navigateSubPage('booths')} className={`tab-btn ${subPage === 'booths' ? 'active' : ''}`}>
           Booth Stats
         </button>
-        <button onClick={() => navigateSubPage('credentials')} className={`tab-btn ${subPage === 'credentials' ? 'active' : ''}`}>
-          Custom Credentials
-        </button>
       </div>
 
       {/* ══════════════════════════════════════════ */}
@@ -951,124 +948,6 @@ const SuperAdminDashboard = () => {
           </div>
         </div>
       )}
-
-      {/* ══════════════════════════════════════════ */}
-      {/* PAGE 7: CUSTOM CREDENTIALS CREATOR         */}
-      {/* ══════════════════════════════════════════ */}
-      {subPage === 'credentials' && (
-        <div style={{ width: '100%', boxSizing: 'border-box' }}>
-          <div className="campsite-card" style={{ width: '100%', padding: '24px', marginBottom: '24px', boxSizing: 'border-box' }}>
-            <h3 style={{ fontSize: '18px', fontWeight: '700', color: 'var(--color-midnight-ink)', marginBottom: '16px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <PlusCircle size={20} color="var(--color-saffron)" /> Create Custom Admin Account
-            </h3>
-
-            {credSuccessMsg && <div style={{ padding: '10px 14px', background: '#f0fdf4', color: 'var(--color-forest-pulse)', borderRadius: '6px', fontSize: '13px', marginBottom: '16px' }}>{credSuccessMsg}</div>}
-            {credErrorMsg && <div style={{ padding: '10px 14px', background: '#fef2f2', color: '#dc2626', borderRadius: '6px', fontSize: '13px', marginBottom: '16px' }}>{credErrorMsg}</div>}
-
-            <form onSubmit={handleCreateCredential} style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '16px' }}>
-              <div>
-                <label style={{ fontSize: '12px', fontWeight: '600', color: 'var(--color-slate)' }}>Username *</label>
-                <input
-                  type="text" required value={newAdminForm.username}
-                  onChange={(e) => setNewAdminForm({ ...newAdminForm, username: e.target.value })}
-                  placeholder="e.g. madurai_north_admin" className="form-control" style={{ marginTop: '4px' }}
-                />
-              </div>
-
-              <div>
-                <label style={{ fontSize: '12px', fontWeight: '600', color: 'var(--color-slate)' }}>Password *</label>
-                <input
-                  type="password" required value={newAdminForm.password}
-                  onChange={(e) => setNewAdminForm({ ...newAdminForm, password: e.target.value })}
-                  placeholder="Enter secure password" className="form-control" style={{ marginTop: '4px' }}
-                />
-              </div>
-
-              <div>
-                <label style={{ fontSize: '12px', fontWeight: '600', color: 'var(--color-slate)' }}>Admin Role *</label>
-                <select
-                  value={newAdminForm.role}
-                  onChange={(e) => setNewAdminForm({ ...newAdminForm, role: e.target.value })}
-                  className="form-control" style={{ marginTop: '4px' }}
-                >
-                  <option value="DISTRICT_ADMIN">District Admin</option>
-                  <option value="ASSEMBLY_ADMIN">Assembly Admin</option>
-                  <option value="BOOTH_ADMIN">Booth Admin</option>
-                  <option value="STATE_ADMIN">State Admin</option>
-                </select>
-              </div>
-
-              <div>
-                <label style={{ fontSize: '12px', fontWeight: '600', color: 'var(--color-slate)' }}>District Name</label>
-                <input
-                  type="text" value={newAdminForm.district}
-                  onChange={(e) => setNewAdminForm({ ...newAdminForm, district: e.target.value.toUpperCase() })}
-                  placeholder="e.g. MADURAI" className="form-control" style={{ marginTop: '4px' }}
-                />
-              </div>
-
-              <div>
-                <label style={{ fontSize: '12px', fontWeight: '600', color: 'var(--color-slate)' }}>Assembly Name</label>
-                <input
-                  type="text" value={newAdminForm.assemblyName}
-                  onChange={(e) => setNewAdminForm({ ...newAdminForm, assemblyName: e.target.value })}
-                  placeholder="e.g. Madurai North" className="form-control" style={{ marginTop: '4px' }}
-                />
-              </div>
-
-              <div>
-                <label style={{ fontSize: '12px', fontWeight: '600', color: 'var(--color-slate)' }}>Booth / Part No</label>
-                <input
-                  type="text" value={newAdminForm.boothNo}
-                  onChange={(e) => setNewAdminForm({ ...newAdminForm, boothNo: e.target.value })}
-                  placeholder="e.g. 142" className="form-control" style={{ marginTop: '4px' }}
-                />
-              </div>
-
-              <div style={{ gridColumn: '1 / -1', marginTop: '8px' }}>
-                <button type="submit" className="btn btn-primary" style={{ padding: '10px 24px', fontSize: '14px', fontWeight: '700' }}>
-                  Create Admin Account
-                </button>
-              </div>
-            </form>
-          </div>
-
-          <div className="campsite-card" style={{ width: '100%', padding: '24px', boxSizing: 'border-box' }}>
-            <h3 style={{ fontSize: '18px', fontWeight: '700', color: 'var(--color-midnight-ink)', marginBottom: '16px' }}>
-              Custom Created Admin Accounts ({adminList.length})
-            </h3>
-            <div style={{ width: '100%', overflowX: 'auto' }}>
-              <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '13px' }}>
-                <thead>
-                  <tr style={{ borderBottom: '2px solid var(--color-linen)', color: 'var(--color-slate)', textAlign: 'left', background: 'var(--color-fog-gray)' }}>
-                    <th style={{ padding: '10px 12px' }}>USERNAME</th>
-                    <th style={{ padding: '10px 12px' }}>ROLE</th>
-                    <th style={{ padding: '10px 12px' }}>DISTRICT</th>
-                    <th style={{ padding: '10px 12px' }}>ASSEMBLY</th>
-                    <th style={{ padding: '10px 12px' }}>BOOTH NO</th>
-                    <th style={{ padding: '10px 12px' }}>CREATED AT</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {adminList.map((a) => (
-                    <tr key={a._id} style={{ borderBottom: '1px solid var(--color-linen)' }}>
-                      <td style={{ padding: '12px', fontWeight: '700', color: 'var(--color-midnight-ink)', fontFamily: 'monospace' }}>{a.username}</td>
-                      <td style={{ padding: '12px' }}>
-                        <span className="tag-pill tag-active" style={{ fontSize: '11px', fontWeight: '700' }}>{a.role}</span>
-                      </td>
-                      <td style={{ padding: '12px', fontWeight: '600' }}>{a.district || '—'}</td>
-                      <td style={{ padding: '12px' }}>{a.assemblyName || '—'}</td>
-                      <td style={{ padding: '12px' }}>{a.boothNo || '—'}</td>
-                      <td style={{ padding: '12px', color: 'var(--color-slate)', fontSize: '12px' }}>{new Date(a.createdAt).toLocaleDateString()}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </div>
-        </div>
-      )}
-
     </div>
   );
 };
