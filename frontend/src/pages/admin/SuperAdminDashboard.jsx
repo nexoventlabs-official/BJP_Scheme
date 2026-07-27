@@ -429,17 +429,28 @@ const SuperAdminDashboard = () => {
                 </div>
               </div>
 
-              {/* Card 2: Voters Requested Schemes (Write DB) */}
-              <div className="stat-card">
-                <div className="stat-icon">
+              {/* Card 2: Voters Enrolled in Schemes (Write DB) */}
+              <div
+                className="stat-card"
+                onClick={() => { setStatusFilter(''); setSchemeFilter(''); navigateSubPage('applications'); }}
+                style={{ cursor: 'pointer', transition: 'all 0.2s ease' }}
+                title="Click to view all enrolled members"
+              >
+                <div className="stat-icon" style={{ background: '#fff7ed', color: 'var(--color-saffron)' }}>
                   <Users size={20} />
                 </div>
                 <div>
                   <div className="stat-number">
-                    {statsData.overview.totalVotersRequested ?? statsData.overview.totalUsers ?? 0}
+                    {statsData.overview.totalVotersRequested != null
+                      ? statsData.overview.totalVotersRequested.toLocaleString()
+                      : 0}
                   </div>
-                  <div className="stat-label">Voters Requested Schemes</div>
-                  <div style={{ fontSize: '11px', color: 'var(--color-slate)', marginTop: '2px' }}>Enrolled in Program</div>
+                  <div className="stat-label">Voters Enrolled in Schemes</div>
+                  <div style={{ fontSize: '11px', color: 'var(--color-slate)', marginTop: '2px' }}>
+                    {statsData.overview.totalRegisteredUsers != null
+                      ? `${statsData.overview.totalRegisteredUsers.toLocaleString()} Portal User Logins`
+                      : 'Enrolled Members'}
+                  </div>
                 </div>
               </div>
 

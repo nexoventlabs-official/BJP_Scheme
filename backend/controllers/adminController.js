@@ -184,9 +184,13 @@ const getDashboardStats = async (req, res) => {
     const { district, assemblyName, boothNo } = req.query || {};
     const scopeQuery = getAdminScopeQuery(admin);
 
-    // Count from WRITE DB: users who registered/requested schemes
-    const totalVotersRequested = await User.countDocuments(scopeQuery);
-    const totalApplications = await SchemeApplication.countDocuments(scopeQuery);
+    // Count from WRITE DB: unique enrolled members with scheme applications
+    const [totalApplications, distinctMobiles, totalRegisteredUsers] = await Promise.all([
+      SchemeApplication.countDocuments(scopeQuery),
+      SchemeApplication.distinct('mobile', scopeQuery),
+      User.countDocuments(scopeQuery)
+    ]);
+    const totalVotersRequested = distinctMobiles.length || totalApplications;
 
     // Count from READ DB: instant from in-memory cache
     let totalVotersInRoll = null;
@@ -453,6 +457,7 @@ const getDashboardStats = async (req, res) => {
       overview: {
         totalUsers: totalVotersRequested,
         totalVotersRequested,
+        totalRegisteredUsers,
         totalVotersInRoll,
         totalApplications,
         statusBreakdown: statusMap
