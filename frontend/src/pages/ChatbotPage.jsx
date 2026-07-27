@@ -1454,7 +1454,7 @@ function MySchemePanel({ epicNo, mobile, onBack }) {
 
             {notAppliedSchemes.length === 0 ? (
               <div style={{ textAlign: 'center', padding: '24px 16px', background: 'var(--color-carbon)', borderRadius: 12, border: '1px solid var(--color-graphite)', color: 'var(--color-signal-mint)', fontWeight: 600 }}>
-                🎉 {t('Congratulations! You have applied for all 20 Central Welfare Schemes!')}
+                🎉 {t('Congratulations! You have applied for all 23 Central Welfare Schemes!')}
               </div>
             ) : (
               <div className="schemes-list" style={{ gap: 12 }}>
@@ -4001,7 +4001,7 @@ function BrochurePanel({ epicNo, mobile, onBack }) {
             <i className="bi bi-chevron-left" />
           </button>
           <i className="bi bi-book-fill brochure-title-orange" />
-          <span>{t('BJP Brochure — 20 Welfare Schemes')}</span>
+          <span>{t('BJP Brochure — 23 Central BJP Schemes')}</span>
         </div>
       </header>
 

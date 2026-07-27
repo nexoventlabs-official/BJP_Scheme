@@ -40,7 +40,7 @@ const Navbar = ({ activeTab, setActiveTab }) => {
               onClick={() => setActiveTab('schemes')}
               className={`tab-btn ${activeTab === 'schemes' ? 'active' : ''}`}
             >
-              20 Schemes
+              23 Central BJP Schemes
             </button>
             <button
               onClick={() => setActiveTab('profile')}

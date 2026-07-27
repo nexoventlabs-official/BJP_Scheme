@@ -96,7 +96,7 @@ const UserHome = () => {
           <div style={{ marginBottom: '16px', display: 'flex', justifyContent: 'flex-start' }}>
             <span className="notification-pill" style={{ background: 'var(--color-midnight-ink)' }}>
               <span className="new-tag" style={{ background: 'var(--color-campfire-orange)', color: '#ffffff' }}>CATALOG</span>
-              <span>20 Government Welfare Schemes — BJP Nalam Thittam</span>
+              <span>23 Central BJP Welfare Schemes — BJP Nalam Thittam</span>
             </span>
           </div>
 
@@ -114,7 +114,7 @@ const UserHome = () => {
               ✨ {userApplications.length} Applied
             </span>
             <span className="tag-pill tag-active" style={{ padding: '8px 18px', fontSize: '13px', fontWeight: '700', background: '#ffffff', boxShadow: '0 2px 6px rgba(0,0,0,0.05)' }}>
-              🎯 {20 - userApplications.length} Available to Apply
+              🎯 {BJP_SCHEMES.length - userApplications.length} Available to Apply
             </span>
           </div>
         </div>
