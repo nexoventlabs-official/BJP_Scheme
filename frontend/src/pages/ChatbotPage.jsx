@@ -3643,8 +3643,8 @@ function BrochurePanel({ epicNo, mobile, onBack }) {
   const [notificationToast, setNotificationToast] = useState(null);
 
   useEffect(() => {
-    const activeEpic = epicNo || epicRef.current || cardRef.current?.epic_no || profileRef.current?.epic_no || localStorage.getItem('bjp_user_epic') || '';
-    const activeMobile = mobile || mobileRef.current || cardRef.current?.mobile || profileRef.current?.mobile || localStorage.getItem('bjp_user_mobile') || '';
+    const activeEpic = epicNo || localStorage.getItem('bjp_user_epic') || '';
+    const activeMobile = mobile || localStorage.getItem('bjp_user_mobile') || '';
     const userKey = activeEpic || activeMobile || 'user';
     const storageKey = `bjp_applied_schemes_${userKey}`;
 
