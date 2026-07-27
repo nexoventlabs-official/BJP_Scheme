@@ -44,6 +44,7 @@ const SuperAdminDashboard = () => {
   const [voters, setVoters] = useState([]);
   const [loadingVoters, setLoadingVoters] = useState(false);
   const [totalVoters, setTotalVoters] = useState(0);
+  const [totalApplications, setTotalApplications] = useState(0);
   const [totalPages, setTotalPages] = useState(1);
   const [currentPage, setCurrentPage] = useState(1);
 
