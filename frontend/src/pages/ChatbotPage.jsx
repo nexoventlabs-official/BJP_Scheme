@@ -1053,9 +1053,8 @@ function MySchemePanel({ epicNo, mobile, onBack }) {
     const scheme = selectedSchemeForModal;
     setIsSubmitting(true);
 
-    const activeEpic = epicNo || epicRef.current || cardRef.current?.epic_no || profileRef.current?.epic_no || localStorage.getItem('bjp_user_epic') || '';
-    const activeMobile = mobile || mobileRef.current || cardRef.current?.mobile || profileRef.current?.mobile || localStorage.getItem('bjp_user_mobile') || '';
-    const userObj = cardRef.current || profileRef.current || {};
+    const activeEpic = epicNo || localStorage.getItem('bjp_user_epic') || '';
+    const activeMobile = mobile || localStorage.getItem('bjp_user_mobile') || '';
 
     try {
       await chat.registerSchemes({

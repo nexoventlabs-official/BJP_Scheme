@@ -216,6 +216,7 @@ const ReportsView = ({
   // ── Styled Excel Download via backend (server-side ExcelJS, fast) ──
   const handleDownloadCsv = () => {
     const token = localStorage.getItem('bjp_admin_token');
+    const apiBase = import.meta.env.VITE_API_URL || '';
     const params = new URLSearchParams({
       ...(searchQuery    && { search: searchQuery }),
       ...(statusFilter   && { status: statusFilter }),
@@ -226,7 +227,7 @@ const ReportsView = ({
     });
 
     setIsExporting(true);
-    fetch(`/api/admin/export-excel?${params}`, {
+    fetch(`${apiBase}/api/admin/export-excel?${params}`, {
       headers: { Authorization: `Bearer ${token}` }
     })
       .then(res => {
