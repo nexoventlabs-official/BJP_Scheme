@@ -581,9 +581,9 @@ const AssemblyAdminDashboard = () => {
         <ReportsView
           initialDistrict={admin?.district}
           initialAssembly={admin?.assemblyName}
-          initialBooth={selectedBooth}
-          initialStatus={selectedStatus}
-          initialScheme={selectedScheme}
+          initialBooth={boothFilter}
+          initialStatus={statusFilter}
+          initialScheme={schemeFilter}
         />
       )}
     </div>

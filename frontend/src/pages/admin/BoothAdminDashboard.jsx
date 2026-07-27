@@ -561,8 +561,8 @@ const BoothAdminDashboard = () => {
           initialDistrict={admin?.district}
           initialAssembly={admin?.assemblyName}
           initialBooth={String(admin?.boothNo || '')}
-          initialStatus={selectedStatus}
-          initialScheme={selectedScheme}
+          initialStatus={statusFilter}
+          initialScheme={schemeFilter}
         />
       )}
     </div>

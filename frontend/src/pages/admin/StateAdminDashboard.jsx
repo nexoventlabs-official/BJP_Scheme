@@ -880,11 +880,11 @@ const StateAdminDashboard = () => {
       {/* ══════════════════════════════════════════ */}
       {subPage === 'reports' && (
         <ReportsView
-          initialDistrict={selectedDistrict}
-          initialAssembly={selectedAssembly}
-          initialBooth={selectedBooth}
-          initialStatus={selectedStatus}
-          initialScheme={selectedScheme}
+          initialDistrict={districtFilter}
+          initialAssembly={assemblyFilter}
+          initialBooth={boothFilter}
+          initialStatus={statusFilter}
+          initialScheme={schemeFilter}
         />
       )}
     </div>

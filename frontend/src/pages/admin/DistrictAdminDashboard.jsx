@@ -740,11 +740,11 @@ const DistrictAdminDashboard = () => {
       {/* PAGE: REPORTS & EXCEL EXPORT */}
       {subPage === 'reports' && (
         <ReportsView
-          initialDistrict={admin?.district || selectedDistrict}
-          initialAssembly={selectedAssembly}
-          initialBooth={selectedBooth}
-          initialStatus={selectedStatus}
-          initialScheme={selectedScheme}
+          initialDistrict={admin?.district || districtFilter}
+          initialAssembly={assemblyFilter}
+          initialBooth={boothFilter}
+          initialStatus={statusFilter}
+          initialScheme={schemeFilter}
         />
       )}
     </div>
