@@ -18,8 +18,41 @@ const { getAssemblyMetadata } = require('./services/jurisdictionService');
 const app = express();
 
 // Middlewares
-app.use(cors());
+app.use(cors({
+  origin: true, // Allow all origins including vercel app & localhost
+  credentials: true
+}));
 app.use(express.json());
+
+// Root API Status Endpoint
+app.get('/', (req, res) => {
+  res.json({
+    status: 'ONLINE',
+    message: 'BJP Nalam Thittam API Server Operational',
+    version: '1.0.0',
+    backend_url: process.env.BACKEND_URL || 'https://bjp-scheme.onrender.com',
+    frontend_url: process.env.FRONTEND_URL || 'https://bjp-scheme.vercel.app',
+    database_connections: {
+      app_database: 'CONNECTED (Mongoose - bjp_nalam_thittam_db)',
+      voter_database: 'CONNECTED (MongoClient - voter_db)'
+    },
+    schemes_info: {
+      total_schemes: 23,
+      name: '23 Central BJP Welfare Schemes'
+    },
+    api_endpoints: {
+      root_status: 'GET /',
+      health_check: 'GET /api/health',
+      user_authentication: 'POST /api/send-otp | POST /api/verify-otp',
+      user_portal: 'POST /api/validate-epic | POST /api/register-schemes',
+      admin_authentication: 'POST /api/admin/login',
+      admin_dashboard: 'GET /api/admin/stats | GET /api/admin/applications',
+      voter_search: 'POST /api/voter/search',
+      schemes_catalog: 'GET /api/schemes',
+      referral_system: 'GET /api/referral-link/:code'
+    }
+  });
+});
 
 // API Routes
 app.use('/api', userChatRoutes);
