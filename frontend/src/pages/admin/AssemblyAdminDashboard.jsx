@@ -6,8 +6,9 @@ import MemberProfileTimelineView, { formatSchemeName } from '../../components/Me
 import ReportsView from '../../components/ReportsView';
 import { BJP_SCHEMES } from '../../utils/constants';
 import {
-  Shield, Users, Building, PhoneCall, RefreshCw, Search, Eye, Award, FileText
+  Shield, Users, Building, PhoneCall, RefreshCw, Search, Eye, Award, FileText, Share2
 } from 'lucide-react';
+import TopReferrersCard from '../../components/TopReferrersCard';
 
 const LIMIT = 20;
 
@@ -295,6 +296,16 @@ const AssemblyAdminDashboard = () => {
                 ))}
               </div>
             </div>
+
+            {/* ── Top Referral Champions ── */}
+            <TopReferrersCard
+              topReferrers={statsData.topReferrers || []}
+              scopeLabel={admin?.assemblyName || ''}
+              onViewProfile={(ref) => {
+                if (ref && ref.epicNo) setSelectedVoterTimeline(ref);
+              }}
+            />
+
           </div>
         ) : (
           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '80px 24px', gap: '12px' }}>

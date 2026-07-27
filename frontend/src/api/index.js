@@ -77,6 +77,9 @@ export const chat = {
   getMyMembers: (ntCode) =>
     api.get(`/api/my-members/${ntCode}`),
 
+  getMyReferrals: (ntCode) =>
+    api.get(`/api/my-members/${ntCode}`),
+
   getMemberStatus: (ntCode) =>
     api.get(`/api/member-status/${ntCode}`),
 

@@ -6667,6 +6667,10 @@ export default function ChatbotPage() {
       setActiveView('my_members')
       return
     }
+    if (action === 'my_referrals') {
+      setActiveView('my_referrals')
+      return
+    }
     setActiveView('chat')
     const bjpCode = cardRef.current?.bjp_code || cardRef.current?.ptc_code || profileRef.current?.bjp_code || profileRef.current?.ptc_code
 
@@ -7075,6 +7079,7 @@ export default function ChatbotPage() {
               { icon: 'person-circle',  label: 'My Profile',              action: 'profile',     desc: 'View your registration details' },
               { icon: 'check2-all',     label: 'My Schemes',              action: 'my_schemes',  desc: 'Schemes you registered for' },
               { icon: 'link-45deg',     label: 'Referral Link',           action: 'referral',    desc: 'Share and invite others' },
+              { icon: 'people-fill',    label: 'My Referrals',            action: 'my_referrals',desc: 'Members you referred' },
               { icon: 'book-fill',      label: 'Central Schemes Brochure', action: 'brochure',   desc: 'Official Central Welfare Schemes Booklet' },
             ].map((item) => {
               const isComingSoon = false
@@ -7225,7 +7230,7 @@ export default function ChatbotPage() {
               localBodyInterest={localBodyInterest}
               handleLocalBodyInterestSubmit={handleLocalBodyInterestSubmit}
             />
-          ) : activeView === 'my_members' ? (
+          ) : activeView === 'my_members' || activeView === 'my_referrals' ? (
             <FullMyMembersPanel 
               bjpCode={cardRef.current?.bjp_code || cardRef.current?.ptc_code || profileRef.current?.bjp_code || profileRef.current?.ptc_code}
               onBack={() => setActiveView('chat')} 

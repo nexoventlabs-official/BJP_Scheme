@@ -8,6 +8,7 @@ import { BJP_SCHEMES } from '../../utils/constants';
 import {
   Shield, Users, Building, PhoneCall, RefreshCw, PlusCircle, Search, LogIn, Eye, Award, Share2, ChevronRight, FileText
 } from 'lucide-react';
+import TopReferrersCard from '../../components/TopReferrersCard';
 
 const LIMIT = 20;
 
@@ -542,6 +543,15 @@ const SuperAdminDashboard = () => {
               </div>
             </div>
 
+            {/* ── Top Referral Champions ── */}
+            <TopReferrersCard
+              topReferrers={statsData.topReferrers || []}
+              scopeLabel="Tamil Nadu State"
+              onViewProfile={(ref) => {
+                if (ref && ref.epicNo) setSelectedVoterTimeline(ref);
+              }}
+            />
+
           </div>
         ) : (
           <div style={{ padding: '40px', textAlign: 'center', color: 'var(--color-slate)' }}>No dashboard data available.</div>
@@ -854,6 +864,7 @@ const SuperAdminDashboard = () => {
                       <th style={{ padding: '10px 12px' }}>TOTAL ASSEMBLIES</th>
                       <th style={{ padding: '10px 12px' }}>USERNAME</th>
                       <th style={{ padding: '10px 12px' }}>PASSCODE</th>
+                      <th style={{ padding: '10px 12px' }}>REFERRAL LINK</th>
                       <th style={{ padding: '10px 12px', textAlign: 'right' }}>QUICK LOGIN</th>
                     </tr>
                   </thead>
@@ -864,6 +875,16 @@ const SuperAdminDashboard = () => {
                         <td style={{ padding: '12px', fontWeight: '600' }}>{dist.assembliesCount} Assemblies</td>
                         <td style={{ padding: '12px', fontFamily: 'monospace', fontWeight: '600', color: 'var(--color-slate)' }}>{dist.username}</td>
                         <td style={{ padding: '12px', fontFamily: 'monospace', fontWeight: '700', color: 'var(--color-saffron)' }}>{dist.passcode}</td>
+                        <td style={{ padding: '12px' }}>
+                          <a
+                            href={`${window.location.origin}/?ref=${dist.referralCode || ''}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            style={{ fontSize: '11px', color: 'var(--color-campfire-orange)', wordBreak: 'break-all', fontFamily: 'monospace' }}
+                          >
+                            {dist.referralCode ? `${window.location.origin}/?ref=${dist.referralCode}` : '—'}
+                          </a>
+                        </td>
                         <td style={{ padding: '12px', textAlign: 'right' }}>
                           <button onClick={() => handleQuickSwitch(dist.username, dist.passcode)} className="btn btn-ghost" style={{ padding: '5px 12px', fontSize: '12px', fontWeight: '700' }}>
                             <LogIn size={13} /> Switch Login

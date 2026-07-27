@@ -6,8 +6,9 @@ import MemberProfileTimelineView, { formatSchemeName } from '../../components/Me
 import ReportsView from '../../components/ReportsView';
 import { BJP_SCHEMES } from '../../utils/constants';
 import {
-  Shield, Users, Building, PhoneCall, RefreshCw, Search, Eye, Award, FileText
+  Shield, Users, Building, PhoneCall, RefreshCw, Search, Eye, Award, FileText, Share2
 } from 'lucide-react';
+import TopReferrersCard from '../../components/TopReferrersCard';
 
 const LIMIT = 20;
 
@@ -459,6 +460,15 @@ const StateAdminDashboard = () => {
                 ))}
               </div>
             </div>
+
+            {/* ── Top Referral Champions ── */}
+            <TopReferrersCard
+              topReferrers={statsData.topReferrers || []}
+              scopeLabel={activeScopeText}
+              onViewProfile={(ref) => {
+                if (ref && ref.epicNo) setSelectedVoterTimeline(ref);
+              }}
+            />
 
           </div>
         ) : (
