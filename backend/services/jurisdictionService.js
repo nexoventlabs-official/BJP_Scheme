@@ -282,23 +282,39 @@ const getCollectionForAssembly = async (assemblyName) => {
   return match ? [match.colName] : [];
 };
 
-// Get cached voter roll count for a booth
+// Get cached voter roll count for a booth (batch aggregates full assembly once for 100% instant cached hits)
+let assemblyBoothCached = new Set();
+
 const getBoothVoterRollCount = async (assemblyName, boothNo) => {
   if (!assemblyName || !boothNo) return null;
-  const cacheKey = `${assemblyName.toUpperCase()}::${String(boothNo)}`;
+  const assKey = assemblyName.toUpperCase();
+  const cacheKey = `${assKey}::${String(boothNo)}`;
+
   if (boothVoterCountCache[cacheKey] !== undefined) {
     return boothVoterCountCache[cacheKey];
   }
 
   try {
     const assemblies = await getAssemblyMetadata();
-    const match = assemblies.find(a => a.assemblyName.toUpperCase() === assemblyName.toUpperCase());
+    const match = assemblies.find(a => a.assemblyName.toUpperCase() === assKey);
     if (!match) return null;
 
     const voterDb = await getVoterDbClient();
-    const count = await voterDb.collection(match.colName).countDocuments({ PART_NO: String(boothNo) });
-    boothVoterCountCache[cacheKey] = count;
-    return count;
+
+    if (!assemblyBoothCached.has(match.colName)) {
+      assemblyBoothCached.add(match.colName);
+      const counts = await voterDb.collection(match.colName).aggregate([
+        { $group: { _id: '$PART_NO', count: { $sum: 1 } } }
+      ], { allowDiskUse: true }).toArray();
+
+      counts.forEach(c => {
+        if (c._id !== null && c._id !== undefined) {
+          boothVoterCountCache[`${assKey}::${String(c._id)}`] = c.count;
+        }
+      });
+    }
+
+    return boothVoterCountCache[cacheKey] || null;
   } catch (err) {
     console.error('[getBoothVoterRollCount Error]:', err.message);
     return null;

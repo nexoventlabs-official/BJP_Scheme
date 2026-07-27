@@ -359,16 +359,22 @@ const getDashboardStats = async (req, res) => {
       })
     );
 
-    const boothStats = rawBoothStats.map(b => {
-      return {
-        _id: b._id,
-        totalVoters: null,
-        appliedVoters: b.appliedVoters || 0,
-        totalApps: b.totalApps,
-        approved: b.approved,
-        pending: b.pending
-      };
-    });
+    const boothStats = await Promise.all(
+      rawBoothStats.map(async (b) => {
+        let rollCount = null;
+        if (b._id.assemblyName && b._id.boothNo) {
+          rollCount = await getBoothVoterRollCount(b._id.assemblyName, b._id.boothNo);
+        }
+        return {
+          _id: b._id,
+          totalVoters: rollCount,
+          appliedVoters: b.appliedVoters || 0,
+          totalApps: b.totalApps,
+          approved: b.approved,
+          pending: b.pending
+        };
+      })
+    );
 
     const schemeMap = {
       '1': { name: 'PMSBY', cluster: 'Cluster 1 — Insurance Trinity (Daily Wage Workers)' },
