@@ -390,7 +390,7 @@ const ReportsView = ({
           <div>
             <label style={{ fontSize: '11px', fontWeight: '700', color: 'var(--color-slate)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>BJP Scheme Name</label>
             <select
-              value={schemeFilter}
+              value={BJP_SCHEMES.find(s => s.name.toLowerCase() === (schemeFilter || '').toLowerCase() || (s.fullTitle && s.fullTitle.toLowerCase() === (schemeFilter || '').toLowerCase()))?.name || schemeFilter || ''}
               onChange={(e) => setSchemeFilter(e.target.value)}
               className="form-control"
               style={{ marginTop: '4px' }}
@@ -398,7 +398,7 @@ const ReportsView = ({
               <option value="">All 23 Central BJP Schemes</option>
               {BJP_SCHEMES.map(s => (
                 <option key={s.id} value={s.name}>
-                  {s.name} ({s.fullTitle})
+                  {s.name} ({s.fullTitle || s.fullName})
                 </option>
               ))}
             </select>

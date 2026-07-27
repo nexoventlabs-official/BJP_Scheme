@@ -651,7 +651,7 @@ const SuperAdminDashboard = () => {
 
               {/* Scheme Filter */}
               <select
-                value={schemeFilter}
+                value={BJP_SCHEMES.find(s => s.name.toLowerCase() === (schemeFilter || '').toLowerCase() || (s.fullTitle && s.fullTitle.toLowerCase() === (schemeFilter || '').toLowerCase()))?.name || schemeFilter || ''}
                 onChange={(e) => setSchemeFilter(e.target.value)}
                 className="form-control"
                 style={{ flex: '1 1 160px', minWidth: '150px', background: '#fff' }}
@@ -659,7 +659,7 @@ const SuperAdminDashboard = () => {
                 <option value="">All 23 Central BJP Schemes</option>
                 {BJP_SCHEMES.map(s => (
                   <option key={s.id} value={s.name}>
-                    {s.name} ({s.fullTitle})
+                    {s.name} ({s.fullTitle || s.fullName})
                   </option>
                 ))}
               </select>
