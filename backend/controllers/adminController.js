@@ -512,29 +512,43 @@ const getApplicationsList = async (req, res) => {
     };
     const allApps = await SchemeApplication.find(appFilter).sort({ appliedAt: -1 }).lean();
 
-    const voters = users.map(u => {
-      const userApps = allApps.filter(app => 
-        (app.userId && String(app.userId) === String(u._id)) ||
-        (app.epicNo && u.epicNo && app.epicNo === u.epicNo) ||
-        (app.mobile && u.mobile && app.mobile === u.mobile)
-      );
-      return {
-        epicNo:       u.epicNo,
-        voterName:    u.voterName,
-        mobile:       u.mobile,
-        district:     u.district,
-        assemblyName: u.assemblyName,
-        boothNo:      u.boothNo,
-        userId:       u._id,
-        applications: userApps
-      };
-    });
+    const voters = users
+      .map(u => {
+        const userApps = allApps.filter(app => 
+          (app.userId && String(app.userId) === String(u._id)) ||
+          (app.epicNo && u.epicNo && app.epicNo === u.epicNo) ||
+          (app.mobile && u.mobile && app.mobile === u.mobile)
+        );
+        return {
+          epicNo:       u.epicNo,
+          voterName:    u.voterName,
+          mobile:       u.mobile,
+          district:     u.district,
+          assemblyName: u.assemblyName,
+          boothNo:      u.boothNo,
+          userId:       u._id,
+          applications: userApps
+        };
+      })
+      .filter(v => {
+        if (schemeName) {
+          const schemeRegex = new RegExp(schemeName.trim(), 'i');
+          const matchesScheme = v.applications.some(a => schemeRegex.test(a.schemeName));
+          if (!matchesScheme) return false;
+        }
+        if (status) {
+          const statusRegex = new RegExp('^' + status.trim() + '$', 'i');
+          const matchesStatus = v.applications.some(a => statusRegex.test(a.status));
+          if (!matchesStatus) return false;
+        }
+        return true;
+      });
 
     return res.status(200).json({
       success:      true,
       voters,
-      totalVoters,
-      totalPages,
+      totalVoters:  (status || schemeName) ? voters.length : totalVoters,
+      totalPages:   (status || schemeName) ? Math.ceil(voters.length / limitNum) || 1 : totalPages,
       currentPage:  pageNum,
       limit:        limitNum,
       applications: voters.flatMap(v => v.applications)
