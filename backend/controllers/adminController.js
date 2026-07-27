@@ -359,50 +359,10 @@ const getDashboardStats = async (req, res) => {
       })
     );
 
-    const assembliesMeta = await getAssemblyMetadata();
-    const voterDb = await getVoterDbClient();
-
-    const boothByCol = {};
-    rawBoothStats.forEach(b => {
-      if (b._id.assemblyName && b._id.boothNo) {
-        const match = assembliesMeta.find(a => a.assemblyName.toLowerCase() === b._id.assemblyName.toLowerCase());
-        if (match) {
-          if (!boothByCol[match.colName]) boothByCol[match.colName] = new Set();
-          boothByCol[match.colName].add(String(b._id.boothNo));
-        }
-      }
-    });
-
-    const boothRollCountMap = {};
-    await Promise.all(
-      Object.entries(boothByCol).map(async ([colName, boothSet]) => {
-        try {
-          const boothNos = Array.from(boothSet);
-          const counts = await voterDb.collection(colName).aggregate([
-            { $match: { PART_NO: { $in: boothNos } } },
-            { $group: { _id: '$PART_NO', count: { $sum: 1 } } }
-          ], { allowDiskUse: true }).toArray();
-
-          counts.forEach(c => {
-            boothRollCountMap[`${colName}_${c._id}`] = c.count;
-          });
-        } catch (e) {
-          console.error('[Batch Booth Count Error]:', e.message);
-        }
-      })
-    );
-
     const boothStats = rawBoothStats.map(b => {
-      let rollCount = null;
-      if (b._id.assemblyName && b._id.boothNo) {
-        const match = assembliesMeta.find(a => a.assemblyName.toLowerCase() === b._id.assemblyName.toLowerCase());
-        if (match) {
-          rollCount = boothRollCountMap[`${match.colName}_${b._id.boothNo}`] || null;
-        }
-      }
       return {
         _id: b._id,
-        totalVoters: rollCount,
+        totalVoters: null,
         appliedVoters: b.appliedVoters || 0,
         totalApps: b.totalApps,
         approved: b.approved,
