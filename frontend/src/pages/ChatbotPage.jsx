@@ -6556,8 +6556,11 @@ export default function ChatbotPage() {
         localStorage.removeItem('bjp_referral')
       } catch {}
 
-      await botSay(t('🎉 Your Digital Member ID Card is ready!'), 200)
-      addMsg('bot', 'generated_card', { card, isNew: true })
+      await botSay(t('👋 Registration completed successfully! Here is your Referral Link & QR Code:'), 200)
+      const regRefLink = card.referral_link || (card.bjp_code ? `${window.location.origin}/r/${card.bjp_code}` : '')
+      if (regRefLink) {
+        addMsg('bot', 'referral_link', { link: regRefLink })
+      }
 
       // Send Welcome Letter PDF attachment
       await sleep(1000)
@@ -6837,8 +6840,10 @@ export default function ChatbotPage() {
           />
         )
       }
-      case 'generated_card':
-        return <GeneratedCardMsg card={msg.card} isNew={msg.isNew || false} />
+      case 'generated_card': {
+        const cardRefLink = msg.card?.referral_link || (msg.card?.bjp_code ? `${window.location.origin}/r/${msg.card.bjp_code}` : '')
+        return <ReferralLinkMsg link={cardRefLink} />
+      }
       case 'welcome_letter':
         return <WelcomeLetterMsg name={msg.name} date={msg.date} refCode={msg.ref || cardRef.current?.bjp_code || cardRef.current?.ptc_code || profileRef.current?.bjp_code || profileRef.current?.ptc_code} autoDownload={msg.autoDownload} />
       case 'appreciation_letter':
