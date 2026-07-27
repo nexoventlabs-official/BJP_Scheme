@@ -548,28 +548,27 @@ const getApplicationsList = async (req, res) => {
     if (boothNo)      appScopeFilter.boothNo      = String(boothNo);
     if (status)       appScopeFilter.status       = new RegExp('^' + status.trim() + '$', 'i');
 
-    if (schemeName) {
-      const clean = schemeName.trim();
-      const regexes = [new RegExp(clean, 'i')];
-      const numId = Number(clean);
-      const schemeMap = {};
-      BJP_SCHEMES.forEach(s => { schemeMap[s.name] = s.id; });
-      let foundId = !isNaN(numId) && numId > 0 ? numId : null;
-      if (!foundId) {
-        for (const [sKey, sId] of Object.entries(schemeMap)) {
-          if (sKey.toLowerCase() === clean.toLowerCase() || clean.toLowerCase().includes(sKey.toLowerCase())) {
-            foundId = sId;
-            regexes.push(new RegExp('^' + sKey + '$', 'i'));
-            break;
-          }
+    const targetScheme = schemeName || scheme || req.query.schemeId;
+    if (targetScheme) {
+      const clean = String(targetScheme).trim();
+      let matchedScheme = BJP_SCHEMES.find(s =>
+        String(s.id) === clean ||
+        s.name.toLowerCase() === clean.toLowerCase() ||
+        (s.fullName && s.fullName.toLowerCase() === clean.toLowerCase()) ||
+        clean.toLowerCase().includes(s.name.toLowerCase())
+      );
+
+      const regexes = [new RegExp('^' + clean.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '$', 'i')];
+      if (matchedScheme) {
+        regexes.push(new RegExp('^' + matchedScheme.name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '$', 'i'));
+        if (matchedScheme.fullName) {
+          regexes.push(new RegExp(matchedScheme.fullName.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'i'));
         }
+      } else {
+        regexes.push(new RegExp(clean.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'i'));
       }
-      const appMatchConds = [{ schemeName: { $in: regexes } }];
-      if (foundId) {
-        appMatchConds.push({ schemeName: String(foundId) });
-        appMatchConds.push({ schemeId: foundId });
-      }
-      appScopeFilter.$or = appMatchConds;
+
+      appScopeFilter.schemeName = { $in: regexes };
     }
 
     if (search) {
@@ -1012,7 +1011,26 @@ const exportApplicationsCsv = async (req, res) => {
     if (assemblyName) appScopeFilter.assemblyName = assemblyName;
     if (boothNo)      appScopeFilter.boothNo      = boothNo;
     if (status)       appScopeFilter.status        = status;
-    if (schemeName)   appScopeFilter.schemeName    = schemeName;
+    const targetScheme = schemeName || req.query.scheme || req.query.schemeId;
+    if (targetScheme) {
+      const clean = String(targetScheme).trim();
+      let matchedScheme = BJP_SCHEMES.find(s =>
+        String(s.id) === clean ||
+        s.name.toLowerCase() === clean.toLowerCase() ||
+        (s.fullName && s.fullName.toLowerCase() === clean.toLowerCase()) ||
+        clean.toLowerCase().includes(s.name.toLowerCase())
+      );
+      const regexes = [new RegExp('^' + clean.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '$', 'i')];
+      if (matchedScheme) {
+        regexes.push(new RegExp('^' + matchedScheme.name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '$', 'i'));
+        if (matchedScheme.fullName) {
+          regexes.push(new RegExp(matchedScheme.fullName.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'i'));
+        }
+      } else {
+        regexes.push(new RegExp(clean.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'i'));
+      }
+      appScopeFilter.schemeName = { $in: regexes };
+    }
     if (search) {
       const re = new RegExp(search, 'i');
       appScopeFilter.$or = [{ voterName: re }, { epicNo: re }, { mobile: re }];
@@ -1096,7 +1114,26 @@ const exportApplicationsExcel = async (req, res) => {
     if (assemblyName) appScopeFilter.assemblyName  = assemblyName;
     if (boothNo)      appScopeFilter.boothNo       = String(boothNo);
     if (status)       appScopeFilter.status        = status;
-    if (schemeId)     appScopeFilter.schemeId      = schemeId;
+    const targetSchemeExcel = req.query.schemeName || req.query.scheme || schemeId;
+    if (targetSchemeExcel) {
+      const clean = String(targetSchemeExcel).trim();
+      let matchedScheme = BJP_SCHEMES.find(s =>
+        String(s.id) === clean ||
+        s.name.toLowerCase() === clean.toLowerCase() ||
+        (s.fullName && s.fullName.toLowerCase() === clean.toLowerCase()) ||
+        clean.toLowerCase().includes(s.name.toLowerCase())
+      );
+      const regexes = [new RegExp('^' + clean.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '$', 'i')];
+      if (matchedScheme) {
+        regexes.push(new RegExp('^' + matchedScheme.name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '$', 'i'));
+        if (matchedScheme.fullName) {
+          regexes.push(new RegExp(matchedScheme.fullName.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'i'));
+        }
+      } else {
+        regexes.push(new RegExp(clean.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'i'));
+      }
+      appScopeFilter.schemeName = { $in: regexes };
+    }
     if (startDate || endDate) {
       appScopeFilter.appliedAt = {};
       if (startDate) appScopeFilter.appliedAt.$gte = new Date(startDate);
