@@ -3452,6 +3452,9 @@ const SCHEMES = [
     overview: 'National Mission for Financial Inclusion providing zero-balance savings accounts, free RuPay debit card, and ₹2 Lakhs accident insurance.',
     tags: ['Zero Balance Account', 'RuPay Debit Card', 'DBT Gateway'],
     eligibility: 'Any Indian citizen aged 10 years and above without an existing bank account.',
+    documents: ['Aadhaar Card', 'Passport Photograph'],
+    steps: ['Visit bank branch / BC kiosk', 'Fill PMJDY form', 'Receive RuPay debit card']
+  },
   {
     id: 23,
     category: 'Foundation Layer',
