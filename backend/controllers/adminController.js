@@ -230,7 +230,7 @@ const getDashboardStats = async (req, res) => {
       if (item._id) statusMap[item._id] = item.count;
     });
 
-    const districtStats = await SchemeApplication.aggregate([
+    const rawDistrictStats = await SchemeApplication.aggregate([
       { $match: scopeQuery },
       {
         $group: {
@@ -247,13 +247,27 @@ const getDashboardStats = async (req, res) => {
           totalApps: 1,
           approved: 1,
           pending: 1,
-          totalVoters: { $size: '$voterIds' }
+          appliedVoters: { $size: '$voterIds' }
         }
       },
       { $sort: { totalApps: -1 } }
     ]);
 
-    const assemblyStats = await SchemeApplication.aggregate([
+    const districtStats = await Promise.all(
+      rawDistrictStats.map(async (d) => {
+        const rollCount = await getDistrictVoterRollCount(d._id);
+        return {
+          _id: d._id,
+          totalVoters: rollCount || null,
+          appliedVoters: d.appliedVoters || 0,
+          totalApps: d.totalApps,
+          approved: d.approved,
+          pending: d.pending
+        };
+      })
+    );
+
+    const rawAssemblyStats = await SchemeApplication.aggregate([
       { $match: scopeQuery },
       {
         $group: {
@@ -270,14 +284,28 @@ const getDashboardStats = async (req, res) => {
           totalApps: 1,
           approved: 1,
           pending: 1,
-          totalVoters: { $size: '$voterIds' }
+          appliedVoters: { $size: '$voterIds' }
         }
       },
       { $sort: { totalApps: -1 } },
       { $limit: 50 }
     ]);
 
-    const boothStats = await SchemeApplication.aggregate([
+    const assemblyStats = await Promise.all(
+      rawAssemblyStats.map(async (a) => {
+        const rollCount = await getAssemblyVoterRollCount(a._id.assemblyName);
+        return {
+          _id: a._id,
+          totalVoters: rollCount || null,
+          appliedVoters: a.appliedVoters || 0,
+          totalApps: a.totalApps,
+          approved: a.approved,
+          pending: a.pending
+        };
+      })
+    );
+
+    const rawBoothStats = await SchemeApplication.aggregate([
       { $match: scopeQuery },
       {
         $group: {
@@ -294,12 +322,35 @@ const getDashboardStats = async (req, res) => {
           totalApps: 1,
           approved: 1,
           pending: 1,
-          totalVoters: { $size: '$voterIds' }
+          appliedVoters: { $size: '$voterIds' }
         }
       },
       { $sort: { totalApps: -1 } },
       { $limit: 100 }
     ]);
+
+    const assembliesMeta = await getAssemblyMetadata();
+    const voterDb = await getVoterDbClient();
+
+    const boothStats = await Promise.all(
+      rawBoothStats.map(async (b) => {
+        let rollCount = null;
+        if (b._id.assemblyName && b._id.boothNo) {
+          const match = assembliesMeta.find(a => a.assemblyName.toLowerCase() === b._id.assemblyName.toLowerCase());
+          if (match) {
+            rollCount = await voterDb.collection(match.colName).countDocuments({ PART_NO: String(b._id.boothNo) });
+          }
+        }
+        return {
+          _id: b._id,
+          totalVoters: rollCount || null,
+          appliedVoters: b.appliedVoters || 0,
+          totalApps: b.totalApps,
+          approved: b.approved,
+          pending: b.pending
+        };
+      })
+    );
 
     const rawPopularity = await SchemeApplication.aggregate([
       { $match: scopeQuery },

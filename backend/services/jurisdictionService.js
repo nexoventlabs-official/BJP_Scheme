@@ -236,12 +236,13 @@ const getStateVoterRollCount = async () => {
 
 // Get cached voter roll count for a district (instant — populated at server startup)
 const getDistrictVoterRollCount = async (district) => {
-  await getAssemblyMetadata(); // ensures cache is built
+  const assemblies = await getAssemblyMetadata(); // ensures cache is built
   if (!district) return null;
-  const key = Object.keys(districtVoterCount).find(
-    k => k.toUpperCase() === district.toUpperCase()
+  const matched = assemblies.filter(
+    a => a.district.toUpperCase() === district.toUpperCase()
   );
-  return key ? districtVoterCount[key] : null;
+  if (matched.length === 0) return null;
+  return matched.reduce((sum, a) => sum + (assemblyVoterCount[a.assemblyName.toUpperCase()] || 0), 0);
 };
 
 // Get cached voter roll count for an assembly (instant)
