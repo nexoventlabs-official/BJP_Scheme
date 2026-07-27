@@ -445,8 +445,39 @@ const getApplicationsList = async (req, res) => {
     // ── Step 1b: If status or schemeName filter is active, filter distinct epicNos/userIds/mobiles ──
     if (status || schemeName) {
       const appScopeFilter = { ...adminScope };
-      if (status) appScopeFilter.status = status;
-      if (schemeName) appScopeFilter.schemeName = new RegExp(schemeName.trim(), 'i');
+      if (status) appScopeFilter.status = new RegExp('^' + status.trim() + '$', 'i');
+      if (schemeName) {
+        const clean = schemeName.trim();
+        const regexes = [new RegExp(clean, 'i')];
+        const numId = Number(clean);
+
+        // Common mapping for schemes
+        const schemeMap = {
+          'PMSBY': 1, 'PMJJBY': 2, 'APY': 3, 'PM SVANidhi': 4, 'PM Mudra Shishu': 5,
+          'PM Mudra Kishor': 6, 'Udyam': 7, 'Stand Up India': 8, 'Startup Seed Fund': 9,
+          'PM Kisan': 10, 'PM Fasal Bima': 11, 'PM Kisan Maan Dhan': 12, 'PM Ujjwala': 13,
+          'Sukanya Samridhi': 14, 'PM Matru Vandana': 15, 'Jan Dhan': 16, 'PM Vishwakarma': 17,
+          'PMKVY': 18, 'e-Shram': 19, 'NSP Scholarship': 20
+        };
+
+        let foundId = !isNaN(numId) && numId > 0 ? numId : null;
+        if (!foundId) {
+          for (const [sKey, sId] of Object.entries(schemeMap)) {
+            if (sKey.toLowerCase() === clean.toLowerCase() || clean.toLowerCase().includes(sKey.toLowerCase())) {
+              foundId = sId;
+              regexes.push(new RegExp('^' + sKey + '$', 'i'));
+              break;
+            }
+          }
+        }
+
+        const appMatchConds = [{ schemeName: { $in: regexes } }];
+        if (foundId) {
+          appMatchConds.push({ schemeName: String(foundId) });
+          appMatchConds.push({ schemeId: foundId });
+        }
+        appScopeFilter.$or = appMatchConds;
+      }
       if (district)     appScopeFilter.district     = new RegExp('^' + district + '$', 'i');
       if (assemblyName) appScopeFilter.assemblyName = new RegExp('^' + assemblyName + '$', 'i');
       if (boothNo)      appScopeFilter.boothNo      = String(boothNo);
@@ -511,8 +542,37 @@ const getApplicationsList = async (req, res) => {
       ...adminScope
     };
 
-    if (schemeName) appFilter.schemeName = new RegExp(schemeName.trim(), 'i');
-    if (status)     appFilter.status     = new RegExp('^' + status.trim() + '$', 'i');
+    if (schemeName) {
+      const clean = schemeName.trim();
+      const regexes = [new RegExp(clean, 'i')];
+      const numId = Number(clean);
+      const schemeMap = {
+        'PMSBY': 1, 'PMJJBY': 2, 'APY': 3, 'PM SVANidhi': 4, 'PM Mudra Shishu': 5,
+        'PM Mudra Kishor': 6, 'Udyam': 7, 'Stand Up India': 8, 'Startup Seed Fund': 9,
+        'PM Kisan': 10, 'PM Fasal Bima': 11, 'PM Kisan Maan Dhan': 12, 'PM Ujjwala': 13,
+        'Sukanya Samridhi': 14, 'PM Matru Vandana': 15, 'Jan Dhan': 16, 'PM Vishwakarma': 17,
+        'PMKVY': 18, 'e-Shram': 19, 'NSP Scholarship': 20
+      };
+      let foundId = !isNaN(numId) && numId > 0 ? numId : null;
+      if (!foundId) {
+        for (const [sKey, sId] of Object.entries(schemeMap)) {
+          if (sKey.toLowerCase() === clean.toLowerCase() || clean.toLowerCase().includes(sKey.toLowerCase())) {
+            foundId = sId;
+            regexes.push(new RegExp('^' + sKey + '$', 'i'));
+            break;
+          }
+        }
+      }
+      const appMatchConds = [{ schemeName: { $in: regexes } }];
+      if (foundId) {
+        appMatchConds.push({ schemeName: String(foundId) });
+        appMatchConds.push({ schemeId: foundId });
+      }
+      appFilter.$and = [{ $or: appFilter.$or }, { $or: appMatchConds }];
+      delete appFilter.$or;
+    }
+
+    if (status) appFilter.status = new RegExp('^' + status.trim() + '$', 'i');
 
     const allApps = await SchemeApplication.find(appFilter).sort({ appliedAt: -1 }).lean();
 
