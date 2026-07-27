@@ -442,7 +442,7 @@ const getApplicationsList = async (req, res) => {
       userFilter.$or = [{ voterName: r }, { epicNo: r }, { mobile: r }];
     }
 
-    // ── Step 1b: If status or schemeName filter is active, filter distinct epicNos ──
+    // ── Step 1b: If status or schemeName filter is active, filter distinct epicNos/userIds/mobiles ──
     if (status || schemeName) {
       const appScopeFilter = { ...adminScope };
       if (status) appScopeFilter.status = status;
@@ -450,12 +450,36 @@ const getApplicationsList = async (req, res) => {
       if (district)     appScopeFilter.district     = new RegExp('^' + district + '$', 'i');
       if (assemblyName) appScopeFilter.assemblyName = new RegExp('^' + assemblyName + '$', 'i');
       if (boothNo)      appScopeFilter.boothNo      = String(boothNo);
-      
-      const epicNosWithFilter = await SchemeApplication.distinct('epicNo', appScopeFilter);
-      if (epicNosWithFilter.length === 0) {
+
+      const [epicNosWithFilter, userIdsWithFilter, mobilesWithFilter] = await Promise.all([
+        SchemeApplication.distinct('epicNo', appScopeFilter),
+        SchemeApplication.distinct('userId', appScopeFilter),
+        SchemeApplication.distinct('mobile', appScopeFilter)
+      ]);
+
+      const validEpicNos = epicNosWithFilter.filter(Boolean);
+      const validUserIds = userIdsWithFilter.filter(Boolean);
+      const validMobiles = mobilesWithFilter.filter(Boolean);
+
+      if (validEpicNos.length === 0 && validUserIds.length === 0 && validMobiles.length === 0) {
         return res.status(200).json({ success: true, voters: [], totalVoters: 0, totalPages: 0, currentPage: pageNum, limit: limitNum, applications: [] });
       }
-      userFilter.epicNo = { $in: epicNosWithFilter };
+
+      const matchingConditions = [];
+      if (validEpicNos.length > 0) matchingConditions.push({ epicNo: { $in: validEpicNos } });
+      if (validUserIds.length > 0) matchingConditions.push({ _id: { $in: validUserIds } });
+      if (validMobiles.length > 0) matchingConditions.push({ mobile: { $in: validMobiles } });
+
+      if (userFilter.$or) {
+        const searchOr = userFilter.$or;
+        delete userFilter.$or;
+        userFilter.$and = [
+          { $or: searchOr },
+          { $or: matchingConditions }
+        ];
+      } else {
+        userFilter.$or = matchingConditions;
+      }
     }
 
     // ── Step 2: Count total users matching filter ──
@@ -486,8 +510,6 @@ const getApplicationsList = async (req, res) => {
       ],
       ...adminScope
     };
-    if (status) appFilter.status = status;
-    if (schemeName) appFilter.schemeName = new RegExp(schemeName.trim(), 'i');
     const allApps = await SchemeApplication.find(appFilter).sort({ appliedAt: -1 }).lean();
 
     const voters = users.map(u => {
