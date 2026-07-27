@@ -3,7 +3,7 @@ import API from '../utils/api';
 import StatusBadge from './StatusBadge';
 import { BJP_SCHEMES } from '../utils/constants';
 import {
-  ArrowLeft, User, Phone, MapPin, Award, Calendar, CheckCircle2, Clock, PhoneCall, RefreshCw, AlertCircle, Share2, ChevronRight, Users
+  ArrowLeft, User, Phone, MapPin, Award, Calendar, CheckCircle2, Clock, PhoneCall, RefreshCw, AlertCircle, Share2, ChevronRight, Users, Copy, Check
 } from 'lucide-react';
 
 export const formatSchemeName = (schemeName, schemeId) => {
@@ -287,6 +287,47 @@ const MemberProfileTimelineView = ({ voterData, onBack, onUpdateAppStatus, onSel
               })}
             </div>
 
+            {/* Member's Unique Referral Code & Link Box */}
+            <div style={{
+              background: '#fff7ed',
+              border: '1.5px dashed var(--color-saffron)',
+              borderRadius: '12px',
+              padding: '14px',
+              marginBottom: '20px'
+            }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px' }}>
+                <div style={{ fontSize: '12px', fontWeight: '700', color: 'var(--color-midnight-ink)', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                  <Share2 size={14} color="var(--color-campfire-orange)" />
+                  Member Referral Link
+                </div>
+                <span className="tag-pill tag-sunlit" style={{ fontSize: '11px', fontWeight: '700' }}>
+                  {referralCode || epicNo}
+                </span>
+              </div>
+              <div style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
+                <input
+                  type="text"
+                  readOnly
+                  value={`${window.location.origin}/r/${referralCode || epicNo}`}
+                  className="form-control"
+                  style={{ fontSize: '11px', padding: '6px 8px', fontFamily: 'var(--font-ui-monospace)', background: '#fff' }}
+                />
+                <button
+                  type="button"
+                  onClick={() => {
+                    const link = `${window.location.origin}/r/${referralCode || epicNo}`;
+                    navigator.clipboard.writeText(link);
+                    setToastMsg('Referral link copied to clipboard!');
+                    setTimeout(() => setToastMsg(''), 3000);
+                  }}
+                  className="btn btn-ghost"
+                  style={{ padding: '6px 10px', fontSize: '11px', fontWeight: '700', whiteSpace: 'nowrap', display: 'flex', alignItems: 'center', gap: '4px' }}
+                >
+                  <Copy size={13} /> Copy Link
+                </button>
+              </div>
+            </div>
+
             {/* Referrals Section inside Left Column */}
             <div style={{ borderTop: '1px solid var(--color-linen)', paddingTop: '20px' }}>
               <div style={{ fontSize: '13px', fontWeight: '700', color: 'var(--color-midnight-ink)', marginBottom: '12px', display: 'flex', alignItems: 'center', gap: '6px' }}>
@@ -304,12 +345,14 @@ const MemberProfileTimelineView = ({ voterData, onBack, onUpdateAppStatus, onSel
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
                   {referredVoters.map((ref) => (
                     <div
-                      key={ref.epicNo}
+                      key={ref.epicNo || ref.id}
                       style={{
                         padding: '12px',
-                        background: 'var(--color-fog-gray)',
+                        background: 'var(--color-paper-white)',
                         borderRadius: '10px',
-                        border: '1px solid var(--color-linen)'
+                        border: '1px solid var(--color-linen)',
+                        boxShadow: '0 1px 3px rgba(0,0,0,0.03)',
+                        transition: 'all 0.15s ease'
                       }}
                     >
                       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
@@ -324,14 +367,17 @@ const MemberProfileTimelineView = ({ voterData, onBack, onUpdateAppStatus, onSel
                             if (onSelectVoter) onSelectVoter(ref);
                           }}
                           className="btn btn-ghost"
-                          style={{ padding: '4px 10px', fontSize: '11px', fontWeight: '700' }}
+                          style={{ padding: '5px 12px', fontSize: '12px', fontWeight: '700', color: 'var(--color-campfire-orange)', display: 'flex', alignItems: 'center', gap: '4px' }}
                         >
-                          View Profile <ChevronRight size={12} />
+                          View Profile <ChevronRight size={13} />
                         </button>
                       </div>
 
-                      <div style={{ fontSize: '11px', color: 'var(--color-slate)', marginTop: '4px' }}>
-                        Mobile: {ref.mobile} • {ref.applications?.length || 0} Schemes Applied
+                      <div style={{ fontSize: '11px', color: 'var(--color-slate)', marginTop: '6px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                        <span>Mobile: <strong>{ref.mobile}</strong></span>
+                        <span className="tag-pill tag-sunlit" style={{ fontSize: '10px', fontWeight: '700' }}>
+                          {ref.applications?.length || 0} Scheme(s)
+                        </span>
                       </div>
                     </div>
                   ))}

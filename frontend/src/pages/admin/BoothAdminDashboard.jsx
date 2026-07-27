@@ -8,6 +8,7 @@ import { BJP_SCHEMES } from '../../utils/constants';
 import {
   Shield, Users, Building, PhoneCall, RefreshCw, Search, Eye, Award, Share2, ChevronRight, FileText
 } from 'lucide-react';
+import TopReferrersCard from '../../components/TopReferrersCard';
 
 const LIMIT = 20;
 
@@ -235,72 +236,11 @@ const BoothAdminDashboard = () => {
             </div>
 
             {/* ── Top 5 Referral Champions Section ── */}
-            <div className="campsite-card" style={{ width: '100%', padding: '24px', marginBottom: '24px', boxSizing: 'border-box' }}>
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px' }}>
-                <div>
-                  <h3 style={{ fontSize: '18px', fontWeight: '700', color: 'var(--color-midnight-ink)', margin: 0, display: 'flex', alignItems: 'center', gap: '8px' }}>
-                    <Share2 size={20} color="var(--color-campfire-orange)" /> Top 5 Referral Champions in Booth {admin.boothNo}
-                  </h3>
-                  <div style={{ fontSize: '13px', color: 'var(--color-slate)', marginTop: '2px' }}>
-                    Voters who referred the highest number of members to BJP Nalam Thittam
-                  </div>
-                </div>
-              </div>
-
-              {statsData.topReferrers?.length === 0 ? (
-                <div style={{ padding: '20px', textAlign: 'center', color: 'var(--color-slate)', background: 'var(--color-fog-gray)', borderRadius: '8px' }}>
-                  No referral activity recorded in Booth {admin.boothNo} yet.
-                </div>
-              ) : (
-                <div style={{ width: '100%', overflowX: 'auto' }}>
-                  <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '13px' }}>
-                    <thead>
-                      <tr style={{ borderBottom: '2px solid var(--color-linen)', color: 'var(--color-slate)', textAlign: 'left', background: 'var(--color-fog-gray)' }}>
-                        <th style={{ padding: '10px 12px' }}>RANK &amp; MEMBER</th>
-                        <th style={{ padding: '10px 12px' }}>EPIC ID</th>
-                        <th style={{ padding: '10px 12px' }}>TOTAL REFERRALS</th>
-                        <th style={{ padding: '10px 12px', textAlign: 'right' }}>ACTION</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {statsData.topReferrers?.map((ref, idx) => (
-                        <tr key={ref.epicNo || idx} style={{ borderBottom: '1px solid var(--color-linen)' }}>
-                          <td style={{ padding: '12px' }}>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                              <span style={{
-                                width: '24px', height: '24px', borderRadius: '9999px',
-                                background: idx === 0 ? '#fef3c7' : 'var(--color-fog-gray)',
-                                color: idx === 0 ? '#d97706' : 'var(--color-midnight-ink)',
-                                fontWeight: '700', fontSize: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center'
-                              }}>
-                                #{idx + 1}
-                              </span>
-                              <span style={{ fontWeight: '700', color: 'var(--color-midnight-ink)', fontSize: '14px' }}>{ref.voterName}</span>
-                            </div>
-                          </td>
-                          <td style={{ padding: '12px', fontFamily: 'monospace', fontWeight: '600', color: 'var(--color-slate)' }}>{ref.epicNo}</td>
-                          <td style={{ padding: '12px' }}>
-                            <span className="tag-pill tag-active" style={{ fontSize: '12px', fontWeight: '700' }}>
-                              {ref.referralCount} Members Referred
-                            </span>
-                          </td>
-                          <td style={{ padding: '12px', textAlign: 'right' }}>
-                            <button
-                              type="button"
-                              onClick={() => handleOpenVoterDetails(ref)}
-                              className="btn btn-ghost"
-                              style={{ padding: '6px 14px', fontSize: '12px', fontWeight: '700' }}
-                            >
-                              View Profile <ChevronRight size={14} />
-                            </button>
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              )}
-            </div>
+            <TopReferrersCard
+              topReferrers={statsData.topReferrers || []}
+              scopeLabel={`Booth ${admin.boothNo}`}
+              onViewProfile={(ref) => handleOpenVoterDetails(ref)}
+            />
 
             {/* ── Top Schemes ── */}
             <div className="campsite-card" style={{ width: '100%', padding: '24px', boxSizing: 'border-box' }}>

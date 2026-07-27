@@ -517,6 +517,7 @@ const getMemberReferrals = async (req, res) => {
           district: u.district,
           assemblyName: u.assemblyName,
           boothNo: u.boothNo,
+          referralCode: u.referralCode,
           applications: apps
         };
       })
