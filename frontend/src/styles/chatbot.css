@@ -1181,52 +1181,8 @@
 
 @media (max-width: 1023px) {
   .chatbot-app.bjp-theme .left-menu-panel {
-    display: none !important; /* Hide left sidebar on mobile */
+    display: none !important; /* Hide on mobile/tablet */
   }
-}
-
-/* ── Mobile Quick Navigation Bar (< 1024px) ──────────────── */
-.mobile-nav-bar {
-  display: flex;
-  align-items: center;
-  justify-content: space-around;
-  background: var(--color-abyss, #0d1418);
-  border-bottom: 1px solid rgba(255, 102, 0, 0.2);
-  padding: 8px 6px;
-  position: sticky;
-  top: 0;
-  z-index: 99;
-  width: 100%;
-  box-sizing: border-box;
-  overflow-x: auto;
-}
-
-@media (min-width: 1024px) {
-  .mobile-nav-bar {
-    display: none !important;
-  }
-}
-
-.mobile-nav-tab {
-  background: transparent;
-  border: 1px solid transparent;
-  color: var(--color-ash, #8696a0);
-  font-size: 11.5px;
-  font-weight: 600;
-  padding: 6px 10px;
-  border-radius: 20px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  white-space: nowrap;
-  transition: all 0.2s ease;
-}
-
-.mobile-nav-tab.active {
-  background: rgba(255, 102, 0, 0.18);
-  color: var(--color-campfire-orange, #ff6600);
-  border-color: rgba(255, 102, 0, 0.4);
 }
 
 .chatbot-app.bjp-theme .left-menu-header {

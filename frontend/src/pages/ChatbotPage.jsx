@@ -7117,39 +7117,6 @@ export default function ChatbotPage() {
 
         {/* Right Chatbot Panel */}
         <div className="right-chat-panel">
-          {/* Mobile Quick Navigation Bar (< 1024px) */}
-          <div className="mobile-nav-bar">
-            <button 
-              className={`mobile-nav-tab ${activeView === 'chat' ? 'active' : ''}`}
-              onClick={() => setActiveView('chat')}
-            >
-              <i className="bi bi-chat-dots-fill" style={{ marginRight: 4 }} /> {t('Chat')}
-            </button>
-            <button 
-              className={`mobile-nav-tab ${activeView === 'my_schemes' ? 'active' : ''}`}
-              onClick={() => setActiveView('my_schemes')}
-            >
-              <i className="bi bi-check2-all" style={{ marginRight: 4 }} /> {t('My Schemes')}
-            </button>
-            <button 
-              className={`mobile-nav-tab ${activeView === 'profile' ? 'active' : ''}`}
-              onClick={() => setActiveView('profile')}
-            >
-              <i className="bi bi-person-circle" style={{ marginRight: 4 }} /> {t('Profile')}
-            </button>
-            <button 
-              className={`mobile-nav-tab ${activeView === 'referral' ? 'active' : ''}`}
-              onClick={() => setActiveView('referral')}
-            >
-              <i className="bi bi-link-45deg" style={{ marginRight: 4 }} /> {t('Referral')}
-            </button>
-            <button 
-              className={`mobile-nav-tab ${activeView === 'brochure' ? 'active' : ''}`}
-              onClick={() => setActiveView('brochure')}
-            >
-              <i className="bi bi-book-fill" style={{ marginRight: 4 }} /> {t('Brochure')}
-            </button>
-          </div>
           {activeView === 'scheme_status' ? (
             <SchemeStatusView
               scheme={NT_SCHEMES.find(s => s.id === selectedSchemeId)}
@@ -7493,8 +7460,9 @@ export default function ChatbotPage() {
             </div>
             <nav className="sidebar-nav">
               {[
-                { icon: 'person-circle',       label: 'My Profile',        action: 'profile' },
-                { icon: 'link-45deg',          label: 'Referral Link',     action: 'referral' },
+                { icon: 'person-circle',       label: 'My Profile',              action: 'profile' },
+                { icon: 'check2-all',          label: 'My Schemes',              action: 'my_schemes' },
+                { icon: 'link-45deg',          label: 'Referral Link',           action: 'referral' },
                 { icon: 'book-fill',           label: 'Central Schemes Brochure', action: 'brochure' },
               ].map((item) => {
                 const isComingSoon = false
