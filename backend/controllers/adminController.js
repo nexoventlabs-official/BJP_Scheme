@@ -510,6 +510,10 @@ const getApplicationsList = async (req, res) => {
       ],
       ...adminScope
     };
+
+    if (schemeName) appFilter.schemeName = new RegExp(schemeName.trim(), 'i');
+    if (status)     appFilter.status     = new RegExp('^' + status.trim() + '$', 'i');
+
     const allApps = await SchemeApplication.find(appFilter).sort({ appliedAt: -1 }).lean();
 
     const voters = users
@@ -530,25 +534,13 @@ const getApplicationsList = async (req, res) => {
           applications: userApps
         };
       })
-      .filter(v => {
-        if (schemeName) {
-          const schemeRegex = new RegExp(schemeName.trim(), 'i');
-          const matchesScheme = v.applications.some(a => schemeRegex.test(a.schemeName));
-          if (!matchesScheme) return false;
-        }
-        if (status) {
-          const statusRegex = new RegExp('^' + status.trim() + '$', 'i');
-          const matchesStatus = v.applications.some(a => statusRegex.test(a.status));
-          if (!matchesStatus) return false;
-        }
-        return true;
-      });
+      .filter(v => v.applications.length > 0);
 
     return res.status(200).json({
       success:      true,
       voters,
-      totalVoters:  (status || schemeName) ? voters.length : totalVoters,
-      totalPages:   (status || schemeName) ? Math.ceil(voters.length / limitNum) || 1 : totalPages,
+      totalVoters,
+      totalPages,
       currentPage:  pageNum,
       limit:        limitNum,
       applications: voters.flatMap(v => v.applications)
