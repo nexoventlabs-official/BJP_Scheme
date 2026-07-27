@@ -566,6 +566,11 @@ const getApplicationsList = async (req, res) => {
         if (matchedScheme.fullName) {
           regexes.push(new RegExp(matchedScheme.fullName.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'i'));
         }
+        if (matchedScheme.keys && Array.isArray(matchedScheme.keys)) {
+          matchedScheme.keys.forEach(k => {
+            regexes.push(new RegExp(k.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'i'));
+          });
+        }
       } else {
         regexes.push(new RegExp(clean.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'i'));
       }
@@ -1032,6 +1037,11 @@ const exportApplicationsCsv = async (req, res) => {
         if (matchedScheme.fullName) {
           regexes.push(new RegExp(matchedScheme.fullName.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'i'));
         }
+        if (matchedScheme.keys && Array.isArray(matchedScheme.keys)) {
+          matchedScheme.keys.forEach(k => {
+            regexes.push(new RegExp(k.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'i'));
+          });
+        }
       } else {
         regexes.push(new RegExp(clean.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'i'));
       }
@@ -1135,6 +1145,11 @@ const exportApplicationsExcel = async (req, res) => {
         regexes.push(new RegExp('^' + matchedScheme.name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '$', 'i'));
         if (matchedScheme.fullName) {
           regexes.push(new RegExp(matchedScheme.fullName.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'i'));
+        }
+        if (matchedScheme.keys && Array.isArray(matchedScheme.keys)) {
+          matchedScheme.keys.forEach(k => {
+            regexes.push(new RegExp(k.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'i'));
+          });
         }
       } else {
         regexes.push(new RegExp(clean.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'i'));
