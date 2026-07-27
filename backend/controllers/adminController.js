@@ -373,7 +373,7 @@ const getDashboardStats = async (req, res) => {
           appliedVoters: b.appliedVoters || 0,
           totalApps: b.totalApps,
           approved: b.approved,
-          pending: b.pending
+        };
       })
     );
 
