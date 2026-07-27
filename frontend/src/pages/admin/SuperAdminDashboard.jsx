@@ -49,6 +49,7 @@ const SuperAdminDashboard = () => {
   // ── Filters ──
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
+  const [schemeFilter, setSchemeFilter] = useState('');
   const [districtFilter, setDistrictFilter] = useState('');
   const [assemblyFilter, setAssemblyFilter] = useState('');
   const [boothFilter, setBoothFilter] = useState('');
