@@ -551,7 +551,8 @@ const AssemblyAdminDashboard = () => {
                   <tr><td colSpan={4} style={{ padding: '24px', textAlign: 'center', color: 'var(--color-slate)' }}>No booth data available.</td></tr>
                 )}
                 {(statsData.boothStats || []).slice((boothStatsPage - 1) * 15, boothStatsPage * 15).map((row, idx) => (
-                  <tr key={idx} style={{ borderBottom: '1px solid var(--color-linen)' }}
+                  <tr key={idx} style={{ borderBottom: '1px solid var(--color-linen)', cursor: 'pointer' }}
+                    onClick={() => { setBoothFilter(String(row._id.boothNo)); setStatusFilter(''); setSchemeFilter(''); navigateSubPage('applications'); }}
                     onMouseEnter={e => e.currentTarget.style.background = 'var(--color-fog-gray)'}
                     onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
                   >

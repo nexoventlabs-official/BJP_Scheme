@@ -981,7 +981,8 @@ const SuperAdminDashboard = () => {
               </thead>
               <tbody>
                 {(statsData.districtStats || []).slice((distStatsPage - 1) * 10, distStatsPage * 10).map((row) => (
-                  <tr key={row._id} style={{ borderBottom: '1px solid var(--color-linen)' }}
+                  <tr key={row._id} style={{ borderBottom: '1px solid var(--color-linen)', cursor: 'pointer' }}
+                    onClick={() => { setDistrictFilter(row._id); setAssemblyFilter(''); setBoothFilter(''); setStatusFilter(''); setSchemeFilter(''); navigateSubPage('applications'); }}
                     onMouseEnter={e => e.currentTarget.style.background = 'var(--color-fog-gray)'}
                     onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
                   >
@@ -1019,7 +1020,8 @@ const SuperAdminDashboard = () => {
               </thead>
               <tbody>
                 {(statsData.assemblyStats || []).slice((assStatsPage - 1) * 15, assStatsPage * 15).map((row, idx) => (
-                  <tr key={idx} style={{ borderBottom: '1px solid var(--color-linen)' }}
+                  <tr key={idx} style={{ borderBottom: '1px solid var(--color-linen)', cursor: 'pointer' }}
+                    onClick={() => { setDistrictFilter(row._id.district); setAssemblyFilter(row._id.assemblyName); setBoothFilter(''); setStatusFilter(''); setSchemeFilter(''); navigateSubPage('applications'); }}
                     onMouseEnter={e => e.currentTarget.style.background = 'var(--color-fog-gray)'}
                     onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
                   >
@@ -1059,7 +1061,8 @@ const SuperAdminDashboard = () => {
               </thead>
               <tbody>
                 {(statsData.boothStats || []).slice((boothStatsPage - 1) * 15, boothStatsPage * 15).map((row, idx) => (
-                  <tr key={idx} style={{ borderBottom: '1px solid var(--color-linen)' }}
+                  <tr key={idx} style={{ borderBottom: '1px solid var(--color-linen)', cursor: 'pointer' }}
+                    onClick={() => { setDistrictFilter(row._id.district); setAssemblyFilter(row._id.assemblyName); setBoothFilter(String(row._id.boothNo)); setStatusFilter(''); setSchemeFilter(''); navigateSubPage('applications'); }}
                     onMouseEnter={e => e.currentTarget.style.background = 'var(--color-fog-gray)'}
                     onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
                   >

@@ -666,7 +666,11 @@ const DistrictAdminDashboard = () => {
               </thead>
               <tbody>
                 {(statsData.assemblyStats || []).slice((assStatsPage - 1) * 15, assStatsPage * 15).map((row, idx) => (
-                  <tr key={idx} style={{ borderBottom: '1px solid var(--color-linen)' }}>
+                  <tr key={idx} style={{ borderBottom: '1px solid var(--color-linen)', cursor: 'pointer' }}
+                    onClick={() => { setAssemblyFilter(row._id.assemblyName); setBoothFilter(''); setStatusFilter(''); setSchemeFilter(''); navigateSubPage('applications'); }}
+                    onMouseEnter={e => e.currentTarget.style.background = 'var(--color-fog-gray)'}
+                    onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
+                  >
                     <td style={{ padding: '10px', fontWeight: '600', color: 'var(--color-midnight-ink)' }}>{row._id.assemblyName}</td>
                     <td style={{ padding: '10px', fontWeight: '600' }}>{row.totalApps}</td>
                     <td style={{ padding: '10px', color: 'var(--color-forest-pulse)', fontWeight: '600' }}>{row.approved}</td>
@@ -699,7 +703,11 @@ const DistrictAdminDashboard = () => {
               </thead>
               <tbody>
                 {(statsData.boothStats || []).slice((boothStatsPage - 1) * 15, boothStatsPage * 15).map((row, idx) => (
-                  <tr key={idx} style={{ borderBottom: '1px solid var(--color-linen)' }}>
+                  <tr key={idx} style={{ borderBottom: '1px solid var(--color-linen)', cursor: 'pointer' }}
+                    onClick={() => { setAssemblyFilter(row._id.assemblyName); setBoothFilter(String(row._id.boothNo)); setStatusFilter(''); setSchemeFilter(''); navigateSubPage('applications'); }}
+                    onMouseEnter={e => e.currentTarget.style.background = 'var(--color-fog-gray)'}
+                    onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
+                  >
                     <td style={{ padding: '10px', fontWeight: '600', color: 'var(--color-midnight-ink)' }}>Booth {row._id.boothNo}</td>
                     <td style={{ padding: '10px' }}>{row._id.assemblyName}</td>
                     <td style={{ padding: '10px', fontWeight: '600' }}>{row.totalApps}</td>
