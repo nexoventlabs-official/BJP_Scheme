@@ -589,21 +589,22 @@ const getApplicationsList = async (req, res) => {
     if (!isExport) {
       const voterSkip = (pageNum - 1) * limitNum;
 
-      // Step 1: Lightweight aggregation — only epicNo + latestAt (tiny memory, no $$ROOT)
+      // Step 1: Lightweight aggregation by mobile number — only mobile + latestAt (tiny memory, no $$ROOT)
       // Run in parallel with counts and status breakdown
-      const [totalAppsCount, rawEpicList, statusGroup, epicPage] = await Promise.all([
+      const [totalAppsCount, rawMobileList, statusGroup, epicPage] = await Promise.all([
         SchemeApplication.countDocuments(appScopeFilter),
-        SchemeApplication.distinct('epicNo', appScopeFilter),
+        SchemeApplication.distinct('mobile', appScopeFilter),
         SchemeApplication.aggregate([
           { $match: appScopeFilter },
           { $group: { _id: '$status', count: { $sum: 1 } } }
         ], { allowDiskUse: true }),
         SchemeApplication.aggregate([
           { $match: appScopeFilter },
-          // Group by voter — only keep the 3 tiny fields needed for sorting + identity
+          // Group by voter mobile number — only keep the tiny fields needed for sorting + identity
           {
             $group: {
-              _id:      { $ifNull: ['$epicNo', { $ifNull: [{ $toString: '$userId' }, '$mobile'] }] },
+              _id:      { $ifNull: ['$mobile', { $ifNull: ['$epicNo', { $toString: '$userId' }] }] },
+              mobile:   { $first: '$mobile' },
               epicNo:   { $first: '$epicNo' },
               latestAt: { $max: '$appliedAt' }
             }
@@ -611,37 +612,39 @@ const getApplicationsList = async (req, res) => {
           { $sort: { latestAt: -1 } },
           { $skip:  voterSkip },
           { $limit: limitNum },
-          { $project: { _id: 1, epicNo: 1 } }
+          { $project: { _id: 1, mobile: 1, epicNo: 1 } }
         ], { allowDiskUse: true })
       ]);
 
-      const distinctVoterCount = rawEpicList.length || totalAppsCount;
+      const distinctVoterCount = rawMobileList.length || totalAppsCount;
       const totalPages = Math.ceil(distinctVoterCount / limitNum) || 1;
 
       const statusCounts = { Approved: 0, Pending: 0, Submitted: 0, Processing: 0, Called: 0, Verified: 0, Completed: 0, Rejected: 0 };
       statusGroup.forEach(g => { if (g._id) statusCounts[g._id] = g.count; });
 
-      // Step 2: Fetch full application docs for just these 20 voter EPICs
+      // Step 2: Fetch full application docs for just these 20 voter Mobiles/EPICs
+      const pageMobiles  = epicPage.map(e => e.mobile).filter(Boolean);
       const pageEpicNos  = epicPage.map(e => e.epicNo).filter(Boolean);
-      const pageVoterIds = epicPage.map(e => e._id).filter(id => id && !pageEpicNos.includes(id));
+      const pageVoterIds = epicPage.map(e => e._id).filter(id => id && !pageMobiles.includes(id) && !pageEpicNos.includes(id));
 
       const rawApps = await SchemeApplication.find({
         $and: [
           appScopeFilter,
           { $or: [
+            { mobile: { $in: pageMobiles } },
             { epicNo: { $in: pageEpicNos } },
-            { mobile: { $in: pageVoterIds } }
+            { userId: { $in: pageVoterIds } }
           ]}
         ]
       }).sort({ appliedAt: -1 }).lean();
 
-      // Group apps by voter key
+      // Group apps by voter mobile key
       const voterMap = {};
       // Preserve the sorted order from epicPage
       epicPage.forEach(e => { voterMap[e._id] = null; });
 
       rawApps.forEach(app => {
-        const key = app.epicNo || (app.userId ? String(app.userId) : app.mobile);
+        const key = app.mobile || app.epicNo || (app.userId ? String(app.userId) : null);
         if (!key) return;
         if (!voterMap[key]) {
           voterMap[key] = {
@@ -748,7 +751,7 @@ const getApplicationsList = async (req, res) => {
       { $match: appScopeFilter },
       {
         $group: {
-          _id: { $ifNull: ['$epicNo', { $ifNull: ['$userId', '$mobile'] }] },
+          _id: { $ifNull: ['$mobile', { $ifNull: ['$epicNo', '$userId'] }] },
           epicNo: { $first: '$epicNo' },
           voterName: { $first: '$voterName' },
           mobile: { $first: '$mobile' },
