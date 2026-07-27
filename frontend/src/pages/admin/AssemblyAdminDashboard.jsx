@@ -544,6 +544,7 @@ const AssemblyAdminDashboard = () => {
               <thead>
                 <tr style={{ borderBottom: '1px solid var(--color-linen)', color: 'var(--color-slate)', textAlign: 'left', background: 'var(--color-fog-gray)' }}>
                   <th style={{ padding: '10px' }}>Booth / Part No</th>
+                  <th style={{ padding: '10px' }}>Total Voters</th>
                   <th style={{ padding: '10px' }}>Total Applications</th>
                   <th style={{ padding: '10px' }}>Approved</th>
                   <th style={{ padding: '10px' }}>Pending</th>
@@ -551,7 +552,7 @@ const AssemblyAdminDashboard = () => {
               </thead>
               <tbody>
                 {statsData.boothStats?.length === 0 && (
-                  <tr><td colSpan={4} style={{ padding: '24px', textAlign: 'center', color: 'var(--color-slate)' }}>No booth data available.</td></tr>
+                  <tr><td colSpan={5} style={{ padding: '24px', textAlign: 'center', color: 'var(--color-slate)' }}>No booth data available.</td></tr>
                 )}
                 {(statsData.boothStats || []).slice((boothStatsPage - 1) * 15, boothStatsPage * 15).map((row, idx) => (
                   <tr key={idx} style={{ borderBottom: '1px solid var(--color-linen)', cursor: 'pointer' }}
@@ -560,6 +561,7 @@ const AssemblyAdminDashboard = () => {
                     onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
                   >
                     <td style={{ padding: '10px', fontWeight: '700', color: 'var(--color-midnight-ink)' }}>Booth {row._id.boothNo}</td>
+                    <td style={{ padding: '10px', color: '#0284c7', fontWeight: '700' }}>{row.totalVoters ?? '—'}</td>
                     <td style={{ padding: '10px', fontWeight: '600' }}>{row.totalApps}</td>
                     <td style={{ padding: '10px', color: 'var(--color-forest-pulse)', fontWeight: '600' }}>{row.approved}</td>
                     <td style={{ padding: '10px', color: 'var(--color-slate)' }}>{row.pending}</td>

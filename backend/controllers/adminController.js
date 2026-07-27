@@ -237,7 +237,17 @@ const getDashboardStats = async (req, res) => {
           _id: '$district',
           totalApps: { $sum: 1 },
           approved: { $sum: { $cond: [{ $eq: ['$status', 'Approved'] }, 1, 0] } },
-          pending: { $sum: { $cond: [{ $in: ['$status', ['Submitted', 'Pending', 'In Progress', 'Called']] }, 1, 0] } }
+          pending: { $sum: { $cond: [{ $in: ['$status', ['Submitted', 'Pending', 'In Progress', 'Called']] }, 1, 0] } },
+          voterIds: { $addToSet: { $ifNull: ['$epicNo', '$mobile'] } }
+        }
+      },
+      {
+        $project: {
+          _id: 1,
+          totalApps: 1,
+          approved: 1,
+          pending: 1,
+          totalVoters: { $size: '$voterIds' }
         }
       },
       { $sort: { totalApps: -1 } }
@@ -250,7 +260,17 @@ const getDashboardStats = async (req, res) => {
           _id: { district: '$district', assemblyName: '$assemblyName' },
           totalApps: { $sum: 1 },
           approved: { $sum: { $cond: [{ $eq: ['$status', 'Approved'] }, 1, 0] } },
-          pending: { $sum: { $cond: [{ $in: ['$status', ['Submitted', 'Pending', 'In Progress', 'Called']] }, 1, 0] } }
+          pending: { $sum: { $cond: [{ $in: ['$status', ['Submitted', 'Pending', 'In Progress', 'Called']] }, 1, 0] } },
+          voterIds: { $addToSet: { $ifNull: ['$epicNo', '$mobile'] } }
+        }
+      },
+      {
+        $project: {
+          _id: 1,
+          totalApps: 1,
+          approved: 1,
+          pending: 1,
+          totalVoters: { $size: '$voterIds' }
         }
       },
       { $sort: { totalApps: -1 } },
@@ -264,7 +284,17 @@ const getDashboardStats = async (req, res) => {
           _id: { district: '$district', assemblyName: '$assemblyName', boothNo: '$boothNo' },
           totalApps: { $sum: 1 },
           approved: { $sum: { $cond: [{ $eq: ['$status', 'Approved'] }, 1, 0] } },
-          pending: { $sum: { $cond: [{ $in: ['$status', ['Submitted', 'Pending', 'In Progress', 'Called']] }, 1, 0] } }
+          pending: { $sum: { $cond: [{ $in: ['$status', ['Submitted', 'Pending', 'In Progress', 'Called']] }, 1, 0] } },
+          voterIds: { $addToSet: { $ifNull: ['$epicNo', '$mobile'] } }
+        }
+      },
+      {
+        $project: {
+          _id: 1,
+          totalApps: 1,
+          approved: 1,
+          pending: 1,
+          totalVoters: { $size: '$voterIds' }
         }
       },
       { $sort: { totalApps: -1 } },

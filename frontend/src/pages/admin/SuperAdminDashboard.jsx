@@ -987,6 +987,7 @@ const SuperAdminDashboard = () => {
               <thead>
                 <tr style={{ borderBottom: '2px solid var(--color-linen)', color: 'var(--color-slate)', textAlign: 'left', background: 'var(--color-fog-gray)' }}>
                   <th style={{ padding: '10px' }}>District Name</th>
+                  <th style={{ padding: '10px' }}>Total Voters</th>
                   <th style={{ padding: '10px' }}>Total Applications</th>
                   <th style={{ padding: '10px' }}>Approved</th>
                   <th style={{ padding: '10px' }}>Pending</th>
@@ -1000,6 +1001,7 @@ const SuperAdminDashboard = () => {
                     onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
                   >
                     <td style={{ padding: '10px', fontWeight: '600', color: 'var(--color-midnight-ink)' }}>{row._id}</td>
+                    <td style={{ padding: '10px', color: '#0284c7', fontWeight: '700' }}>{row.totalVoters ?? '—'}</td>
                     <td style={{ padding: '10px', fontWeight: '600' }}>{row.totalApps}</td>
                     <td style={{ padding: '10px', color: 'var(--color-forest-pulse)', fontWeight: '600' }}>{row.approved}</td>
                     <td style={{ padding: '10px', color: 'var(--color-slate)' }}>{row.pending}</td>
@@ -1026,6 +1028,7 @@ const SuperAdminDashboard = () => {
                 <tr style={{ borderBottom: '2px solid var(--color-linen)', color: 'var(--color-slate)', textAlign: 'left', background: 'var(--color-fog-gray)' }}>
                   <th style={{ padding: '10px' }}>Assembly Constituency</th>
                   <th style={{ padding: '10px' }}>District</th>
+                  <th style={{ padding: '10px' }}>Total Voters</th>
                   <th style={{ padding: '10px' }}>Total Applications</th>
                   <th style={{ padding: '10px' }}>Approved</th>
                   <th style={{ padding: '10px' }}>Pending</th>
@@ -1040,6 +1043,7 @@ const SuperAdminDashboard = () => {
                   >
                     <td style={{ padding: '10px', fontWeight: '600', color: 'var(--color-midnight-ink)' }}>{row._id.assemblyName}</td>
                     <td style={{ padding: '10px', color: 'var(--color-slate)' }}>{row._id.district}</td>
+                    <td style={{ padding: '10px', color: '#0284c7', fontWeight: '700' }}>{row.totalVoters ?? '—'}</td>
                     <td style={{ padding: '10px', fontWeight: '600' }}>{row.totalApps}</td>
                     <td style={{ padding: '10px', color: 'var(--color-forest-pulse)', fontWeight: '600' }}>{row.approved}</td>
                     <td style={{ padding: '10px', color: 'var(--color-slate)' }}>{row.pending}</td>
@@ -1067,6 +1071,7 @@ const SuperAdminDashboard = () => {
                   <th style={{ padding: '10px' }}>Booth / Part No</th>
                   <th style={{ padding: '10px' }}>Assembly</th>
                   <th style={{ padding: '10px' }}>District</th>
+                  <th style={{ padding: '10px' }}>Total Voters</th>
                   <th style={{ padding: '10px' }}>Total Applications</th>
                   <th style={{ padding: '10px' }}>Approved</th>
                   <th style={{ padding: '10px' }}>Pending</th>
@@ -1082,6 +1087,7 @@ const SuperAdminDashboard = () => {
                     <td style={{ padding: '10px', fontWeight: '600', color: 'var(--color-midnight-ink)' }}>Booth {row._id.boothNo}</td>
                     <td style={{ padding: '10px' }}>{row._id.assemblyName}</td>
                     <td style={{ padding: '10px', color: 'var(--color-slate)' }}>{row._id.district}</td>
+                    <td style={{ padding: '10px', color: '#0284c7', fontWeight: '700' }}>{row.totalVoters ?? '—'}</td>
                     <td style={{ padding: '10px', fontWeight: '600' }}>{row.totalApps}</td>
                     <td style={{ padding: '10px', color: 'var(--color-forest-pulse)', fontWeight: '600' }}>{row.approved}</td>
                     <td style={{ padding: '10px', color: 'var(--color-slate)' }}>{row.pending}</td>
