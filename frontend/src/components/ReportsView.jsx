@@ -71,6 +71,8 @@ const ReportsView = ({
   const [totalRecords, setTotalRecords] = useState(0); // distinct applied voters
   const [totalApps, setTotalApps] = useState(0);       // total scheme applications
   const [statusCounts, setStatusCounts] = useState({ Approved: 0, Pending: 0, Submitted: 0, Processing: 0, Called: 0, Verified: 0, Completed: 0, Rejected: 0 });
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
   const [loadingData, setLoadingData] = useState(false);
   const [isExporting, setIsExporting] = useState(false);
 
@@ -122,8 +124,8 @@ const ReportsView = ({
     try {
       setLoadingData(true);
       const params = new URLSearchParams({
-        page: 1,
-        limit: 100,
+        page: currentPage,
+        limit: 50,
         ...(searchQuery    && { search: searchQuery }),
         ...(statusFilter   && { status: statusFilter }),
         ...(schemeFilter   && { schemeName: schemeFilter }),
@@ -136,6 +138,7 @@ const ReportsView = ({
         setReportVoters(res.data.voters || []);
         setTotalRecords(res.data.totalVoters || 0);
         setTotalApps(res.data.totalApplications || res.data.totalVoters || 0);
+        setTotalPages(res.data.totalPages || 1);
         if (res.data.statusCounts) {
           setStatusCounts(res.data.statusCounts);
         }
@@ -168,8 +171,12 @@ const ReportsView = ({
   }, [assemblyFilter]);
 
   useEffect(() => {
-    fetchReportData();
+    setCurrentPage(1);
   }, [districtFilter, assemblyFilter, boothFilter, statusFilter, schemeFilter, searchQuery]);
+
+  useEffect(() => {
+    fetchReportData();
+  }, [districtFilter, assemblyFilter, boothFilter, statusFilter, schemeFilter, searchQuery, currentPage]);
 
   // ── Flatten All Scheme Application Items for Export & Stats ──
   const allReportApps = reportVoters.flatMap(v => {
@@ -698,7 +705,7 @@ const ReportsView = ({
               <tbody>
                 {allReportApps.map((row, idx) => (
                   <tr key={idx} style={{ borderBottom: '1px solid var(--color-linen)' }}>
-                    <td style={{ padding: '10px 12px', textAlign: 'center', color: 'var(--color-slate)' }}>{idx + 1}</td>
+                    <td style={{ padding: '10px 12px', textAlign: 'center', color: 'var(--color-slate)' }}>{(currentPage - 1) * 50 + idx + 1}</td>
                     <td style={{ padding: '10px 12px', fontWeight: '700', color: 'var(--color-midnight-ink)' }}>{row.voterName}</td>
                     <td style={{ padding: '10px 12px', fontFamily: 'monospace', fontWeight: '600' }}>{row.epicNo}</td>
                     <td style={{ padding: '10px 12px' }}>{row.mobile}</td>
@@ -714,6 +721,59 @@ const ReportsView = ({
                 ))}
               </tbody>
             </table>
+
+            {/* ── Pagination Bar (50 items per page) ── */}
+            {totalPages > 1 && (
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '12px', marginTop: '20px', paddingTop: '14px', borderTop: '1px solid var(--color-linen)', fontSize: '13px', color: 'var(--color-slate)' }}>
+                <div>
+                  Showing <strong>{(currentPage - 1) * 50 + 1}</strong> – <strong>{Math.min(currentPage * 50, totalAppsCount)}</strong> of <strong>{totalAppsCount}</strong> application records
+                </div>
+
+                <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                  <button
+                    onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+                    disabled={currentPage === 1 || loadingData}
+                    className="btn btn-ghost"
+                    style={{ padding: '6px 12px', fontSize: '12px', opacity: currentPage === 1 ? 0.4 : 1 }}
+                  >
+                    ← Prev
+                  </button>
+
+                  {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                    let p = i + 1;
+                    if (totalPages > 5) {
+                      if (currentPage > 3) p = currentPage - 2 + i;
+                      if (p > totalPages) p = totalPages - 4 + i;
+                    }
+                    return (
+                      <button
+                        key={p}
+                        onClick={() => setCurrentPage(p)}
+                        disabled={loadingData}
+                        className={`btn ${p === currentPage ? 'btn-primary' : 'btn-ghost'}`}
+                        style={{
+                          padding: '6px 12px',
+                          fontSize: '12px',
+                          fontWeight: p === currentPage ? '700' : '500',
+                          minWidth: '34px'
+                        }}
+                      >
+                        {p}
+                      </button>
+                    );
+                  })}
+
+                  <button
+                    onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
+                    disabled={currentPage === totalPages || loadingData}
+                    className="btn btn-ghost"
+                    style={{ padding: '6px 12px', fontSize: '12px', opacity: currentPage === totalPages ? 0.4 : 1 }}
+                  >
+                    Next →
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
         )}
       </div>
