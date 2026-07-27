@@ -645,9 +645,10 @@ const getApplicationsList = async (req, res) => {
           referralCode: { $first: '$referralCode' },
           latestAppliedAt: { $max: '$appliedAt' }
         }
-      },
-      { $sort: { latestAppliedAt: -1 } }
-    ], { allowDiskUse: true });
+      }
+    ]);
+
+    applicantAgg.sort((a, b) => new Date(b.latestAppliedAt || 0) - new Date(a.latestAppliedAt || 0));
 
     const totalVoters = applicantAgg.length;
     const totalPages  = Math.ceil(totalVoters / limitNum) || 1;
