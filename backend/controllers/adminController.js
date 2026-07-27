@@ -376,35 +376,39 @@ const getDashboardStats = async (req, res) => {
       })
     );
 
-    const schemeMap = {
-      '1': { name: 'PMSBY', cluster: 'Cluster 1 — Insurance Trinity (Daily Wage Workers)' },
-      '2': { name: 'PMJJBY', cluster: 'Cluster 1 — Insurance Trinity (Daily Wage Workers)' },
-      '3': { name: 'APY', cluster: 'Cluster 1 — Insurance Trinity (Daily Wage Workers)' },
-      '4': { name: 'PM SVANidhi', cluster: 'Cluster 2 — Credit (Street Vendors & Small Business)' },
-      '5': { name: 'PM Mudra Shishu', cluster: 'Cluster 2 — Credit (Street Vendors & Small Business)' },
-      '6': { name: 'PM Mudra Kishor', cluster: 'Cluster 2 — Credit (Street Vendors & Small Business)' },
-      '7': { name: 'Udyam', cluster: 'Cluster 2 — Credit (Street Vendors & Small Business)' },
-      '8': { name: 'Stand Up India', cluster: 'Cluster 2 — Credit (Street Vendors & Small Business)' },
-      '9': { name: 'Startup Seed Fund', cluster: 'Cluster 2 — Credit (Street Vendors & Small Business)' },
-      '10': { name: 'PM Kisan', cluster: 'Cluster 3 — Farmers (Kisan)' },
-      '11': { name: 'PM Fasal Bima', cluster: 'Cluster 3 — Farmers (Kisan)' },
-      '12': { name: 'PM Kisan Maan Dhan', cluster: 'Cluster 3 — Farmers (Kisan)' },
-      '13': { name: 'PM Ujjwala', cluster: 'Cluster 4 — Women & Families' },
-      '14': { name: 'PM Matru Vandana', cluster: 'Cluster 4 — Women & Families' },
-      '15': { name: 'Sukanya Samridhi', cluster: 'Cluster 4 — Women & Families' },
-      '16': { name: 'PMKVY', cluster: 'Cluster 5 — Youth & Skills (Future)' },
-      '17': { name: 'NSP Scholarship', cluster: 'Cluster 5 — Youth & Skills (Future)' },
-      '18': { name: 'PM Vishwakarma', cluster: 'Cluster 5 — Youth & Skills (Future)' },
-      '19': { name: 'Jan Dhan', cluster: 'Foundation Layer (Prerequisite for all DBT)' },
-      '20': { name: 'e-Shram', cluster: 'Foundation Layer (Prerequisite for all DBT)' }
-    };
+    const CANONICAL_SCHEMES = [
+      { id: '1', name: 'PMSBY', keys: ['pmsby', 'suraksha bima'], cluster: 'Cluster 1 — Insurance Trinity (Daily Wage Workers)' },
+      { id: '2', name: 'PMJJBY', keys: ['pmjjby', 'jeevan jyoti'], cluster: 'Cluster 1 — Insurance Trinity (Daily Wage Workers)' },
+      { id: '3', name: 'APY', keys: ['apy', 'atal pension'], cluster: 'Cluster 1 — Insurance Trinity (Daily Wage Workers)' },
+      { id: '4', name: 'PM SVANidhi', keys: ['svanidhi', 'street vendor'], cluster: 'Cluster 2 — Credit (Street Vendors & Small Business)' },
+      { id: '5', name: 'PM Mudra Shishu', keys: ['mudra shishu', 'shishu'], cluster: 'Cluster 2 — Credit (Street Vendors & Small Business)' },
+      { id: '6', name: 'PM Mudra Kishor', keys: ['mudra kishor', 'kishor'], cluster: 'Cluster 2 — Credit (Street Vendors & Small Business)' },
+      { id: '7', name: 'Udyam', keys: ['udyam', 'msme'], cluster: 'Cluster 2 — Credit (Street Vendors & Small Business)' },
+      { id: '8', name: 'Stand Up India', keys: ['stand up', 'standup'], cluster: 'Cluster 2 — Credit (Street Vendors & Small Business)' },
+      { id: '9', name: 'Startup Seed Fund', keys: ['startup', 'seed fund'], cluster: 'Cluster 2 — Credit (Street Vendors & Small Business)' },
+      { id: '10', name: 'PM Kisan', keys: ['pm kisan', 'kisan samman'], cluster: 'Cluster 3 — Farmers (Kisan)' },
+      { id: '11', name: 'PM Fasal Bima', keys: ['fasal bima', 'crop insurance'], cluster: 'Cluster 3 — Farmers (Kisan)' },
+      { id: '12', name: 'PM Kisan Maan Dhan', keys: ['maan dhan', 'farmer pension'], cluster: 'Cluster 3 — Farmers (Kisan)' },
+      { id: '13', name: 'PM Ujjwala', keys: ['ujjwala', 'lpg'], cluster: 'Cluster 4 — Women & Families' },
+      { id: '14', name: 'PM Matru Vandana', keys: ['matru vandana', 'maternity'], cluster: 'Cluster 4 — Women & Families' },
+      { id: '15', name: 'Sukanya Samridhi', keys: ['sukanya', 'girl child'], cluster: 'Cluster 4 — Women & Families' },
+      { id: '16', name: 'PMKVY', keys: ['pmkvy', 'kaushal vikas'], cluster: 'Cluster 5 — Youth & Skills (Future)' },
+      { id: '17', name: 'NSP Scholarship', keys: ['nsp', 'scholarship'], cluster: 'Cluster 5 — Youth & Skills (Future)' },
+      { id: '18', name: 'PM Vishwakarma', keys: ['vishwakarma'], cluster: 'Cluster 5 — Youth & Skills (Future)' },
+      { id: '19', name: 'Jan Dhan', keys: ['jan dhan', 'zero-balance', 'ayushman'], cluster: 'Foundation Layer (Prerequisite for all DBT)' },
+      { id: '20', name: 'e-Shram', keys: ['e-shram', 'eshram', 'unorganised'], cluster: 'Foundation Layer (Prerequisite for all DBT)' }
+    ];
 
     const popularityObj = {};
     rawPopularity.forEach(item => {
-      const key = String(item._id).trim();
-      const mapped = schemeMap[key];
-      const displayName = mapped ? mapped.name : key;
-      const clusterName = mapped ? mapped.cluster : (item.cluster || 'BJP Nalam Thittam Welfare');
+      const rawStr = String(item._id || '').trim().toLowerCase();
+      let matched = CANONICAL_SCHEMES.find(s => String(s.id) === String(item._id) || s.name.toLowerCase() === rawStr);
+      if (!matched) {
+        matched = CANONICAL_SCHEMES.find(s => s.keys.some(k => rawStr.includes(k)));
+      }
+
+      const displayName = matched ? matched.name : String(item._id);
+      const clusterName = matched ? matched.cluster : (item.cluster || 'BJP Nalam Thittam Welfare');
 
       if (!popularityObj[displayName]) {
         popularityObj[displayName] = { _id: displayName, count: 0, cluster: clusterName };
@@ -597,8 +601,13 @@ const getApplicationsList = async (req, res) => {
 
     // ── Fast Path for Normal Paginated Display (e.g. Reports preview / App list) ──
     if (!isExport) {
-      const [totalAppsCount, rawApps] = await Promise.all([
+      const [totalAppsCount, rawEpicList, statusGroup, rawApps] = await Promise.all([
         SchemeApplication.countDocuments(appScopeFilter),
+        SchemeApplication.distinct('epicNo', appScopeFilter),
+        SchemeApplication.aggregate([
+          { $match: appScopeFilter },
+          { $group: { _id: '$status', count: { $sum: 1 } } }
+        ]),
         SchemeApplication.find(appScopeFilter)
           .sort({ appliedAt: -1, _id: -1 })
           .skip(skip)
@@ -607,6 +616,10 @@ const getApplicationsList = async (req, res) => {
       ]);
 
       const totalPages = Math.ceil(totalAppsCount / limitNum) || 1;
+      const statusCounts = { Approved: 0, Pending: 0, Submitted: 0, Processing: 0, Called: 0, Verified: 0, Completed: 0, Rejected: 0 };
+      statusGroup.forEach(g => {
+        if (g._id) statusCounts[g._id] = g.count;
+      });
 
       // Group paginated items by voter
       const voterMap = {};
@@ -633,7 +646,9 @@ const getApplicationsList = async (req, res) => {
       return res.status(200).json({
         success: true,
         voters: Object.values(voterMap),
-        totalVoters: totalAppsCount,
+        totalApplications: totalAppsCount,
+        totalVoters: rawEpicList.length || totalAppsCount,
+        statusCounts,
         totalPages,
         currentPage: pageNum,
         limit: limitNum,

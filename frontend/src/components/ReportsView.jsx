@@ -68,7 +68,9 @@ const ReportsView = ({
 
   // Data & Loading State
   const [reportVoters, setReportVoters] = useState([]);
-  const [totalRecords, setTotalRecords] = useState(0);
+  const [totalRecords, setTotalRecords] = useState(0); // distinct applied voters
+  const [totalApps, setTotalApps] = useState(0);       // total scheme applications
+  const [statusCounts, setStatusCounts] = useState({ Approved: 0, Pending: 0, Submitted: 0, Processing: 0, Called: 0, Verified: 0, Completed: 0, Rejected: 0 });
   const [loadingData, setLoadingData] = useState(false);
   const [isExporting, setIsExporting] = useState(false);
 
@@ -133,6 +135,10 @@ const ReportsView = ({
       if (res.data.success) {
         setReportVoters(res.data.voters || []);
         setTotalRecords(res.data.totalVoters || 0);
+        setTotalApps(res.data.totalApplications || res.data.totalVoters || 0);
+        if (res.data.statusCounts) {
+          setStatusCounts(res.data.statusCounts);
+        }
       }
     } catch (err) {
       console.error('Error fetching report data:', err);
@@ -195,10 +201,10 @@ const ReportsView = ({
     }));
   });
 
-  const totalAppsCount = allReportApps.length;
-  const approvedCount = allReportApps.filter(a => a.status === 'Approved').length;
-  const pendingCount = allReportApps.filter(a => ['Submitted', 'Pending', 'In Progress', 'Processing', 'Called'].includes(a.status)).length;
-  const rejectedCount = allReportApps.filter(a => a.status === 'Rejected').length;
+  const totalAppsCount = totalApps || allReportApps.length;
+  const approvedCount = (statusCounts.Approved || 0) + (statusCounts.Completed || 0);
+  const pendingCount = (statusCounts.Submitted || 0) + (statusCounts.Pending || 0) + (statusCounts.Processing || 0) + (statusCounts.Called || 0) + (statusCounts.Verified || 0);
+  const rejectedCount = statusCounts.Rejected || 0;
 
   // ── Download Styled Excel Report ──
   const handleDownloadExcel = async () => {
