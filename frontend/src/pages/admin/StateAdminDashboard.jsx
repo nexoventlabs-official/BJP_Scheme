@@ -28,6 +28,7 @@ const StateAdminDashboard = () => {
   // ── Filters ──
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
+  const [schemeFilter, setSchemeFilter] = useState('');
   const [districtFilter, setDistrictFilter] = useState('');
   const [assemblyFilter, setAssemblyFilter] = useState('');
   const [boothFilter, setBoothFilter] = useState('');
@@ -128,6 +129,7 @@ const StateAdminDashboard = () => {
         page, limit: LIMIT,
         ...(searchQuery     && { search: searchQuery }),
         ...(statusFilter    && { status: statusFilter }),
+        ...(schemeFilter    && { schemeName: schemeFilter }),
         ...(districtFilter  && { district: districtFilter }),
         ...(assemblyFilter  && { assemblyName: assemblyFilter }),
         ...(boothFilter     && { boothNo: boothFilter })
@@ -160,7 +162,7 @@ const StateAdminDashboard = () => {
   useEffect(() => {
     fetchVoters(1);
     setCurrentPage(1);
-  }, [districtFilter, assemblyFilter, boothFilter, statusFilter, searchQuery]);
+  }, [districtFilter, assemblyFilter, boothFilter, statusFilter, schemeFilter, searchQuery]);
 
   // Handle District change
   useEffect(() => {
@@ -371,19 +373,29 @@ const StateAdminDashboard = () => {
               </div>
 
               {/* Card 3: Total Applications */}
-              <div className="stat-card">
+              <div
+                className="stat-card"
+                onClick={() => { setStatusFilter(''); setSchemeFilter(''); navigateSubPage('applications'); }}
+                style={{ cursor: 'pointer', transition: 'all 0.2s ease' }}
+                title="Click to view all applications"
+              >
                 <div className="stat-icon" style={{ background: 'var(--color-fog-gray)', color: 'var(--color-midnight-ink)' }}>
                   <FileText size={20} />
                 </div>
                 <div>
                   <div className="stat-number">{statsData.overview.totalApplications}</div>
                   <div className="stat-label">Applications Submitted</div>
-                  <div style={{ fontSize: '11px', color: 'var(--color-slate)', marginTop: '2px' }}>Scheme Directives</div>
+                  <div style={{ fontSize: '11px', color: 'var(--color-saffron)', fontWeight: '600', marginTop: '2px' }}>Click to View Applications →</div>
                 </div>
               </div>
 
               {/* Card 4: Approved Directives */}
-              <div className="stat-card">
+              <div
+                className="stat-card"
+                onClick={() => { setStatusFilter('Approved'); setSchemeFilter(''); navigateSubPage('applications'); }}
+                style={{ cursor: 'pointer', transition: 'all 0.2s ease' }}
+                title="Click to view approved applications"
+              >
                 <div className="stat-icon" style={{ background: '#f0fdf4', color: 'var(--color-forest-pulse)' }}>
                   <Shield size={20} />
                 </div>
@@ -392,7 +404,7 @@ const StateAdminDashboard = () => {
                     {statsData.overview.statusBreakdown?.Approved || 0}
                   </div>
                   <div className="stat-label">Approved Benefit Directives</div>
-                  <div style={{ fontSize: '11px', color: 'var(--color-slate)', marginTop: '2px' }}>Delivered Benefits</div>
+                  <div style={{ fontSize: '11px', color: 'var(--color-forest-pulse)', fontWeight: '600', marginTop: '2px' }}>Click to View Approved →</div>
                 </div>
               </div>
 
@@ -400,15 +412,47 @@ const StateAdminDashboard = () => {
 
             {/* ── Top Applied BJP Schemes ── */}
             <div className="campsite-card" style={{ width: '100%', padding: '24px', boxSizing: 'border-box' }}>
-              <h3 style={{ fontSize: '18px', fontWeight: '600', color: 'var(--color-midnight-ink)', marginBottom: '16px' }}>
-                Top Applied BJP Schemes in {activeScopeText}
-              </h3>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px' }}>
+                <h3 style={{ fontSize: '18px', fontWeight: '600', color: 'var(--color-midnight-ink)', margin: 0 }}>
+                  Top Applied BJP Schemes in {activeScopeText}
+                </h3>
+                <span style={{ fontSize: '12px', color: 'var(--color-slate)' }}>Click any scheme to filter applications</span>
+              </div>
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: '12px', width: '100%' }}>
                 {statsData.schemePopularity?.map((item) => (
-                  <div key={item._id} style={{ padding: '14px', background: 'var(--color-fog-gray)', borderRadius: '8px', border: '1px solid var(--color-linen)' }}>
-                    <div style={{ fontSize: '14px', fontWeight: '600', color: 'var(--color-midnight-ink)' }}>{item._id}</div>
-                    <div style={{ fontSize: '11px', color: 'var(--color-slate)' }}>{item.cluster}</div>
-                    <div style={{ fontSize: '20px', fontWeight: '700', color: 'var(--color-midnight-ink)', marginTop: '6px' }}>
+                  <div
+                    key={item._id}
+                    onClick={() => {
+                      setSchemeFilter(item._id);
+                      setStatusFilter('');
+                      navigateSubPage('applications');
+                    }}
+                    style={{
+                      padding: '14px',
+                      background: '#fff',
+                      borderRadius: '10px',
+                      border: '1px solid var(--color-linen)',
+                      cursor: 'pointer',
+                      boxShadow: '0 2px 4px rgba(0,0,0,0.03)',
+                      transition: 'all 0.2s ease'
+                    }}
+                    onMouseEnter={e => {
+                      e.currentTarget.style.borderColor = 'var(--color-saffron)';
+                      e.currentTarget.style.transform = 'translateY(-2px)';
+                      e.currentTarget.style.boxShadow = '0 4px 12px rgba(255, 153, 51, 0.18)';
+                    }}
+                    onMouseLeave={e => {
+                      e.currentTarget.style.borderColor = 'var(--color-linen)';
+                      e.currentTarget.style.transform = 'translateY(0)';
+                      e.currentTarget.style.boxShadow = '0 2px 4px rgba(0,0,0,0.03)';
+                    }}
+                  >
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <div style={{ fontSize: '14px', fontWeight: '700', color: 'var(--color-midnight-ink)' }}>{item._id}</div>
+                      <span style={{ fontSize: '11px', color: 'var(--color-saffron)', fontWeight: '600' }}>View →</span>
+                    </div>
+                    <div style={{ fontSize: '11px', color: 'var(--color-slate)', marginTop: '2px' }}>{item.cluster}</div>
+                    <div style={{ fontSize: '20px', fontWeight: '700', color: 'var(--color-midnight-ink)', marginTop: '8px' }}>
                       {item.count} <span style={{ fontSize: '12px', color: 'var(--color-slate)', fontWeight: 'normal' }}>applications</span>
                     </div>
                   </div>
@@ -525,14 +569,35 @@ const StateAdminDashboard = () => {
                 <option value="Rejected">Rejected</option>
               </select>
 
+              {/* Scheme Filter */}
+              <select
+                value={schemeFilter}
+                onChange={(e) => setSchemeFilter(e.target.value)}
+                className="form-control"
+                style={{ flex: '1 1 160px', minWidth: '150px', background: '#fff' }}
+              >
+                <option value="">All BJP Schemes</option>
+                <option value="PMSBY">PMSBY</option>
+                <option value="PM SVANidhi">PM SVANidhi</option>
+                <option value="Stand Up India">Stand Up India</option>
+                <option value="Udyam">Udyam Registration</option>
+                <option value="APY">APY (Atal Pension)</option>
+                <option value="PMJJBY">PMJJBY</option>
+                <option value="PMKVY">PMKVY (Kaushal Vikas)</option>
+                <option value="PM Mudra Kishor">PM Mudra Kishor</option>
+                <option value="Sukanya Samridhi">Sukanya Samriddhi</option>
+                <option value="PM Matru Vandana">PM Matru Vandana</option>
+              </select>
+
               {/* Clear All button */}
-              {(districtFilter || assemblyFilter || boothFilter || statusFilter || searchQuery) && (
+              {(districtFilter || assemblyFilter || boothFilter || statusFilter || schemeFilter || searchQuery) && (
                 <button
                   onClick={() => {
                     setDistrictFilter('');
                     setAssemblyFilter('');
                     setBoothFilter('');
                     setStatusFilter('');
+                    setSchemeFilter('');
                     setSearchQuery('');
                   }}
                   style={{
