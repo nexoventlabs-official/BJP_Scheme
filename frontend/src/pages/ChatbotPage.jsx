@@ -6233,9 +6233,6 @@ export default function ChatbotPage() {
       setIsTyping(false)
       if (res?.success) {
         await botSay(t('📱 A 6-digit OTP has been sent to {mobile}. Please enter the OTP to verify.', { mobile: maskMobile(mobile) }), 300)
-        if (res.devOtp) {
-          await botSay(`🔑 Demo OTP: ${res.devOtp}`, 200)
-        }
         setChatState(S.AWAIT_OTP)
         startOtpCountdown(60)
       } else {

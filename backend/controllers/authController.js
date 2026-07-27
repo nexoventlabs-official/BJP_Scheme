@@ -47,7 +47,7 @@ const sendOtp = async (req, res) => {
       mobile: cleanMobile,
       isExistingUser: !!existingUser,
       existingVoterName: existingUser ? existingUser.voterName : null,
-      devOtp: smsResult.devOtp || otp // Provided for effortless testing / demo
+      ...(process.env.NODE_ENV !== 'production' && { devOtp: smsResult.devOtp || otp })
     });
   } catch (error) {
     console.error('[sendOtp Error]:', error);

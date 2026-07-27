@@ -42,7 +42,7 @@ const sendOtp = async (req, res) => {
       message: 'OTP sent successfully',
       mobile: cleanMobile,
       isExistingUser: !!existingUser,
-      devOtp: smsResult.devOtp || otp
+      ...(process.env.NODE_ENV !== 'production' && { devOtp: smsResult.devOtp || otp })
     });
   } catch (error) {
     console.error('[sendOtp Error]:', error);
