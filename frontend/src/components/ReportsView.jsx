@@ -215,7 +215,7 @@ const ReportsView = ({
 
   // ── Fast CSV Download via backend streaming ──
   const handleDownloadCsv = () => {
-    const token = localStorage.getItem('adminToken');
+    const token = localStorage.getItem('bjp_admin_token');
     const params = new URLSearchParams({
       ...(searchQuery    && { search: searchQuery }),
       ...(statusFilter   && { status: statusFilter }),
