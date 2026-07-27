@@ -1,9 +1,24 @@
 import React, { useState, useEffect } from 'react';
 import API from '../utils/api';
 import StatusBadge from './StatusBadge';
+import { BJP_SCHEMES } from '../utils/constants';
 import {
   ArrowLeft, User, Phone, MapPin, Award, Calendar, CheckCircle2, Clock, PhoneCall, RefreshCw, AlertCircle, Share2, ChevronRight, Users
 } from 'lucide-react';
+
+export const formatSchemeName = (schemeName, schemeId) => {
+  if (!schemeName) return 'BJP Scheme';
+  const str = String(schemeName).trim();
+  if (/^\d+$/.test(str)) {
+    const found = BJP_SCHEMES.find(s => s.id === parseInt(str));
+    if (found) return found.name;
+  }
+  if (schemeId && /^\d+$/.test(String(schemeId))) {
+    const found = BJP_SCHEMES.find(s => s.id === parseInt(schemeId));
+    if (found && (str === String(schemeId) || !isNaN(str))) return found.name;
+  }
+  return schemeName;
+};
 
 const MemberProfileTimelineView = ({ voterData, onBack, onUpdateAppStatus, onSelectVoter, targetSchemeName }) => {
   if (!voterData) return null;
@@ -261,7 +276,9 @@ const MemberProfileTimelineView = ({ voterData, onBack, onUpdateAppStatus, onSel
                     }}
                   >
                     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '6px' }}>
-                      <span style={{ fontWeight: '700', fontSize: '15px', color: 'var(--color-midnight-ink)' }}>{app.schemeName}</span>
+                      <span style={{ fontWeight: '700', fontSize: '15px', color: 'var(--color-midnight-ink)' }}>
+                        {formatSchemeName(app.schemeName, app.schemeId)}
+                      </span>
                       <StatusBadge status={app.status} />
                     </div>
                     <div style={{ fontSize: '13px', color: 'var(--color-slate)' }}>{app.benefit}</div>
@@ -334,7 +351,7 @@ const MemberProfileTimelineView = ({ voterData, onBack, onUpdateAppStatus, onSel
                   <div>
                     <span className="tag-pill tag-sunlit" style={{ fontSize: '11px', marginBottom: '4px' }}>{selectedApp.clusterName}</span>
                     <h3 style={{ fontSize: '20px', fontWeight: '700', color: 'var(--color-midnight-ink)', margin: 0 }}>
-                      {selectedApp.schemeName}
+                      {formatSchemeName(selectedApp.schemeName, selectedApp.schemeId)}
                     </h3>
                     <div style={{ fontSize: '14px', color: 'var(--color-forest-pulse)', fontWeight: '600', marginTop: '2px' }}>
                       {selectedApp.benefit}

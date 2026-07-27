@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import API from '../../utils/api';
 import { useAuth } from '../../context/AuthContext';
 import StatusBadge from '../../components/StatusBadge';
-import MemberProfileTimelineView from '../../components/MemberProfileTimelineView';
+import MemberProfileTimelineView, { formatSchemeName } from '../../components/MemberProfileTimelineView';
 import ReportsView from '../../components/ReportsView';
 import {
   Shield, Users, Building, PhoneCall, RefreshCw, Search, Eye, Award, Share2, ChevronRight, FileText
@@ -490,7 +490,7 @@ const BoothAdminDashboard = () => {
                                 <Award size={12} /> {voter.applications.length} Scheme{voter.applications.length > 1 ? 's' : ''}
                               </span>
                               <span style={{ fontSize: '11px', color: 'var(--color-slate)' }}>
-                                {voter.applications.map(a => a.schemeName).join(', ')}
+                                {voter.applications.map(a => formatSchemeName(a.schemeName, a.schemeId)).join(', ')}
                               </span>
                             </div>
                           </td>
