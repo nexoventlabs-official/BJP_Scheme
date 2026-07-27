@@ -44,7 +44,13 @@ const DistrictAdminDashboard = () => {
   const fetchStats = async () => {
     try {
       setLoadingStats(true);
-      const res = await API.get('/admin/dashboard-stats');
+      const params = new URLSearchParams({
+        ...(assemblyFilter && { assemblyName: assemblyFilter }),
+        ...(boothFilter    && { boothNo: boothFilter }),
+        ...(statusFilter   && { status: statusFilter }),
+        ...(searchQuery    && { search: searchQuery })
+      });
+      const res = await API.get(`/admin/dashboard-stats?${params}`);
       if (res.data.success) setStatsData(res.data);
     } catch (err) {
       console.error('Error loading stats:', err);

@@ -40,7 +40,11 @@ const BoothAdminDashboard = () => {
   const fetchStats = async () => {
     try {
       setLoadingStats(true);
-      const res = await API.get('/admin/dashboard-stats');
+      const params = new URLSearchParams({
+        ...(statusFilter && { status: statusFilter }),
+        ...(searchQuery  && { search: searchQuery })
+      });
+      const res = await API.get(`/admin/dashboard-stats?${params}`);
       if (res.data.success) setStatsData(res.data);
     } catch (err) {
       console.error('Error loading stats:', err);
@@ -75,7 +79,7 @@ const BoothAdminDashboard = () => {
   const fetchDashboardData = () => { fetchStats(); fetchVoters(1); };
 
   useEffect(() => { fetchStats(); }, []);
-  useEffect(() => { fetchVoters(1); setCurrentPage(1); }, [searchQuery, statusFilter]);
+  useEffect(() => { fetchStats(); fetchVoters(1); setCurrentPage(1); }, [searchQuery, statusFilter]);
 
   const handleUpdateAppStatus = async (appId, updatePayload) => {
     try {

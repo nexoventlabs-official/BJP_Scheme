@@ -125,7 +125,9 @@ const SuperAdminDashboard = () => {
       const params = new URLSearchParams({
         ...(districtFilter && { district: districtFilter }),
         ...(assemblyFilter && { assemblyName: assemblyFilter }),
-        ...(boothFilter    && { boothNo: boothFilter })
+        ...(boothFilter    && { boothNo: boothFilter }),
+        ...(statusFilter   && { status: statusFilter }),
+        ...(searchQuery    && { search: searchQuery })
       });
       const res = await API.get(`/admin/dashboard-stats?${params}`);
       if (res.data.success) setStatsData(res.data);
