@@ -32,6 +32,8 @@ const SuperAdminDashboard = () => {
   const [boothCredentialsData, setBoothCredentialsData] = useState(null);
   const [boothSearchQuery, setBoothSearchQuery] = useState('');
   const [loadingBooths, setLoadingBooths] = useState(false);
+  const [distCredSearch, setDistCredSearch] = useState('');
+  const [assCredSearch, setAssCredSearch] = useState('');
 
   // ── Sub-page Pagination States ──
   const [distCredPage, setDistCredPage] = useState(1);
@@ -274,6 +276,25 @@ const SuperAdminDashboard = () => {
     if (!boothSearchQuery) return true;
     return b.boothNo.includes(boothSearchQuery) || b.username.includes(boothSearchQuery.toLowerCase()) || b.passcode.includes(boothSearchQuery);
   }) || [];
+
+  // ── District / Assembly credential search filters ──
+  const _distQ = distCredSearch.trim().toLowerCase();
+  const filteredDistrictCreds = _distQ
+    ? districtCredentials.filter(d =>
+        (d.district || '').toLowerCase().includes(_distQ) ||
+        (d.username || '').toLowerCase().includes(_distQ) ||
+        String(d.passcode || '').toLowerCase().includes(_distQ))
+    : districtCredentials;
+
+  const _assQ = assCredSearch.trim().toLowerCase();
+  const filteredAssemblyCreds = _assQ
+    ? assemblyCredentials.filter(a =>
+        (a.assemblyName || '').toLowerCase().includes(_assQ) ||
+        String(a.assemblyNo || '').toLowerCase().includes(_assQ) ||
+        (a.district || '').toLowerCase().includes(_assQ) ||
+        (a.username || '').toLowerCase().includes(_assQ) ||
+        String(a.passcode || '').toLowerCase().includes(_assQ))
+    : assemblyCredentials;
 
   const getPageRange = () => {
     const range = [];
@@ -548,7 +569,7 @@ const SuperAdminDashboard = () => {
               topReferrers={statsData.topReferrers || []}
               scopeLabel="Tamil Nadu State"
               onViewProfile={(ref) => {
-                if (ref && ref.epicNo) setSelectedVoterTimeline(ref);
+                if (ref && ref.epicNo) { setSubPage('applications'); setSelectedVoterTimeline(ref); }
               }}
             />
 
@@ -856,6 +877,21 @@ const SuperAdminDashboard = () => {
               <h3 style={{ fontSize: '18px', fontWeight: '700', color: 'var(--color-midnight-ink)', marginBottom: '16px' }}>
                 Statewide District Admin Passcodes &amp; Quick Access
               </h3>
+              <div style={{ marginBottom: '16px' }}>
+                <input
+                  type="text"
+                  placeholder="Search by district, username or passcode..."
+                  value={distCredSearch}
+                  onChange={(e) => { setDistCredSearch(e.target.value); setDistCredPage(1); }}
+                  className="form-control"
+                  style={{ maxWidth: '360px' }}
+                />
+                {distCredSearch && (
+                  <span style={{ marginLeft: '12px', fontSize: '13px', color: 'var(--color-slate)' }}>
+                    {filteredDistrictCreds.length} result(s)
+                  </span>
+                )}
+              </div>
               <div style={{ width: '100%', overflowX: 'auto' }}>
                 <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '13px' }}>
                   <thead>
@@ -864,27 +900,16 @@ const SuperAdminDashboard = () => {
                       <th style={{ padding: '10px 12px' }}>TOTAL ASSEMBLIES</th>
                       <th style={{ padding: '10px 12px' }}>USERNAME</th>
                       <th style={{ padding: '10px 12px' }}>PASSCODE</th>
-                      <th style={{ padding: '10px 12px' }}>REFERRAL LINK</th>
                       <th style={{ padding: '10px 12px', textAlign: 'right' }}>QUICK LOGIN</th>
                     </tr>
                   </thead>
                   <tbody>
-                    {districtCredentials.slice((distCredPage - 1) * 10, distCredPage * 10).map((dist) => (
+                    {filteredDistrictCreds.slice((distCredPage - 1) * 10, distCredPage * 10).map((dist) => (
                       <tr key={dist.username} style={{ borderBottom: '1px solid var(--color-linen)' }}>
                         <td style={{ padding: '12px', fontWeight: '700', color: 'var(--color-midnight-ink)' }}>{dist.district}</td>
                         <td style={{ padding: '12px', fontWeight: '600' }}>{dist.assembliesCount} Assemblies</td>
                         <td style={{ padding: '12px', fontFamily: 'monospace', fontWeight: '600', color: 'var(--color-slate)' }}>{dist.username}</td>
                         <td style={{ padding: '12px', fontFamily: 'monospace', fontWeight: '700', color: 'var(--color-saffron)' }}>{dist.passcode}</td>
-                        <td style={{ padding: '12px' }}>
-                          <a
-                            href={`${window.location.origin}/?ref=${dist.referralCode || ''}`}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            style={{ fontSize: '11px', color: 'var(--color-campfire-orange)', wordBreak: 'break-all', fontFamily: 'monospace' }}
-                          >
-                            {dist.referralCode ? `${window.location.origin}/?ref=${dist.referralCode}` : '—'}
-                          </a>
-                        </td>
                         <td style={{ padding: '12px', textAlign: 'right' }}>
                           <button onClick={() => handleQuickSwitch(dist.username, dist.passcode)} className="btn btn-ghost" style={{ padding: '5px 12px', fontSize: '12px', fontWeight: '700' }}>
                             <LogIn size={13} /> Switch Login
@@ -895,7 +920,7 @@ const SuperAdminDashboard = () => {
                   </tbody>
                 </table>
               </div>
-              {renderPagination(distCredPage, districtCredentials.length, 10, setDistCredPage)}
+              {renderPagination(distCredPage, filteredDistrictCreds.length, 10, setDistCredPage)}
             </div>
           )}
 
@@ -905,6 +930,21 @@ const SuperAdminDashboard = () => {
               <h3 style={{ fontSize: '18px', fontWeight: '700', color: 'var(--color-midnight-ink)', marginBottom: '16px' }}>
                 All 234 Assembly Constituency Passcodes
               </h3>
+              <div style={{ marginBottom: '16px' }}>
+                <input
+                  type="text"
+                  placeholder="Search by assembly name, no, district, username or passcode..."
+                  value={assCredSearch}
+                  onChange={(e) => { setAssCredSearch(e.target.value); setAssCredPage(1); }}
+                  className="form-control"
+                  style={{ maxWidth: '420px' }}
+                />
+                {assCredSearch && (
+                  <span style={{ marginLeft: '12px', fontSize: '13px', color: 'var(--color-slate)' }}>
+                    {filteredAssemblyCreds.length} result(s)
+                  </span>
+                )}
+              </div>
               <div style={{ width: '100%', overflowX: 'auto' }}>
                 <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '13px' }}>
                   <thead>
@@ -918,7 +958,7 @@ const SuperAdminDashboard = () => {
                     </tr>
                   </thead>
                   <tbody>
-                    {assemblyCredentials.slice((assCredPage - 1) * 15, assCredPage * 15).map((ass) => (
+                    {filteredAssemblyCreds.slice((assCredPage - 1) * 15, assCredPage * 15).map((ass) => (
                       <tr key={ass.username} style={{ borderBottom: '1px solid var(--color-linen)' }}>
                         <td style={{ padding: '12px', fontWeight: '700', color: 'var(--color-slate)' }}>#{ass.assemblyNo}</td>
                         <td style={{ padding: '12px', fontWeight: '700', color: 'var(--color-midnight-ink)' }}>{ass.assemblyName}</td>
@@ -935,7 +975,7 @@ const SuperAdminDashboard = () => {
                   </tbody>
                 </table>
               </div>
-              {renderPagination(assCredPage, assemblyCredentials.length, 15, setAssCredPage)}
+              {renderPagination(assCredPage, filteredAssemblyCreds.length, 15, setAssCredPage)}
             </div>
           )}
 

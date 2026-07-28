@@ -6,6 +6,28 @@ import { FlipCard3D } from '../components/FlipCard3D'
 import '../styles/chatbot.css'
 import { useLang } from '../i18n/LanguageContext'
 
+// ── Scheme application status → colour + icon metadata (tracking timeline) ──
+const SCHEME_STATUS_META = {
+  Pending:       { fg: '#e0a106', border: 'rgba(224,161,6,0.4)',  tint: 'rgba(224,161,6,0.05)',  icon: 'bi-hourglass-split' },
+  Submitted:     { fg: '#e0a106', border: 'rgba(224,161,6,0.4)',  tint: 'rgba(224,161,6,0.05)',  icon: 'bi-inbox-fill' },
+  Processing:    { fg: '#2b6cb0', border: 'rgba(43,108,176,0.4)', tint: 'rgba(43,108,176,0.05)', icon: 'bi-gear-fill' },
+  'In Progress': { fg: '#2b6cb0', border: 'rgba(43,108,176,0.4)', tint: 'rgba(43,108,176,0.05)', icon: 'bi-gear-fill' },
+  Called:        { fg: '#2b6cb0', border: 'rgba(43,108,176,0.4)', tint: 'rgba(43,108,176,0.05)', icon: 'bi-telephone-fill' },
+  Verified:      { fg: '#8e44ad', border: 'rgba(142,68,173,0.4)', tint: 'rgba(142,68,173,0.05)', icon: 'bi-patch-check-fill' },
+  Approved:      { fg: '#27ae60', border: 'rgba(39,174,96,0.4)',  tint: 'rgba(39,174,96,0.05)',  icon: 'bi-check-circle-fill' },
+  Completed:     { fg: '#27ae60', border: 'rgba(39,174,96,0.4)',  tint: 'rgba(39,174,96,0.05)',  icon: 'bi-trophy-fill' },
+  Rejected:      { fg: '#e53935', border: 'rgba(229,57,53,0.4)',  tint: 'rgba(229,57,53,0.05)',  icon: 'bi-x-circle-fill' },
+}
+const statusColor = (s) => SCHEME_STATUS_META[s] || SCHEME_STATUS_META.Submitted
+const fmtDateTime = (d) => {
+  if (!d) return ''
+  try {
+    return new Date(d).toLocaleString('en-IN', {
+      day: 'numeric', month: 'short', year: 'numeric', hour: 'numeric', minute: '2-digit', hour12: true
+    })
+  } catch { return '' }
+}
+
 // ── Always produce a frontend referral link (never the backend origin) ──
 const toFrontendReferralLink = (rawLink, bjpCode) => {
   let code = bjpCode;
@@ -22,7 +44,7 @@ const getReferralParams = () => {
   try {
     const p = new URLSearchParams(window.location.search)
     const ref = (p.get('ref') || '').trim().toUpperCase()
-    if (/^NT-[0-9A-F]{8}$/.test(ref)) {
+    if (/^(?:NT-[0-9A-Z]{4,16}|BJP-[0-9A-Z]+-[0-9A-Z]+)$/.test(ref)) {
       return { ref }
     }
     // localStorage fallback — valid for 24 hours
@@ -31,7 +53,7 @@ const getReferralParams = () => {
       const data = JSON.parse(stored)
       if (data && Date.now() - data.timestamp < 24 * 60 * 60 * 1000) {
         const storedRef = (data.ntCode || '').trim().toUpperCase()
-        if (/^NT-[0-9A-F]{8}$/.test(storedRef)) {
+        if (/^(?:NT-[0-9A-Z]{4,16}|BJP-[0-9A-Z]+-[0-9A-Z]+)$/.test(storedRef)) {
           return { ref: storedRef }
         }
       }
@@ -46,7 +68,7 @@ const hasReferralInUrl = () => {
   try {
     const p = new URLSearchParams(window.location.search)
     const ref = (p.get('ref') || '').trim().toUpperCase()
-    return /^NT-[0-9A-F]{8}$/.test(ref)
+    return /^(?:NT-[0-9A-Z]{4,16}|BJP-[0-9A-Z]+-[0-9A-Z]+)$/.test(ref)
   } catch {
     return false
   }
@@ -64,10 +86,10 @@ const S = {
 }
 
 const CACHE_KEY = 'bjp_card_cache'
-// Rolling 1-hour session: the cached login is valid for 1h from the LAST
+// Rolling 30-minute session: the cached login is valid for 30 min from the LAST
 // activity. Every user action refreshes `timestamp` (see touchCache), so an
-// active member stays logged in; 1h of inactivity expires it (auto-logout).
-const CACHE_TTL = 60 * 60 * 1000   // 1 hour
+// active member stays logged in; 30 min of inactivity expires it (auto-logout).
+const CACHE_TTL = 30 * 60 * 1000   // 30 minutes
 
 const getCache = () => {
   try {
@@ -1003,6 +1025,8 @@ function MySchemePanel({ epicNo, mobile, onBack }) {
   const [isAgreed, setIsAgreed] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [notificationToast, setNotificationToast] = useState(null);
+  const [appliedAppsMap, setAppliedAppsMap] = useState({}); // schemeId -> application doc (with statusHistory)
+  const [trackingScheme, setTrackingScheme] = useState(null); // { scheme, app } when viewing tracking detail
 
   useEffect(() => {
     const activeEpic = epicNo || localStorage.getItem('bjp_user_epic') || '';
@@ -1033,6 +1057,7 @@ function MySchemePanel({ epicNo, mobile, onBack }) {
         .then(data => {
           const apps = data.applications || [];
           const updatedMap = { ...localAppliedMap };
+          const appsMap = {};
           const titlesList = [];
 
           apps.forEach(app => {
@@ -1040,11 +1065,13 @@ function MySchemePanel({ epicNo, mobile, onBack }) {
             const match = SCHEMES.find(sch => sch.title === sName || sch.id === Number(sName) || sch.title?.includes(sName));
             if (match) {
               updatedMap[match.id] = 'applied';
+              appsMap[match.id] = app;
               titlesList.push(match.title);
             }
           });
 
           setApplyStatus(updatedMap);
+          setAppliedAppsMap(appsMap);
           try {
             localStorage.setItem(storageKey, JSON.stringify(titlesList));
             localStorage.setItem('bjp_applied_schemes_global', JSON.stringify(titlesList));
@@ -1057,6 +1084,10 @@ function MySchemePanel({ epicNo, mobile, onBack }) {
   const handleOpenApplyModal = (scheme) => {
     setSelectedSchemeForModal(scheme);
     setIsAgreed(true);
+  };
+
+  const openTracking = (scheme) => {
+    setTrackingScheme({ scheme, app: appliedAppsMap[scheme.id] || null });
   };
 
   const handleConfirmSubmit = async () => {
@@ -1109,6 +1140,103 @@ function MySchemePanel({ epicNo, mobile, onBack }) {
 
   const appliedSchemes = SCHEMES.filter(s => applyStatus[s.id] === 'applied');
   const notAppliedSchemes = SCHEMES.filter(s => applyStatus[s.id] !== 'applied');
+
+  // ── Application Tracking detail view (timeline of admin status updates) ──
+  if (trackingScheme) {
+    const { scheme, app } = trackingScheme;
+    const history = (app?.statusHistory || []).slice().sort((a, b) => new Date(a.updatedAt) - new Date(b.updatedAt));
+    const current = app?.status || 'Submitted';
+    const cs = statusColor(current);
+    return (
+      <div className="chatbot-container brochure-panel">
+        <header className="brochure-header">
+          <div className="brochure-title" style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+            <button
+              onClick={() => setTrackingScheme(null)}
+              style={{ background: 'none', border: 'none', color: 'var(--color-ash)', cursor: 'pointer', padding: '4px 8px 4px 0', fontSize: '18px', display: 'flex', alignItems: 'center' }}
+              aria-label={t('Back')}
+            >
+              <i className="bi bi-chevron-left" />
+            </button>
+            <i className="bi bi-clipboard-check brochure-title-orange" />
+            <span>{t('Application Tracking')}</span>
+          </div>
+        </header>
+
+        <div className="brochure-content">
+          <div style={{ padding: '12px 0', display: 'flex', flexDirection: 'column', gap: 20 }}>
+
+            {/* Scheme summary + current status */}
+            <div style={{ background: 'var(--color-carbon)', border: `1px solid ${cs.border}`, borderRadius: 14, padding: '16px 18px' }}>
+              <div className="scheme-meta-cat" style={{ color: '#2ecc71' }}>{t(scheme.category)}</div>
+              <h3 className="scheme-title" style={{ marginTop: 2 }}>{scheme.id}. {scheme.title}</h3>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginTop: 12, flexWrap: 'wrap' }}>
+                <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, background: cs.fg, color: '#fff', padding: '6px 14px', borderRadius: 20, fontSize: 12, fontWeight: 800 }}>
+                  <i className={`bi ${cs.icon}`} /> {t(current)}
+                </span>
+                {app?.appliedAt && (
+                  <span style={{ fontSize: 12, color: 'var(--color-ash)' }}>
+                    {t('Applied on')}: {fmtDateTime(app.appliedAt)}
+                  </span>
+                )}
+              </div>
+              {app?.adminRemarks && (
+                <p style={{ fontSize: 12.5, color: 'var(--color-chalk)', marginTop: 12, marginBottom: 0, lineHeight: 1.5 }}>
+                  <i className="bi bi-chat-left-quote-fill" style={{ color: 'var(--color-ash)', marginRight: 6 }} />
+                  {app.adminRemarks}
+                </p>
+              )}
+            </div>
+
+            {/* Status timeline */}
+            <div>
+              <h4 style={{ fontSize: 14, fontWeight: 700, color: 'var(--color-chalk)', display: 'flex', alignItems: 'center', gap: 8, margin: '0 0 14px' }}>
+                <i className="bi bi-clock-history brochure-title-orange" /> {t('Status Timeline')}
+              </h4>
+
+              {!app ? (
+                <div style={{ fontSize: 13, color: 'var(--color-ash)', background: 'var(--color-carbon)', borderRadius: 10, padding: 14, border: '1px dashed var(--color-graphite)' }}>
+                  {t('This application is being synced. Please check back shortly.')}
+                </div>
+              ) : history.length === 0 ? (
+                <div style={{ fontSize: 13, color: 'var(--color-ash)', background: 'var(--color-carbon)', borderRadius: 10, padding: 14, border: '1px dashed var(--color-graphite)' }}>
+                  {t('No updates yet. Your application is being reviewed.')}
+                </div>
+              ) : (
+                <div style={{ position: 'relative' }}>
+                  {history.map((h, idx) => {
+                    const hs = statusColor(h.status);
+                    const isLast = idx === history.length - 1;
+                    return (
+                      <div key={idx} style={{ display: 'flex', gap: 14 }}>
+                        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                          <div style={{ width: 30, height: 30, borderRadius: '50%', background: hs.fg, color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 13, flexShrink: 0, boxShadow: isLast ? `0 0 0 4px ${hs.tint}` : 'none' }}>
+                            <i className={`bi ${hs.icon}`} />
+                          </div>
+                          {!isLast && <div style={{ width: 2, flex: 1, minHeight: 28, background: 'var(--color-graphite)' }} />}
+                        </div>
+                        <div style={{ paddingBottom: isLast ? 0 : 20, flex: 1, minWidth: 0 }}>
+                          <div style={{ fontSize: 13.5, fontWeight: 700, color: hs.fg }}>{t(h.status)}</div>
+                          {h.remarks && (
+                            <div style={{ fontSize: 12.5, color: 'var(--color-chalk)', marginTop: 2, lineHeight: 1.45 }}>{h.remarks}</div>
+                          )}
+                          <div style={{ fontSize: 11, color: 'var(--color-ash)', marginTop: 4, display: 'flex', gap: 12, flexWrap: 'wrap' }}>
+                            <span><i className="bi bi-clock" /> {fmtDateTime(h.updatedAt)}</span>
+                            {h.updatedBy && <span><i className="bi bi-person-badge" /> {h.updatedBy}</span>}
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="chatbot-container brochure-panel">
@@ -1377,13 +1505,18 @@ function MySchemePanel({ epicNo, mobile, onBack }) {
             ) : (
               <div className="schemes-list" style={{ gap: 12 }}>
                 {appliedSchemes.map((scheme) => {
-                  const isExpanded = expandedId === scheme.id;
+                  const app = appliedAppsMap[scheme.id] || null;
+                  const st = app?.status || 'Submitted';
+                  const sc = statusColor(st);
+                  const lastUpdate = app?.statusHistory?.length
+                    ? app.statusHistory[app.statusHistory.length - 1].updatedAt
+                    : app?.appliedAt;
                   return (
                     <div 
                       key={scheme.id} 
                       className="scheme-card"
-                      style={{ border: '1px solid rgba(46,204,113,0.3)', background: 'rgba(46,204,113,0.03)' }}
-                      onClick={() => setExpandedId(isExpanded ? null : scheme.id)}
+                      style={{ border: `1px solid ${sc.border}`, background: sc.tint, cursor: 'pointer' }}
+                      onClick={() => openTracking(scheme)}
                     >
                       <div className="scheme-card-header">
                         <div>
@@ -1394,55 +1527,35 @@ function MySchemePanel({ epicNo, mobile, onBack }) {
                           display: 'inline-flex',
                           alignItems: 'center',
                           gap: 4,
-                          background: '#27ae60',
+                          background: sc.fg,
                           color: '#fff',
                           padding: '4px 12px',
                           borderRadius: 20,
                           fontSize: 11,
-                          fontWeight: 700
+                          fontWeight: 700,
+                          whiteSpace: 'nowrap'
                         }}>
-                          <i className="bi bi-check-circle-fill" /> {t('Applied ✓')}
+                          <i className={`bi ${sc.icon}`} /> {t(st)}
                         </span>
                       </div>
 
-                      {scheme.highlight && (
-                        <div style={{ fontSize: 11, fontWeight: 700, color: '#FF9933', marginTop: 4 }}>
-                          ⚡ {scheme.highlight}
-                        </div>
-                      )}
-
                       <p className="scheme-overview" style={{ marginTop: 6 }}>{scheme.overview}</p>
 
-                      <div style={{ display: 'flex', gap: 12, alignItems: 'center', marginTop: 10 }}>
-                        <button className="scheme-toggle-btn" onClick={(e) => { e.stopPropagation(); setExpandedId(isExpanded ? null : scheme.id); }}>
-                          <i className={`bi bi-chevron-${isExpanded ? 'up' : 'down'}`} />
-                          <span>{isExpanded ? t('Hide Details') : t('View Details')}</span>
+                      <div style={{ display: 'flex', gap: 10, alignItems: 'center', marginTop: 10, flexWrap: 'wrap' }}>
+                        <button
+                          className="scheme-toggle-btn"
+                          onClick={(e) => { e.stopPropagation(); openTracking(scheme); }}
+                          style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}
+                        >
+                          <i className="bi bi-clipboard-check" />
+                          <span>{t('Track Application')}</span>
                         </button>
+                        {lastUpdate && (
+                          <span style={{ fontSize: 11, color: 'var(--color-ash)' }}>
+                            {t('Updated')}: {fmtDateTime(lastUpdate)}
+                          </span>
+                        )}
                       </div>
-
-                      {isExpanded && (
-                        <div className="scheme-details-expanded" onClick={(e) => e.stopPropagation()}>
-                          <div>
-                            <div className="details-section-title">
-                              <i className="bi bi-info-circle-fill" /> {t('Eligibility & Benefits')}
-                            </div>
-                            <p className="details-text">{scheme.eligibility}</p>
-                          </div>
-                          <div>
-                            <div className="details-section-title">
-                              <i className="bi bi-file-earmark-check-fill" /> {t('Required Documents')}
-                            </div>
-                            <div className="documents-list">
-                              {scheme.documents.map((doc, idx) => (
-                                <div key={idx} className="doc-item">
-                                  <i className="bi bi-check-circle-fill" />
-                                  <span>{doc}</span>
-                                </div>
-                              ))}
-                            </div>
-                          </div>
-                        </div>
-                      )}
                     </div>
                   );
                 })}
@@ -4478,6 +4591,7 @@ function FullProfilePanel({ epicNo, mobile, referredCount, onBack }) {
   const userMobile = u.mobile || mobile || 'N/A'
   const userAssembly = u.assemblyName || u.assembly || 'N/A'
   const userDistrict = u.district || 'N/A'
+  const userBooth = u.boothNo || u.booth_no || u.part_no || 'N/A'
 
   return (
     <div className="chatbot-container brochure-panel">
@@ -4631,6 +4745,23 @@ function FullProfilePanel({ epicNo, mobile, referredCount, onBack }) {
                 <span style={{ fontSize: 14, fontWeight: 600, color: 'var(--color-chalk)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }} title={userDistrict}>{userDistrict}</span>
               </div>
 
+              {/* Booth Number */}
+              <div style={{ 
+                background: 'var(--color-carbon)', 
+                border: '1px solid var(--color-graphite)',
+                borderRadius: 12,
+                padding: '12px 16px',
+                display: 'flex',
+                flexDirection: 'column',
+                gap: 4
+              }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 11, color: 'var(--color-ash)' }}>
+                  <i className="bi bi-house-door" style={{ color: '#FF9933' }} />
+                  <span>{t('Polling Booth')}</span>
+                </div>
+                <span style={{ fontSize: 14, fontWeight: 600, color: 'var(--color-chalk)' }}>{userBooth === 'N/A' ? userBooth : `${t('Booth')} ${userBooth}`}</span>
+              </div>
+
               {/* Total Referrals */}
               <div style={{ 
                 background: 'rgba(46,204,113,0.04)', 
@@ -4658,6 +4789,128 @@ function FullProfilePanel({ epicNo, mobile, referredCount, onBack }) {
       `}</style>
     </div>
   );
+}
+
+// ── My Referrals — simple flat list of referred persons ─────────────
+function MyReferralsListPanel({ bjpCode, onBack }) {
+  const { t } = useLang()
+  const [members, setMembers] = useState([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState(null)
+
+  useEffect(() => {
+    if (!bjpCode) {
+      setError(t('No referral code available.'))
+      setLoading(false)
+      return
+    }
+    chat.getMyMembers(bjpCode)
+      .then((data) => {
+        // Backend returns a flat { members } array. Also support a legacy
+        // { root, tree } shape by flattening direct + indirect referrals.
+        let list = []
+        if (Array.isArray(data.members)) {
+          list = data.members
+        } else if (Array.isArray(data.tree)) {
+          data.tree.forEach((m) => {
+            list.push(m)
+            if (Array.isArray(m.referrals)) list.push(...m.referrals)
+          })
+        }
+        setMembers(list)
+      })
+      .catch((err) => setError(err.message || t('Unable to load referred members.')))
+      .finally(() => setLoading(false))
+  }, [bjpCode])
+
+  const fmtJoin = (d) => {
+    if (!d) return ''
+    try {
+      return new Date(d).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })
+    } catch { return '' }
+  }
+
+  return (
+    <div className="chatbot-container brochure-panel">
+      <header className="brochure-header">
+        <div className="brochure-title" style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+          <button
+            onClick={onBack}
+            style={{ background: 'none', border: 'none', color: 'var(--color-ash)', cursor: 'pointer', padding: '4px 8px 4px 0', fontSize: '18px', display: 'flex', alignItems: 'center' }}
+            aria-label={t('Back')}
+          >
+            <i className="bi bi-chevron-left" />
+          </button>
+          <i className="bi bi-people-fill brochure-title-orange" />
+          <span>{t('My Referrals')}</span>
+        </div>
+      </header>
+
+      <div className="brochure-content" style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+        {loading ? (
+          <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: 200 }}>
+            <div style={{ width: 32, height: 32, border: '3px solid rgba(46, 204, 113, 0.15)', borderTopColor: 'var(--color-signal-mint)', borderRadius: '50%', animation: 'spin 1s linear infinite' }} />
+          </div>
+        ) : error ? (
+          <div style={{ textAlign: 'center', padding: '40px 20px', color: 'var(--color-ash)' }}>
+            <i className="bi bi-exclamation-triangle" style={{ fontSize: 32, color: '#ff3b30', marginBottom: 12, display: 'block' }} />
+            {error}
+          </div>
+        ) : (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 12, padding: '8px 0' }}>
+            <div style={{ fontSize: 13, color: 'var(--color-signal-mint)', fontWeight: 700, display: 'flex', alignItems: 'center', gap: 8, borderBottom: '1px solid var(--color-graphite)', paddingBottom: 10 }}>
+              <i className="bi bi-people-fill" />
+              {t('{count} people joined using your referral link', { count: members.length })}
+            </div>
+
+            {members.length === 0 ? (
+              <div style={{ textAlign: 'center', padding: '40px 20px', color: 'var(--color-ash)' }}>
+                <i className="bi bi-person-plus" style={{ fontSize: 44, color: 'var(--color-graphite)', marginBottom: 14, display: 'block' }} />
+                <h3 style={{ fontSize: 16, fontWeight: 600, color: 'var(--color-chalk)', marginBottom: 8 }}>{t('No referrals yet')}</h3>
+                <p style={{ fontSize: 13, margin: 0, color: 'var(--color-ash)', lineHeight: 1.6 }}>
+                  {t('Share your referral link — everyone who registers through it will appear here.')}
+                </p>
+              </div>
+            ) : (
+              members.map((m, idx) => {
+                const name = m.voterName || m.name || 'BJP Member'
+                const epic = m.epicNo || m.epic_no || '—'
+                const district = m.district || '—'
+                const assembly = m.assemblyName || m.assembly_name || '—'
+                const booth = m.boothNo || m.part_no || '—'
+                const joined = m.createdAt || m.generated_at
+                return (
+                  <div key={m._id || m.epicNo || m.bjp_code || idx} style={{
+                    display: 'flex', alignItems: 'center', gap: 12, padding: '12px 14px',
+                    background: 'var(--color-carbon)', border: '1px solid var(--color-graphite)', borderRadius: 14
+                  }}>
+                    <div style={{ width: 26, height: 26, borderRadius: '50%', background: 'rgba(46,204,113,0.12)', color: 'var(--color-signal-mint)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, fontWeight: 800, flexShrink: 0 }}>
+                      {idx + 1}
+                    </div>
+                    <div style={{ flex: 1, minWidth: 0, textAlign: 'left' }}>
+                      <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--color-chalk)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{name}</div>
+                      <div style={{ fontSize: 11, color: 'var(--color-ash)', marginTop: 2 }}>
+                        <i className="bi bi-card-text" style={{ marginRight: 4 }} />{epic}
+                      </div>
+                      <div style={{ fontSize: 11, color: 'var(--color-ash)', marginTop: 2, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                        <i className="bi bi-geo-alt" style={{ marginRight: 4 }} />{district} • {assembly} • {t('Booth')} {booth}
+                      </div>
+                    </div>
+                    {joined && (
+                      <div style={{ fontSize: 10, color: 'var(--color-ash)', textAlign: 'right', flexShrink: 0 }}>
+                        {t('Joined')}<br />{fmtJoin(joined)}
+                      </div>
+                    )}
+                  </div>
+                )
+              })
+            )}
+          </div>
+        )}
+      </div>
+      <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
+    </div>
+  )
 }
 
 function FullMyMembersPanel({ bjpCode, onBack }) {
@@ -5866,6 +6119,12 @@ export default function ChatbotPage() {
   const [cropOpen, setCropOpen]     = useState(false)
   const [modalCard, setModalCard]   = useState(null)
 
+  // Notification bell: reflects browser permission (on/off) + unseen scheme updates
+  const [notifPermission, setNotifPermission] = useState(
+    typeof window !== 'undefined' && 'Notification' in window ? Notification.permission : 'denied'
+  )
+  const [hasSchemeUpdate, setHasSchemeUpdate] = useState(false)
+
   const [referredCount, setReferredCount] = useState(0)
   const [createdAt, setCreatedAt] = useState(null)
   const [appreciationEarnedAt, setAppreciationEarnedAt] = useState(null)
@@ -5880,6 +6139,11 @@ export default function ChatbotPage() {
   const [bookingError, setBookingError] = useState('')
 
   const soundPlayedRef = useRef({ localBody: false, president: false, volunteer: false, boothAgent: false })
+
+  // Snapshot of the user's scheme applications (status + history length) for
+  // detecting admin status updates during polling.
+  const schemeSnapshotRef = useRef(null)
+  const schemeSeenKeyRef  = useRef(null)
 
   const playNotificationSound = () => {
     try {
@@ -5915,6 +6179,17 @@ export default function ChatbotPage() {
       console.warn('Audio Context sound play failed:', err)
     }
   }
+
+  // Refresh referral count / member status whenever a view that shows it opens.
+  // Returning users load from cache without a fresh fetch, so without this the
+  // "Total Referrals" count stays stale at 0.
+  useEffect(() => {
+    if (activeView === 'profile' || activeView === 'my_referrals' || activeView === 'my_members') {
+      const code = cardRef.current?.bjp_code || cardRef.current?.ptc_code || profileRef.current?.bjp_code || profileRef.current?.ptc_code
+      if (code) fetchMemberStatus(code)
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeView])
 
   const fetchMemberStatus = async (code) => {
     if (!code) return
@@ -5995,6 +6270,33 @@ export default function ChatbotPage() {
       }
       setShowModal(true)
     }
+  }
+
+  // Unified notification bell handler.
+  const handleNotifBellClick = () => {
+    // 1) Notifications not granted yet → request permission (once). No repeat prompt.
+    if ('Notification' in window && Notification.permission !== 'granted') {
+      Notification.requestPermission().then((p) => setNotifPermission(p)).catch(() => {})
+      return
+    }
+    // 2) Unseen scheme status update → clear the red dot, mark as seen, open My Schemes.
+    if (hasSchemeUpdate) {
+      setHasSchemeUpdate(false)
+      if (schemeSeenKeyRef.current && schemeSnapshotRef.current) {
+        try { localStorage.setItem(schemeSeenKeyRef.current, JSON.stringify(schemeSnapshotRef.current)) } catch {}
+      }
+      setSidebarOpen(false)
+      setActiveView('my_schemes')
+      return
+    }
+    // 3) Milestone meeting invite (existing feature) if pending.
+    if (referredCount >= 5 && meetingInterest === null) {
+      handleBellClick()
+      return
+    }
+    // 4) Otherwise open My Schemes so the member can review their applications.
+    setSidebarOpen(false)
+    setActiveView('my_schemes')
   }
 
   const handleSidebarOpen = () => {
@@ -6087,18 +6389,88 @@ export default function ChatbotPage() {
   // Keep stateRef synced
   useEffect(() => { stateRef.current = chatState }, [chatState])
 
-  // Auto scroll
+  // Auto scroll — scroll ONLY the messages container, never the page.
+  // Using scrollIntoView() here caused the whole fixed chat layout to jump/move
+  // on mobile (it scrolls every scrollable ancestor). Scrolling the container's
+  // own scrollTop keeps the header + input bar fixed.
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
+    const end = messagesEndRef.current
+    if (!end) return
+    const container = end.parentElement // .chat-messages
+    if (container) {
+      container.scrollTo({ top: container.scrollHeight, behavior: 'smooth' })
+    }
   }, [messages, isTyping])
+
+  // Poll for admin status updates on the user's scheme applications.
+  // On any status/history change → red dot on the bell + notification sound
+  // (+ a browser notification if the user has granted permission).
+  useEffect(() => {
+    if (chatState !== S.DONE) return
+    const epic = epicRef.current || cardRef.current?.epic_no || profileRef.current?.epic_no || ''
+    const mob  = mobileRef.current || cardRef.current?.mobile || profileRef.current?.mobile || ''
+    const userKey = epic || mob
+    if (!userKey) return
+    const seenKey = `bjp_scheme_seen_${userKey}`
+    schemeSeenKeyRef.current = seenKey
+    let stopped = false
+
+    const buildSnapshot = (apps) => {
+      const snap = {}
+      apps.forEach((a) => { snap[a._id] = { status: a.status, len: (a.statusHistory || []).length } })
+      return snap
+    }
+
+    const check = async () => {
+      try {
+        const data = await chat.profile(epic || 'user', mob)
+        if (stopped) return
+        const apps = data.applications || []
+        const snapshot = buildSnapshot(apps)
+        schemeSnapshotRef.current = snapshot
+
+        const raw = localStorage.getItem(seenKey)
+        if (!raw) {
+          // First observation — establish baseline silently.
+          try { localStorage.setItem(seenKey, JSON.stringify(snapshot)) } catch {}
+          return
+        }
+        let seen = {}
+        try { seen = JSON.parse(raw) } catch {}
+        let changed = false
+        for (const id in snapshot) {
+          const cur = snapshot[id]
+          const old = seen[id]
+          if (!old || old.status !== cur.status || old.len !== cur.len) { changed = true; break }
+        }
+        if (changed) {
+          setHasSchemeUpdate(true)
+          playNotificationSound()
+          if ('Notification' in window && Notification.permission === 'granted') {
+            try {
+              new Notification('BJP Nalam Thittam', {
+                body: t('Your scheme application status has been updated.'),
+                icon: '/bjp_logo.png'
+              })
+            } catch { /* ignore */ }
+          }
+        }
+      } catch { /* ignore network errors */ }
+    }
+
+    check()
+    const iv = setInterval(check, 30000)
+    return () => { stopped = true; clearInterval(iv) }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [chatState])
 
   // Clear the OTP resend timer on unmount
   useEffect(() => () => { if (otpTimerRef.current) clearInterval(otpTimerRef.current) }, [])
 
-  // ── Rolling session: auto-logout after 1 hour of inactivity ────
+  // ── Rolling session: auto-logout after 30 minutes of inactivity ────
   // Timer resets on every user action (sliding). If the member returns before
-  // 1h, the clock restarts; 1h of no activity logs them out automatically.
-  const AUTO_LOGOUT_MS   = 60 * 60 * 1000
+  // 30 min, the clock restarts; 30 min of no activity logs them out automatically.
+  const AUTO_LOGOUT_MS   = 30 * 60 * 1000
   const inactivityRef    = useRef(null)
   const lastActivityRef  = useRef(0)
 
@@ -6120,7 +6492,7 @@ export default function ChatbotPage() {
     setShowModal(false)
     setMessages([])
     setChatState(S.WELCOME)
-    addMsg('bot', 'text', { text: t('🔒 You have been logged out after 1 hour of inactivity. Tap Start to continue.') })
+    addMsg('bot', 'text', { text: t('🔒 You have been logged out after 30 minutes of inactivity. Tap Start to continue.') })
     addMsg('bot', 'welcome_banner', {})
   // addMsg is a stable useCallback([]) declared later — referencing it in the
   // dep array here would hit the temporal dead zone at render (ReferenceError).
@@ -6186,8 +6558,11 @@ export default function ChatbotPage() {
     if (initializedRef.current) return
     initializedRef.current = true
 
-    if ('Notification' in window && Notification.permission === 'default') {
-      Notification.requestPermission();
+    // Do NOT auto-prompt for notification permission on load. Just reflect the
+    // current permission state on the bell icon; the user enables it by tapping
+    // the bell (shown as "off" until granted).
+    if ('Notification' in window) {
+      setNotifPermission(Notification.permission)
     }
 
     const cache = getCache()
@@ -7019,29 +7394,7 @@ export default function ChatbotPage() {
               </div>
             </div>
             <div className="left-menu-header-actions" style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
-              {isDone && (
-                <button
-                  className={`chat-header-btn bell-alert-btn ${
-                    hasPendingNotification ? 'pulsing-vibrate' : ''
-                  } ${hasAppointment ? 'bell-booked-btn' : ''}`}
-                  onClick={handleBellClick}
-                  title={
-                    hasAppointment 
-                      ? t('Meeting Scheduled! Click to view details') 
-                      : t('Milestone Achieved! Click to Schedule Meeting with President')
-                  }
-                  style={{ 
-                    fontSize: 18, 
-                    color: hasAppointment ? '#2ecc71' : '#D1B078', 
-                    border: 'none', 
-                    background: 'none', 
-                    cursor: 'pointer' 
-                  }}
-                >
-                  <i className="bi bi-bell-fill" />
-                  {hasPendingNotification && <span className="bell-badge" />}
-                </button>
-              )}
+
               {isDone && (
                 <button
                   className="chat-header-btn"
@@ -7080,7 +7433,6 @@ export default function ChatbotPage() {
               { icon: 'check2-all',     label: 'My Schemes',              action: 'my_schemes',  desc: 'Schemes you registered for' },
               { icon: 'link-45deg',     label: 'Referral Link',           action: 'referral',    desc: 'Share and invite others' },
               { icon: 'people-fill',    label: 'My Referrals',            action: 'my_referrals',desc: 'Members you referred' },
-              { icon: 'book-fill',      label: 'Central Schemes Brochure', action: 'brochure',   desc: 'Official Central Welfare Schemes Booklet' },
             ].map((item) => {
               const isComingSoon = false
               const locked = !isDone || (item.action === 'appreciation_letter' && referredCount < 5)
@@ -7231,7 +7583,7 @@ export default function ChatbotPage() {
               handleLocalBodyInterestSubmit={handleLocalBodyInterestSubmit}
             />
           ) : activeView === 'my_members' || activeView === 'my_referrals' ? (
-            <FullMyMembersPanel 
+            <MyReferralsListPanel 
               bjpCode={cardRef.current?.bjp_code || cardRef.current?.ptc_code || profileRef.current?.bjp_code || profileRef.current?.ptc_code}
               onBack={() => setActiveView('chat')} 
             />
@@ -7260,29 +7612,7 @@ export default function ChatbotPage() {
                 </div>
               </div>
               <div className="chat-header-actions" style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
-                {isDone && (
-                  <button
-                    className={`chat-header-btn bell-alert-btn ${
-                      hasPendingNotification ? 'pulsing-vibrate' : ''
-                    } ${hasAppointment ? 'bell-booked-btn' : ''}`}
-                    onClick={handleBellClick}
-                    title={
-                      hasAppointment 
-                        ? 'Meeting Scheduled! Click to view details' 
-                        : 'Milestone Achieved! Click to Schedule Meeting with President'
-                    }
-                    style={{ 
-                      fontSize: 18, 
-                      color: hasAppointment ? '#2ecc71' : '#D1B078', 
-                      border: 'none', 
-                      background: 'none', 
-                      cursor: 'pointer' 
-                    }}
-                  >
-                    <i className="bi bi-bell-fill" />
-                    {hasPendingNotification && <span className="bell-badge" />}
-                  </button>
-                )}
+
                 {isDone && (
                   <button
                     className="chat-header-btn"
@@ -7384,13 +7714,12 @@ export default function ChatbotPage() {
               </div>
             )}
 
-            {/* Input area */}
+            {/* Input area — only render when there is something to show, so the
+                WELCOME / CONFIRM / SELECT_SCHEMES states don't leave an empty
+                input bar (white gap) at the bottom. */}
+            {(isDone || inputCfg) && (
             <footer className="chat-input-area">
-              {chatState === S.CONFIRM ? (
-                null
-              ) : chatState === S.SELECT_SCHEMES ? (
-                null
-              ) : isDone && !inputCfg ? (
+              {isDone && !inputCfg ? (
                 <div className="chat-form done-bar">
                   <div className="chat-input-wrapper">
                     <span className="done-status">
@@ -7437,6 +7766,7 @@ export default function ChatbotPage() {
                 </form>
               ) : null}
             </footer>
+            )}
           </div>
           )}
         </div>
@@ -7481,7 +7811,7 @@ export default function ChatbotPage() {
                 { icon: 'person-circle',       label: 'My Profile',              action: 'profile' },
                 { icon: 'check2-all',          label: 'My Schemes',              action: 'my_schemes' },
                 { icon: 'link-45deg',          label: 'Referral Link',           action: 'referral' },
-                { icon: 'book-fill',           label: 'Central Schemes Brochure', action: 'brochure' },
+                { icon: 'people-fill',         label: 'My Referrals',            action: 'my_referrals' },
               ].map((item) => {
                 const isComingSoon = false
                 const isLocked = item.action === 'appreciation_letter' && referredCount < 5

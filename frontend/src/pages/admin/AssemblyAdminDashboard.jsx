@@ -302,7 +302,7 @@ const AssemblyAdminDashboard = () => {
               topReferrers={statsData.topReferrers || []}
               scopeLabel={admin?.assemblyName || ''}
               onViewProfile={(ref) => {
-                if (ref && ref.epicNo) setSelectedVoterTimeline(ref);
+                if (ref && ref.epicNo) { setSubPage('applications'); setSelectedVoterTimeline(ref); }
               }}
             />
 

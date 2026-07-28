@@ -311,16 +311,13 @@ const getDashboardStats = async (req, res) => {
         { $sort: { count: -1 } }
       ], { allowDiskUse: true }),
 
+      // Global referral counts grouped by referrer code (NOT scoped by the
+      // referred person's location). Scoping to the referrer's own jurisdiction
+      // is applied afterwards so a referrer shows up in THEIR district/assembly/
+      // booth dashboard even when they refer people elsewhere.
       User.aggregate([
-        {
-          $match: {
-            ...scopeQuery,
-            referredBy: { $nin: [null, '', 'null', 'undefined'] }
-          }
-        },
-        { $group: { _id: '$referredBy', referralCount: { $sum: 1 } } },
-        { $sort: { referralCount: -1 } },
-        { $limit: 5 }
+        { $match: { referredBy: { $nin: [null, '', 'null', 'undefined'] } } },
+        { $group: { _id: '$referredBy', referralCount: { $sum: 1 } } }
       ], { allowDiskUse: true })
     ]);
 
@@ -412,37 +409,56 @@ const getDashboardStats = async (req, res) => {
 
     const schemePopularity = Object.values(popularityObj).sort((a, b) => b.count - a.count);
 
-    const topReferrers = await Promise.all(
-      topReferrersRaw.map(async (item) => {
-        const referrerUser = await User.findOne({
-          $or: [
-            { referralCode: item._id },
-            { epicNo: item._id },
-            { mobile: item._id }
-          ]
-        });
+    // ── Rank Top Referrers by the REFERRER's OWN jurisdiction ──
+    // A referral is credited to the referrer regardless of where the referred
+    // member lives. We keep only referrers who belong to this admin's scope.
+    const countByCode = {};
+    topReferrersRaw.forEach((r) => {
+      if (r._id != null) countByCode[String(r._id).trim().toUpperCase()] = r.referralCount;
+    });
 
-        if (referrerUser) {
-          const apps = await SchemeApplication.find({ userId: referrerUser._id });
-          return {
-            epicNo: referrerUser.epicNo,
-            voterName: referrerUser.voterName,
-            mobile: referrerUser.mobile,
-            district: referrerUser.district,
-            assemblyName: referrerUser.assemblyName,
-            boothNo: referrerUser.boothNo,
-            referralCode: referrerUser.referralCode,
-            referralCount: item.referralCount,
-            applications: apps
-          };
-        } else {
-          return {
-            epicNo: item._id,
-            voterName: `Referrer (${item._id})`,
-            referralCount: item.referralCount,
-            applications: []
-          };
-        }
+    const referrerCodeList = topReferrersRaw.map((r) => r._id).filter(Boolean);
+
+    let rankedReferrers = [];
+    if (referrerCodeList.length > 0) {
+      // Only load users who are actual referrers AND fall within this admin's scope.
+      const scopedReferrerUsers = await User.find({
+        ...scopeQuery,
+        $or: [
+          { referralCode: { $in: referrerCodeList } },
+          { epicNo: { $in: referrerCodeList } },
+          { mobile: { $in: referrerCodeList } }
+        ]
+      }).select('referralCode epicNo mobile voterName district assemblyName boothNo');
+
+      rankedReferrers = scopedReferrerUsers
+        .map((u) => {
+          const cnt =
+            countByCode[String(u.referralCode || '').trim().toUpperCase()] ||
+            countByCode[String(u.epicNo || '').trim().toUpperCase()] ||
+            countByCode[String(u.mobile || '').trim().toUpperCase()] ||
+            0;
+          return { user: u, referralCount: cnt };
+        })
+        .filter((x) => x.referralCount > 0)
+        .sort((a, b) => b.referralCount - a.referralCount)
+        .slice(0, 5);
+    }
+
+    const topReferrers = await Promise.all(
+      rankedReferrers.map(async ({ user: referrerUser, referralCount }) => {
+        const apps = await SchemeApplication.find({ userId: referrerUser._id });
+        return {
+          epicNo: referrerUser.epicNo,
+          voterName: referrerUser.voterName,
+          mobile: referrerUser.mobile,
+          district: referrerUser.district,
+          assemblyName: referrerUser.assemblyName,
+          boothNo: referrerUser.boothNo,
+          referralCode: referrerUser.referralCode,
+          referralCount,
+          applications: apps
+        };
       })
     );
 
@@ -569,6 +585,10 @@ const getApplicationsList = async (req, res) => {
       const regexes = [new RegExp('^' + clean.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '$', 'i')];
       if (matchedScheme) {
         regexes.push(new RegExp('^' + matchedScheme.name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '$', 'i'));
+        // Applications are often stored with schemeName = the numeric scheme id
+        // (the chatbot submits scheme ids). Match that too, otherwise filtering
+        // by the human-readable name returns nothing.
+        regexes.push(new RegExp('^' + String(matchedScheme.id) + '$'));
         if (matchedScheme.fullName) {
           regexes.push(new RegExp(matchedScheme.fullName.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'i'));
         }
@@ -581,7 +601,13 @@ const getApplicationsList = async (req, res) => {
         regexes.push(new RegExp(clean.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'i'));
       }
 
-      appScopeFilter.schemeName = { $in: regexes };
+      // Match either the schemeName (by any regex above) or the numeric schemeId.
+      if (matchedScheme) {
+        const schemeCond = { $or: [{ schemeName: { $in: regexes } }, { schemeId: Number(matchedScheme.id) }] };
+        appScopeFilter.$and = [...(appScopeFilter.$and || []), schemeCond];
+      } else {
+        appScopeFilter.schemeName = { $in: regexes };
+      }
     }
 
     if (search) {

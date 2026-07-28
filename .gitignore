@@ -7,7 +7,7 @@ dist/
 **/dist/
 build/
 **/build/
-
+w
 # Environment variables
 .env
 **/.env

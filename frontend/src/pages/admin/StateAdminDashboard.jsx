@@ -466,7 +466,7 @@ const StateAdminDashboard = () => {
               topReferrers={statsData.topReferrers || []}
               scopeLabel={activeScopeText}
               onViewProfile={(ref) => {
-                if (ref && ref.epicNo) setSelectedVoterTimeline(ref);
+                if (ref && ref.epicNo) { setSubPage('applications'); setSelectedVoterTimeline(ref); }
               }}
             />
 

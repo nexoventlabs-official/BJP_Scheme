@@ -355,29 +355,21 @@ const MemberProfileTimelineView = ({ voterData, onBack, onUpdateAppStatus, onSel
                         transition: 'all 0.15s ease'
                       }}
                     >
-                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                      <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '8px' }}>
                         <div>
                           <div style={{ fontWeight: '700', fontSize: '13px', color: 'var(--color-midnight-ink)' }}>{ref.voterName}</div>
                           <div style={{ fontSize: '11px', color: 'var(--color-slate)', fontFamily: 'var(--font-ui-monospace)' }}>{ref.epicNo}</div>
                         </div>
-
-                        <button
-                          type="button"
-                          onClick={() => {
-                            if (onSelectVoter) onSelectVoter(ref);
-                          }}
-                          className="btn btn-ghost"
-                          style={{ padding: '5px 12px', fontSize: '12px', fontWeight: '700', color: 'var(--color-campfire-orange)', display: 'flex', alignItems: 'center', gap: '4px' }}
-                        >
-                          View Profile <ChevronRight size={13} />
-                        </button>
-                      </div>
-
-                      <div style={{ fontSize: '11px', color: 'var(--color-slate)', marginTop: '6px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                        <span>Mobile: <strong>{ref.mobile}</strong></span>
-                        <span className="tag-pill tag-sunlit" style={{ fontSize: '10px', fontWeight: '700' }}>
+                        <span className="tag-pill tag-sunlit" style={{ fontSize: '10px', fontWeight: '700', flexShrink: 0 }}>
                           {ref.applications?.length || 0} Scheme(s)
                         </span>
+                      </div>
+
+                      <div style={{ fontSize: '11px', color: 'var(--color-slate)', marginTop: '8px', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '4px 12px' }}>
+                        <span>District: <strong style={{ color: 'var(--color-midnight-ink)' }}>{ref.district || '—'}</strong></span>
+                        <span>Assembly: <strong style={{ color: 'var(--color-midnight-ink)' }}>{ref.assemblyName || '—'}</strong></span>
+                        <span>Booth: <strong style={{ color: 'var(--color-midnight-ink)' }}>{ref.boothNo || '—'}</strong></span>
+                        <span>Mobile: <strong style={{ color: 'var(--color-midnight-ink)' }}>{ref.mobile}</strong></span>
                       </div>
                     </div>
                   ))}

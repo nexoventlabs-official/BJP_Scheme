@@ -22,32 +22,48 @@ const sendOtp = async (req, res) => {
     }
 
     const cleanMobile = mobile.trim();
-    const existingUser = await User.findOne({ mobile: cleanMobile });
-
     const otp = Math.floor(100000 + Math.random() * 900000).toString();
     const expiresAt = new Date(Date.now() + 10 * 60 * 1000); // 10 mins
 
-    await OtpSession.deleteMany({ mobile: cleanMobile });
+    // Run the user lookup and old-session cleanup together (both local DB ops).
+    const [existingUser] = await Promise.all([
+      User.findOne({ mobile: cleanMobile }),
+      OtpSession.deleteMany({ mobile: cleanMobile })
+    ]);
 
-    const smsResult = await sendSmsOtp(cleanMobile, otp);
-
-    await OtpSession.create({
+    // Persist the OTP session BEFORE responding so verification is ready
+    // immediately. (verifyOtp matches on mobile + otp, not sessionId.)
+    const session = await OtpSession.create({
       mobile: cleanMobile,
       otp,
-      sessionId: smsResult.sessionId || null,
+      sessionId: null,
       expiresAt
     });
 
-    return res.status(200).json({
+    // Respond right away — the SMS gateway call is the slow part, so we
+    // dispatch it in the background instead of making the user wait for the
+    // 2Factor round-trip. The OTP already works the moment this returns.
+    res.status(200).json({
       success: true,
       message: 'OTP sent successfully',
       mobile: cleanMobile,
       isExistingUser: !!existingUser,
-      ...(process.env.NODE_ENV !== 'production' && { devOtp: smsResult.devOtp || otp })
+      ...(process.env.NODE_ENV !== 'production' && { devOtp: otp })
     });
+
+    // Fire-and-forget SMS dispatch (does not block the response).
+    sendSmsOtp(cleanMobile, otp)
+      .then((smsResult) => {
+        if (smsResult?.sessionId) {
+          OtpSession.updateOne({ _id: session._id }, { sessionId: smsResult.sessionId }).catch(() => {});
+        }
+      })
+      .catch((err) => console.error('[sendOtp background SMS Error]:', err.message));
   } catch (error) {
     console.error('[sendOtp Error]:', error);
-    return res.status(500).json({ success: false, message: 'Failed to send OTP', error: error.message });
+    if (!res.headersSent) {
+      return res.status(500).json({ success: false, message: 'Failed to send OTP', error: error.message });
+    }
   }
 };
 
@@ -392,10 +408,22 @@ const getMemberStatus = async (req, res) => {
 
     const applications = await SchemeApplication.find({ userId: user._id }).sort({ appliedAt: -1 });
 
+    // Count everyone this member has referred (matched against their referral
+    // code / epic / mobile, since referredBy stores the referrer's code).
+    const matchCodes = [user.referralCode, user.epicNo, user.mobile].filter(Boolean);
+    const referredCount = await User.countDocuments({ referredBy: { $in: matchCodes } });
+
     return res.status(200).json({
       success: true,
       user,
-      applications
+      applications,
+      referred_count: referredCount,
+      referralCount: referredCount,
+      created_at: user.createdAt,
+      district: user.district,
+      assembly_name: user.assemblyName,
+      booth_no: user.boothNo,
+      boothNo: user.boothNo
     });
   } catch (error) {
     return res.status(500).json({ success: false, message: error.message });

@@ -386,7 +386,7 @@ const DistrictAdminDashboard = () => {
             topReferrers={statsData.topReferrers || []}
             scopeLabel={admin?.district || ''}
             onViewProfile={(ref) => {
-              if (ref && ref.epicNo) setSelectedVoterTimeline(ref);
+              if (ref && ref.epicNo) { setSubPage('applications'); setSelectedVoterTimeline(ref); }
             }}
           />
 
