@@ -4,6 +4,19 @@ const Admin = require('../models/Admin');
 const User = require('../models/User');
 const SchemeApplication = require('../models/SchemeApplication');
 const { BJP_SCHEMES } = require('../constants/schemes');
+
+// Resolve a stored schemeName (often the numeric scheme id, since the chatbot
+// submits scheme ids) to a human-readable scheme name for display / exports.
+const resolveSchemeName = (schemeName, schemeId) => {
+  const raw = String(schemeName == null ? '' : schemeName).trim();
+  const byId = BJP_SCHEMES.find(s => String(s.id) === raw || (schemeId != null && String(s.id) === String(schemeId)));
+  if (/^\d+$/.test(raw) && byId) return byId.name;
+  const byName = BJP_SCHEMES.find(s => s.name.toLowerCase() === raw.toLowerCase());
+  if (byName) return byName.name;
+  const byKey = BJP_SCHEMES.find(s => (s.keys || []).some(k => k && raw.toLowerCase().includes(k)));
+  if (byKey) return byKey.name;
+  return raw || (byId ? byId.name : '—');
+};
 const { getVoterDbClient } = require('../config/db');
 const {
   getAssemblyMetadata,
@@ -1101,7 +1114,7 @@ const exportApplicationsCsv = async (req, res) => {
     // Stream cursor — never loads all docs into memory
     const cursor = SchemeApplication.find(
       appScopeFilter,
-      { voterName: 1, epicNo: 1, mobile: 1, district: 1, assemblyName: 1, boothNo: 1, schemeName: 1, clusterName: 1, status: 1, appliedAt: 1 }
+      { voterName: 1, epicNo: 1, mobile: 1, district: 1, assemblyName: 1, boothNo: 1, schemeName: 1, schemeId: 1, clusterName: 1, status: 1, appliedAt: 1 }
     ).sort({ appliedAt: -1 }).lean().cursor();
 
     let idx = 0;
@@ -1118,7 +1131,7 @@ const exportApplicationsCsv = async (req, res) => {
         esc(doc.district),
         esc(doc.assemblyName),
         esc(doc.boothNo),
-        esc(doc.schemeName),
+        esc(resolveSchemeName(doc.schemeName, doc.schemeId)),
         esc(doc.clusterName),
         esc(doc.status),
         esc(appliedDate)
@@ -1214,11 +1227,12 @@ const exportApplicationsExcel = async (req, res) => {
     const workbook  = new ExcelJS.Workbook();
     workbook.creator = 'BJP Nalam Thittam';
     const sheet = workbook.addWorksheet('Applications', {
-      views: [{ state: 'frozen', ySplit: 1 }]
+      views: [{ state: 'frozen', ySplit: 5 }]
     });
 
-    // Column definitions with widths
-    sheet.columns = [
+    // Column definitions (key + width only; header row is written manually
+    // below so we can place a title/scope/filter block above it).
+    const COLUMNS = [
       { header: 'S.No',         key: 'sno',      width: 6  },
       { header: 'Voter Name',   key: 'name',     width: 25 },
       { header: 'EPIC Number',  key: 'epic',     width: 16 },
@@ -1231,9 +1245,60 @@ const exportApplicationsExcel = async (req, res) => {
       { header: 'Status',       key: 'status',   width: 13 },
       { header: 'Applied Date', key: 'date',     width: 14 },
     ];
+    sheet.columns = COLUMNS.map(c => ({ key: c.key, width: c.width }));
+    const LAST_COL = 'K'; // 11 columns → A..K
 
-    // Style header row — saffron BJP orange
-    const headerRow = sheet.getRow(1);
+    // ── Scope label (based on the admin's role) ──
+    let scopeLabel;
+    if (user.role === 'DISTRICT_ADMIN')      scopeLabel = `District-wise Report — ${user.district || '—'}`;
+    else if (user.role === 'ASSEMBLY_ADMIN') scopeLabel = `Assembly-wise Report — ${user.assemblyName || '—'}`;
+    else if (user.role === 'BOOTH_ADMIN')    scopeLabel = `Booth-wise Report — Booth ${user.boothNo || '—'}${user.assemblyName ? ', ' + user.assemblyName : ''}`;
+    else                                     scopeLabel = 'Statewide Report — All Tamil Nadu';
+
+    // ── Filters applied at download time ──
+    const filterParts = [];
+    if (isValidFilterVal(status))            filterParts.push(`Status: ${status}`);
+    if (isValidFilterVal(targetSchemeExcel)) filterParts.push(`Scheme: ${resolveSchemeName(targetSchemeExcel)}`);
+    if (isValidFilterVal(district))          filterParts.push(`District: ${district}`);
+    if (isValidFilterVal(assemblyName))      filterParts.push(`Assembly: ${assemblyName}`);
+    if (isValidFilterVal(boothNo))           filterParts.push(`Booth: ${boothNo}`);
+    if (isValidFilterVal(search))            filterParts.push(`Search: "${search}"`);
+    if (startDate || endDate)                filterParts.push(`Date: ${startDate || '…'} to ${endDate || '…'}`);
+    const filtersLabel = filterParts.length ? filterParts.join('    |    ') : 'None (all records in scope)';
+
+    // ── Title block (rows 1–4) ──
+    sheet.mergeCells(`A1:${LAST_COL}1`);
+    const titleCell = sheet.getCell('A1');
+    titleCell.value = 'BJP Nalam Thittam — Scheme Applications Report';
+    titleCell.font = { bold: true, size: 16, color: { argb: 'FFFF6B00' }, name: 'Calibri' };
+    titleCell.alignment = { vertical: 'middle', horizontal: 'center' };
+    sheet.getRow(1).height = 26;
+
+    sheet.mergeCells(`A2:${LAST_COL}2`);
+    const scopeCell = sheet.getCell('A2');
+    scopeCell.value = scopeLabel;
+    scopeCell.font = { bold: true, size: 12, color: { argb: 'FF1F2937' } };
+    scopeCell.alignment = { vertical: 'middle', horizontal: 'center' };
+    sheet.getRow(2).height = 20;
+
+    sheet.mergeCells(`A3:${LAST_COL}3`);
+    const filterCell = sheet.getCell('A3');
+    filterCell.value = `Filters Applied:   ${filtersLabel}`;
+    filterCell.font = { size: 11, italic: true, color: { argb: 'FF475569' } };
+    filterCell.alignment = { vertical: 'middle', horizontal: 'center' };
+    sheet.getRow(3).height = 18;
+
+    sheet.mergeCells(`A4:${LAST_COL}4`);
+    const genCell = sheet.getCell('A4');
+    genCell.value = `Generated by ${user.username || user.role}  •  ${new Date().toLocaleString('en-IN')}`;
+    genCell.font = { size: 10, color: { argb: 'FF94A3B8' } };
+    genCell.alignment = { vertical: 'middle', horizontal: 'center' };
+    sheet.getRow(4).height = 16;
+
+    // ── Column header row (row 5) — saffron BJP orange ──
+    const HEADER_ROW_NUM = 5;
+    const headerRow = sheet.getRow(HEADER_ROW_NUM);
+    COLUMNS.forEach((c, i) => { headerRow.getCell(i + 1).value = c.header; });
     headerRow.eachCell(cell => {
       cell.fill   = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFFF6B00' } };
       cell.font   = { bold: true, color: { argb: 'FFFFFFFF' }, size: 11, name: 'Calibri' };
@@ -1265,7 +1330,7 @@ const exportApplicationsExcel = async (req, res) => {
         district: doc.district   || '—',
         assembly: doc.assemblyName || '—',
         booth:    doc.boothNo    || '—',
-        scheme:   doc.schemeName || '—',
+        scheme:   resolveSchemeName(doc.schemeName, doc.schemeId),
         cluster:  doc.clusterName || '—',
         status:   doc.status     || '—',
         date:     appliedDate,
