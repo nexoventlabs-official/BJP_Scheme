@@ -40,19 +40,60 @@ export const formatAppliedDateTime = (dateStr) => {
 
 import { CLOUDINARY_SCHEME_IMAGES, optimizeCloudinaryUrl } from '../utils/cloudinarySchemes';
 
+const SCHEME_ALIASES = [
+  { key: 'PMSBY', keywords: ['pmsby', 'suraksha', 'bima'] },
+  { key: 'PMJJBY', keywords: ['pmjjby', 'jeevan', 'jyoti'] },
+  { key: 'APY', keywords: ['apy', 'atal', 'pension'] },
+  { key: 'PM SVANidhi', keywords: ['svanidhi', 'street vendor'] },
+  { key: 'PM Mudra Shishu', keywords: ['shishu'] },
+  { key: 'PM Mudra Kishor', keywords: ['kishor'] },
+  { key: 'Udyam', keywords: ['udyam', 'msme'] },
+  { key: 'Stand Up India', keywords: ['stand up'] },
+  { key: 'Startup Seed Fund', keywords: ['startup', 'seed'] },
+  { key: 'PM Kisan Maan Dhan', keywords: ['maan dhan', 'kisan maan'] },
+  { key: 'PM Kisan', keywords: ['kisan'] },
+  { key: 'PM Fasal Bima', keywords: ['fasal bima', 'pmfby'] },
+  { key: 'Ayushman Bharat', keywords: ['ayushman', 'pmjay'] },
+  { key: 'ABHA', keywords: ['abha', 'health id'] },
+  { key: 'PM Ujjwala', keywords: ['ujjwala'] },
+  { key: 'PM Matru Vandana', keywords: ['matru vandana', 'pmmvy'] },
+  { key: 'Sukanya Samridhi', keywords: ['sukanya', 'samridhi', 'samriddhi'] },
+  { key: 'PM Awas Yojana', keywords: ['awas', 'pmay'] },
+  { key: 'PMKVY', keywords: ['pmkvy', 'kaushal vikas'] },
+  { key: 'NSP Scholarship', keywords: ['scholarship', 'nsp', 'national scholarship'] },
+  { key: 'PM Vishwakarma', keywords: ['vishwakarma'] },
+  { key: 'Jan Dhan', keywords: ['jan dhan', 'pmjdy'] },
+  { key: 'e-Shram', keywords: ['shram', 'eshram'] }
+];
+
 export const getSchemeBgImage = (schemeIdOrName) => {
   if (!schemeIdOrName) return null;
   const name = formatSchemeName(schemeIdOrName);
   let rawUrl = CLOUDINARY_SCHEME_IMAGES[name];
+
   if (!rawUrl) {
-    const lower = name.toLowerCase().trim();
+    const lower = String(name).toLowerCase().trim();
+    
+    // 1. Check exact key or substring match
     for (const [key, path] of Object.entries(CLOUDINARY_SCHEME_IMAGES)) {
-      if (key.toLowerCase() === lower || lower.includes(key.toLowerCase()) || key.toLowerCase().includes(lower)) {
+      const kLower = key.toLowerCase();
+      if (kLower === lower || lower.includes(kLower) || kLower.includes(lower)) {
         rawUrl = path;
         break;
       }
     }
+
+    // 2. Check alias keywords
+    if (!rawUrl) {
+      for (const item of SCHEME_ALIASES) {
+        if (item.keywords.some(kw => lower.includes(kw))) {
+          rawUrl = CLOUDINARY_SCHEME_IMAGES[item.key];
+          break;
+        }
+      }
+    }
   }
+
   return optimizeCloudinaryUrl(rawUrl);
 };
 
