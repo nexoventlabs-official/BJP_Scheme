@@ -1,4 +1,4 @@
-export const CLOUDINARY_SCHEME_IMAGES = {
+const RAW_CLOUDINARY_SCHEME_IMAGES = {
   "ABHA": "https://res.cloudinary.com/dkjrdntf/image/upload/v1785409290/bjp_schemes/ABHA.png",
   "APY": "https://res.cloudinary.com/dkjrdntf/image/upload/v1785409389/bjp_schemes/APY.png",
   "Ayushman Bharat": "https://res.cloudinary.com/dkjrdntf/image/upload/v1785409392/bjp_schemes/Ayushman_Bharat.png",
@@ -23,3 +23,30 @@ export const CLOUDINARY_SCHEME_IMAGES = {
   "Sukanya Samridhi": "https://res.cloudinary.com/dkjrdntf/image/upload/v1785409441/bjp_schemes/Sukanya_Samridhi.png",
   "Udyam": "https://res.cloudinary.com/dkjrdntf/image/upload/v1785409442/bjp_schemes/Udyam.png"
 };
+
+// Helper to inject Cloudinary automatic WebP/AVIF format + quality compression + resizing
+export const optimizeCloudinaryUrl = (url, width = 600) => {
+  if (!url || typeof url !== 'string') return url;
+  if (url.includes('res.cloudinary.com') && url.includes('/upload/')) {
+    return url.replace('/upload/', `/upload/f_auto,q_auto,w_${width}/`);
+  }
+  return url;
+};
+
+// Pre-optimized mapping
+export const CLOUDINARY_SCHEME_IMAGES = Object.entries(RAW_CLOUDINARY_SCHEME_IMAGES).reduce((acc, [key, val]) => {
+  acc[key] = optimizeCloudinaryUrl(val, 600);
+  return acc;
+}, {});
+
+// Immediate in-memory image preloading queue for instant zero-latency loading
+if (typeof window !== 'undefined') {
+  const preloaded = new Set();
+  Object.values(CLOUDINARY_SCHEME_IMAGES).forEach(url => {
+    if (!preloaded.has(url)) {
+      preloaded.add(url);
+      const img = new Image();
+      img.src = url;
+    }
+  });
+}

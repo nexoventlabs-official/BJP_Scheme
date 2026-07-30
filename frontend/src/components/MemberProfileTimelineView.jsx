@@ -38,19 +38,22 @@ export const formatAppliedDateTime = (dateStr) => {
   }
 };
 
-import { CLOUDINARY_SCHEME_IMAGES } from '../utils/cloudinarySchemes';
+import { CLOUDINARY_SCHEME_IMAGES, optimizeCloudinaryUrl } from '../utils/cloudinarySchemes';
 
 export const getSchemeBgImage = (schemeIdOrName) => {
   if (!schemeIdOrName) return null;
   const name = formatSchemeName(schemeIdOrName);
-  if (CLOUDINARY_SCHEME_IMAGES[name]) return CLOUDINARY_SCHEME_IMAGES[name];
-  const lower = name.toLowerCase().trim();
-  for (const [key, path] of Object.entries(CLOUDINARY_SCHEME_IMAGES)) {
-    if (key.toLowerCase() === lower || lower.includes(key.toLowerCase()) || key.toLowerCase().includes(lower)) {
-      return path;
+  let rawUrl = CLOUDINARY_SCHEME_IMAGES[name];
+  if (!rawUrl) {
+    const lower = name.toLowerCase().trim();
+    for (const [key, path] of Object.entries(CLOUDINARY_SCHEME_IMAGES)) {
+      if (key.toLowerCase() === lower || lower.includes(key.toLowerCase()) || key.toLowerCase().includes(lower)) {
+        rawUrl = path;
+        break;
+      }
     }
   }
-  return null;
+  return optimizeCloudinaryUrl(rawUrl);
 };
 
 
