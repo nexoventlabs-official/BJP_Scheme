@@ -431,14 +431,14 @@ const SuperAdminDashboard = () => {
                 <div className="stat-icon" style={{ background: '#eff6ff', color: '#2563eb' }}>
                   <Users size={20} />
                 </div>
-                <div>
+                <div style={{ width: '100%' }}>
                   <div className="stat-number" style={{ color: '#2563eb' }}>
                     {statsData.overview.totalVotersInRoll != null
                       ? statsData.overview.totalVotersInRoll.toLocaleString()
                       : '—'}
                   </div>
                   <div className="stat-label">Total Voters in Roll</div>
-                  <div style={{ fontSize: '11px', color: 'var(--color-slate)', marginTop: '2px' }}>Electoral Roll (Read DB)</div>
+                  <div className="stat-sub">Electoral Roll (Read DB)</div>
                 </div>
               </div>
 
@@ -446,20 +446,20 @@ const SuperAdminDashboard = () => {
               <div
                 className="stat-card"
                 onClick={() => { setStatusFilter(''); setSchemeFilter(''); navigateSubPage('applications'); }}
-                style={{ cursor: 'pointer', transition: 'all 0.2s ease' }}
+                style={{ cursor: 'pointer' }}
                 title="Click to view all enrolled members"
               >
                 <div className="stat-icon" style={{ background: '#fff7ed', color: 'var(--color-saffron)' }}>
                   <Users size={20} />
                 </div>
-                <div>
+                <div style={{ width: '100%' }}>
                   <div className="stat-number">
                     {statsData.overview.totalVotersRequested != null
                       ? statsData.overview.totalVotersRequested.toLocaleString()
                       : 0}
                   </div>
                   <div className="stat-label">Voters Enrolled in Schemes</div>
-                  <div style={{ fontSize: '11px', color: 'var(--color-slate)', marginTop: '2px' }}>
+                  <div className="stat-sub">
                     {statsData.overview.totalRegisteredUsers != null
                       ? `${statsData.overview.totalRegisteredUsers.toLocaleString()} Portal User Logins`
                       : 'Enrolled Members'}
@@ -471,16 +471,16 @@ const SuperAdminDashboard = () => {
               <div
                 className="stat-card"
                 onClick={() => { setStatusFilter(''); setSchemeFilter(''); navigateSubPage('applications'); }}
-                style={{ cursor: 'pointer', transition: 'all 0.2s ease' }}
+                style={{ cursor: 'pointer' }}
                 title="Click to view all applications"
               >
                 <div className="stat-icon" style={{ background: 'var(--color-fog-gray)', color: 'var(--color-midnight-ink)' }}>
                   <FileText size={20} />
                 </div>
-                <div>
+                <div style={{ width: '100%' }}>
                   <div className="stat-number">{statsData.overview.totalApplications}</div>
                   <div className="stat-label">Applications Submitted</div>
-                  <div style={{ fontSize: '11px', color: 'var(--color-saffron)', fontWeight: '600', marginTop: '2px' }}>Click to View Applications →</div>
+                  <div className="stat-sub" style={{ color: 'var(--color-electric-blue)', fontWeight: '500' }}>Click to View Applications →</div>
                 </div>
               </div>
 
@@ -488,20 +488,21 @@ const SuperAdminDashboard = () => {
               <div
                 className="stat-card"
                 onClick={() => { setStatusFilter('Approved'); setSchemeFilter(''); navigateSubPage('applications'); }}
-                style={{ cursor: 'pointer', transition: 'all 0.2s ease' }}
+                style={{ cursor: 'pointer' }}
                 title="Click to view approved applications"
               >
                 <div className="stat-icon" style={{ background: '#f0fdf4', color: 'var(--color-forest-pulse)' }}>
                   <Shield size={20} />
                 </div>
-                <div>
+                <div style={{ width: '100%' }}>
                   <div className="stat-number" style={{ color: 'var(--color-forest-pulse)' }}>
                     {statsData.overview.statusBreakdown?.Approved || 0}
                   </div>
                   <div className="stat-label">Approved Benefit Directives</div>
-                  <div style={{ fontSize: '11px', color: 'var(--color-forest-pulse)', fontWeight: '600', marginTop: '2px' }}>Click to View Approved →</div>
+                  <div className="stat-sub" style={{ color: 'var(--color-forest-pulse)', fontWeight: '500' }}>Click to View Approved →</div>
                 </div>
               </div>
+
 
             </div>
 

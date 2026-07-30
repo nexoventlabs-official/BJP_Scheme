@@ -271,14 +271,14 @@ const DistrictAdminDashboard = () => {
               <div className="stat-icon" style={{ background: '#eff6ff', color: '#2563eb' }}>
                 <Users size={20} />
               </div>
-              <div>
+              <div style={{ width: '100%' }}>
                 <div className="stat-number" style={{ color: '#2563eb' }}>
                   {statsData.overview.totalVotersInRoll != null
                     ? statsData.overview.totalVotersInRoll.toLocaleString()
                     : '—'}
                 </div>
                 <div className="stat-label">Total Voters in {admin.district}</div>
-                <div style={{ fontSize: '11px', color: 'var(--color-slate)', marginTop: '2px' }}>Electoral Roll (Voter DB)</div>
+                <div className="stat-sub">Electoral Roll (Voter DB)</div>
               </div>
             </div>
 
@@ -287,10 +287,10 @@ const DistrictAdminDashboard = () => {
               <div className="stat-icon">
                 <Users size={20} />
               </div>
-              <div>
+              <div style={{ width: '100%' }}>
                 <div className="stat-number">{statsData.overview.totalVotersRequested}</div>
                 <div className="stat-label">Voters Requested Schemes</div>
-                <div style={{ fontSize: '11px', color: 'var(--color-slate)', marginTop: '2px' }}>Enrolled in Program</div>
+                <div className="stat-sub">Enrolled in Program</div>
               </div>
             </div>
 
@@ -298,16 +298,16 @@ const DistrictAdminDashboard = () => {
             <div
               className="stat-card"
               onClick={() => { setStatusFilter(''); setSchemeFilter(''); navigateSubPage('applications'); }}
-              style={{ cursor: 'pointer', transition: 'all 0.2s ease' }}
+              style={{ cursor: 'pointer' }}
               title="Click to view all applications"
             >
               <div className="stat-icon" style={{ background: 'var(--color-fog-gray)', color: 'var(--color-midnight-ink)' }}>
                 <Building size={20} />
               </div>
-              <div>
+              <div style={{ width: '100%' }}>
                 <div className="stat-number">{statsData.overview.totalApplications}</div>
                 <div className="stat-label">District Applications</div>
-                <div style={{ fontSize: '11px', color: 'var(--color-saffron)', fontWeight: '600', marginTop: '2px' }}>Click to View Applications →</div>
+                <div className="stat-sub" style={{ color: 'var(--color-electric-blue)', fontWeight: '500' }}>Click to View Applications →</div>
               </div>
             </div>
 
@@ -315,18 +315,19 @@ const DistrictAdminDashboard = () => {
             <div
               className="stat-card"
               onClick={() => { setStatusFilter('Approved'); setSchemeFilter(''); navigateSubPage('applications'); }}
-              style={{ cursor: 'pointer', transition: 'all 0.2s ease' }}
+              style={{ cursor: 'pointer' }}
               title="Click to view approved applications"
             >
               <div className="stat-icon" style={{ background: '#f0fdf4', color: 'var(--color-forest-pulse)' }}>
                 <Shield size={20} />
               </div>
-              <div>
+              <div style={{ width: '100%' }}>
                 <div className="stat-number" style={{ color: 'var(--color-forest-pulse)' }}>{statsData.overview.statusBreakdown.Approved || 0}</div>
                 <div className="stat-label">Approved Directives</div>
-                <div style={{ fontSize: '11px', color: 'var(--color-forest-pulse)', fontWeight: '600', marginTop: '2px' }}>Click to View Approved →</div>
+                <div className="stat-sub" style={{ color: 'var(--color-forest-pulse)', fontWeight: '500' }}>Click to View Approved →</div>
               </div>
             </div>
+
           </div>
 
           <div className="campsite-card" style={{ width: '100%', padding: '24px', boxSizing: 'border-box' }}>
