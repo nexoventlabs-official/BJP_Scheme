@@ -29,63 +29,105 @@ const AdminLoginPage = () => {
   };
 
   return (
-    <div style={{ minHeight: '80vh', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px', width: '100%', boxSizing: 'border-box' }}>
-      <div className="campsite-card" style={{ maxWidth: '420px', width: '100%', padding: '36px', boxSizing: 'border-box' }}>
+    <div style={{
+      minHeight: '80vh',
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      padding: '24px',
+      width: '100%',
+      boxSizing: 'border-box',
+      backgroundColor: 'var(--color-canvas)'
+    }}>
+      <div className="campsite-card" style={{
+        maxWidth: '440px',
+        width: '100%',
+        padding: '48px 40px',
+        boxSizing: 'border-box',
+        borderRadius: '28px',
+        backgroundColor: '#ffffff',
+        border: 'none',
+        boxShadow: 'none'
+      }}>
         
-        <div style={{ textAlign: 'center', marginBottom: '28px' }}>
+        <div style={{ textAlign: 'center', marginBottom: '32px' }}>
           <div style={{
-            width: '48px',
-            height: '48px',
-            borderRadius: '9999px',
-            background: 'var(--color-fog-gray)',
-            color: 'var(--color-midnight-ink)',
+            width: '56px',
+            height: '56px',
+            borderRadius: '980px',
+            background: 'var(--color-canvas)',
+            color: 'var(--color-electric-blue)',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            margin: '0 auto 14px'
+            margin: '0 auto 18px'
           }}>
-            <Shield size={24} />
+            <Shield size={28} />
           </div>
-          <h2 className="text-heading" style={{ margin: 0 }}>
+          <h2 style={{
+            fontFamily: 'var(--font-sf-pro-display)',
+            fontSize: '32px',
+            fontWeight: '600',
+            color: 'var(--color-primary-ink)',
+            margin: 0,
+            letterSpacing: '0.007em'
+          }}>
             Admin Portal
           </h2>
-          <p className="text-subheading" style={{ fontSize: '14px', marginTop: '6px' }}>
+          <p style={{
+            fontSize: '17px',
+            color: 'var(--color-mid-gray)',
+            marginTop: '8px',
+            lineHeight: '1.4'
+          }}>
             Sign in to access your administrative workspace
           </p>
         </div>
 
         {loginError && (
-          <div className="tag-pill tag-error" style={{ width: '100%', borderRadius: '8px', padding: '8px 12px', marginBottom: '16px' }}>
+          <div className="tag-pill tag-error" style={{
+            width: '100%',
+            borderRadius: '980px',
+            padding: '10px 16px',
+            marginBottom: '20px',
+            justifyContent: 'center',
+            boxSizing: 'border-box'
+          }}>
             {loginError}
           </div>
         )}
 
         <form onSubmit={handleAdminLogin}>
-          <div className="form-group">
+          <div className="form-group" style={{ marginBottom: '20px' }}>
             <label className="form-label">Username</label>
             <input
               type="text"
               value={username}
               onChange={(e) => setUsername(e.target.value)}
-              placeholder="Username"
+              placeholder="Enter username"
               className="form-control"
               required
             />
           </div>
 
-          <div className="form-group">
+          <div className="form-group" style={{ marginBottom: '24px' }}>
             <label className="form-label">Password / Passcode</label>
             <input
               type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              placeholder="Password"
+              placeholder="Enter password"
               className="form-control"
               required
             />
           </div>
 
-          <button type="submit" className="btn btn-filled" style={{ width: '100%', marginTop: '10px' }} disabled={loginLoading}>
+          <button
+            type="submit"
+            className="btn btn-filled"
+            style={{ width: '100%', marginTop: '8px', padding: '13px' }}
+            disabled={loginLoading}
+          >
             {loginLoading ? 'Authenticating...' : 'Sign In'}
           </button>
         </form>

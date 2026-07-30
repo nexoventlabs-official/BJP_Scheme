@@ -1,30 +1,69 @@
-/* Campsite — Style Reference Implementation for BJP Nalam Thittam */
+/* Apple (España) — Style Reference Implementation for BJP Nalam Thittam Admin Portal */
 
 :root {
   /* Colors */
-  --color-campfire-orange: #ff6b1a;
-  --color-ember-brown: #451a03;
-  --color-sunlit-cream: #fef3c7;
-  --color-forest-pulse: #22c55e;
-  --color-ember-alert: #ef4444;
-  --color-midnight-ink: #171717;
-  --color-paper-white: #ffffff;
-  --color-parchment: #fffdf9;
-  --color-fog-gray: #f5f5f5;
-  --color-linen: #f0f0f0;
-  --color-ash-gray: #a3a3a3;
-  --color-slate: #737373;
-  --color-graphite: #525252;
-  --color-stone: #8f7668;
+  --color-primary-ink: #1d1d1f;
+  --gradient-primary-ink: linear-gradient(184deg, #1d1d1f 20%, #0000f9 76%, #252525 95%);
+  --color-mid-gray: #707070;
+  --color-deep-gray: #474747;
+  --color-hairline: #d6d6d6;
+  --color-canvas: #f5f5f7;
+  --color-paper: #ffffff;
+  --color-cool-wash: #e8e8ed;
+  --color-faded-surface: #fafafc;
+  --color-quiet-dot: #777779;
+  --color-electric-blue: #0071e3;
+  --color-link-blue: #0066cc;
+  --color-ember: #b64400;
+  --color-sky: #c8d8e0;
+  --color-citrus: #dddc8c;
+  --color-starlight: #f0e4d3;
+  --color-silver: #e3e4e5;
+  --color-blush: #e8d0d0;
+  --color-indigo: #596680;
+  --color-midnight: #2e3642;
+  --color-citrus-gradient: #3b3b23;
+  --gradient-citrus-gradient: linear-gradient(184deg, #1d1d1f 0%, #dfe74f 33%, #5a7e2 100%);
+
+  /* Legacy mappings mapped cleanly to Apple palette */
+  --color-campfire-orange: var(--color-electric-blue);
+  --color-ember-brown: var(--color-primary-ink);
+  --color-sunlit-cream: var(--color-canvas);
+  --color-forest-pulse: #2e7d32;
+  --color-ember-alert: var(--color-ember);
+  --color-midnight-ink: var(--color-primary-ink);
+  --color-paper-white: var(--color-paper);
+  --color-parchment: var(--color-canvas);
+  --color-fog-gray: var(--color-canvas);
+  --color-linen: var(--color-cool-wash);
+  --color-ash-gray: var(--color-mid-gray);
+  --color-slate: var(--color-mid-gray);
+  --color-graphite: var(--color-deep-gray);
+  --color-stone: var(--color-deep-gray);
 
   /* Typography — Font Families */
-  --font-inter: 'Inter', ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --font-sf-pro-display: 'SF Pro Display', 'Inter', ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --font-sf-pro-text: 'SF Pro Text', 'Inter', ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --font-inter: var(--font-sf-pro-text);
   --font-ui-monospace: 'ui-monospace', SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+
+  /* Typography — Scale */
+  --text-micro: 12px;
+  --text-caption: 14px;
+  --text-body-sm: 17px;
+  --text-body: 21px;
+  --text-body-lg: 28px;
+  --text-subheading: 32px;
+  --text-heading-sm: 40px;
+  --text-heading: 56px;
+  --text-heading-lg: 80px;
+  --text-display: 96px;
 
   /* Typography — Weights */
   --font-weight-regular: 400;
   --font-weight-medium: 500;
   --font-weight-semibold: 600;
+  --font-weight-bold: 700;
 
   /* Spacing */
   --spacing-4: 4px;
@@ -33,22 +72,34 @@
   --spacing-16: 16px;
   --spacing-20: 20px;
   --spacing-24: 24px;
+  --spacing-28: 28px;
   --spacing-32: 32px;
+  --spacing-40: 40px;
+  --spacing-44: 44px;
   --spacing-48: 48px;
-  --spacing-64: 64px;
+  --spacing-52: 52px;
+  --spacing-76: 76px;
   --spacing-80: 80px;
+  --spacing-120: 120px;
+  --spacing-144: 144px;
 
   /* Layout */
   --page-max-width: 1200px;
+  --card-padding: 28px;
 
-  /* Border Radius */
-  --radius-inputs: 8px;
-  --radius-cards: 12px;
+  /* Border Radius — Apple standard */
+  --radius-inputs: 980px;
+  --radius-cards: 28px;
+  --radius-links: 10px;
+  --radius-badges: 36px;
+  --radius-buttons: 980px;
+  --radius-smallbuttons: 999px;
+  --radius-productimages: 28px;
   --radius-full: 9999px;
 
-  /* Shadows */
-  --shadow-sm: rgba(0, 0, 0, 0.05) 0px 3px 6px -3px, rgba(0, 0, 0, 0.05) 0px 2px 4px -2px, rgba(0, 0, 0, 0.05) 0px 1px 2px -1px, rgba(0, 0, 0, 0.05) 0px 1px 1px -1px;
-  --shadow-subtle: rgba(0, 0, 0, 0.08) 0px 1px 1px -1px, rgba(0, 0, 0, 0.08) 0px 2px 2px -1px, rgba(0, 0, 0, 0.06) 0px 0px 0px 1px, #ffffff 0px 1px 0px 0px inset;
+  /* Zero Shadows — Apple system relies on canvas contrast & 28px radii */
+  --shadow-sm: none;
+  --shadow-subtle: none;
 }
 
 * {
@@ -58,12 +109,14 @@
 }
 
 body {
-  font-family: var(--font-inter);
-  background-color: var(--color-parchment);
-  color: var(--color-midnight-ink);
+  font-family: var(--font-sf-pro-text);
+  background-color: var(--color-canvas);
+  color: var(--color-primary-ink);
   min-height: 100vh;
-  line-height: 1.5;
+  line-height: 1.47;
+  letter-spacing: -0.022em;
   -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
   overflow-x: hidden;
 }
 
@@ -82,51 +135,66 @@ html, body {
 
 /* Typography Hierarchy */
 .text-display {
-  font-size: 58px;
-  font-weight: 600;
-  line-height: 1.00;
-  letter-spacing: -1.8px;
-  color: var(--color-midnight-ink);
+  font-family: var(--font-sf-pro-display);
+  font-size: var(--text-display);
+  font-weight: 700;
+  line-height: 1.04;
+  letter-spacing: -1.44px;
+  color: var(--color-primary-ink);
 }
 
 .text-heading {
-  font-size: 29px;
-  font-weight: 600;
-  line-height: 1.20;
-  letter-spacing: -0.52px;
-  color: var(--color-midnight-ink);
+  font-family: var(--font-sf-pro-display);
+  font-size: var(--text-heading);
+  font-weight: 700;
+  line-height: 1.07;
+  letter-spacing: -0.28px;
+  color: var(--color-primary-ink);
 }
 
 .text-heading-sm {
-  font-size: 22px;
+  font-family: var(--font-sf-pro-display);
+  font-size: var(--text-heading-sm);
   font-weight: 600;
-  line-height: 1.40;
-  letter-spacing: -0.37px;
-  color: var(--color-midnight-ink);
+  line-height: 1.14;
+  letter-spacing: 0.007em;
+  color: var(--color-primary-ink);
 }
 
 .text-subheading {
-  font-size: 18px;
-  font-weight: 500;
-  line-height: 1.56;
-  color: var(--color-slate);
+  font-family: var(--font-sf-pro-display);
+  font-size: var(--text-subheading);
+  font-weight: 600;
+  line-height: 1.18;
+  letter-spacing: 0.007em;
+  color: var(--color-primary-ink);
+}
+
+.text-body-lg {
+  font-size: var(--text-body-lg);
+  font-weight: 400;
+  line-height: 1.25;
+  letter-spacing: 0.007em;
+  color: var(--color-primary-ink);
 }
 
 .text-body {
-  font-size: 15px;
+  font-size: var(--text-body-sm);
   font-weight: 400;
-  line-height: 1.50;
-  color: var(--color-midnight-ink);
+  line-height: 1.47;
+  letter-spacing: -0.022em;
+  color: var(--color-primary-ink);
 }
 
 .text-caption {
-  font-size: 12px;
-  font-weight: 500;
-  line-height: 1.2;
-  letter-spacing: 0.3px;
+  font-size: var(--text-caption);
+  font-weight: 400;
+  line-height: 1.33;
+  letter-spacing: -0.016em;
+  color: var(--color-mid-gray);
 }
 
-/* Layout Container - Fixed Full Width Consistency */
+/* Layout Container */
 .container {
   width: 100%;
   max-width: var(--page-max-width);
@@ -135,20 +203,20 @@ html, body {
   box-sizing: border-box;
 }
 
-/* Surfaces / Cards - Fixed Full Width Consistency */
+/* Surfaces / Cards — Apple Borderless 28px Radii */
 .campsite-card {
   width: 100%;
   box-sizing: border-box;
-  background: var(--color-paper-white);
+  background: var(--color-paper);
   border-radius: var(--radius-cards);
-  box-shadow: var(--shadow-sm);
-  border: 1px solid var(--color-linen);
-  padding: 20px 24px;
-  transition: all 0.2s ease;
+  box-shadow: none;
+  border: none;
+  padding: 28px;
+  transition: background-color 0.2s ease;
 }
 
 .campsite-card:hover {
-  box-shadow: 0 6px 12px -4px rgba(0, 0, 0, 0.08);
+  box-shadow: none;
 }
 
 /* Brand Logo Badge */
@@ -169,152 +237,157 @@ html, body {
   gap: 8px;
   padding: 6px 16px;
   border-radius: var(--radius-full);
-  background-color: var(--color-campfire-orange);
-  color: #ffffff;
-  font-size: 13px;
-  font-weight: 500;
+  background-color: var(--color-canvas);
+  color: var(--color-primary-ink);
+  font-size: 14px;
+  font-weight: 400;
 }
 
 .notification-pill .new-tag {
-  background: #ffffff;
-  color: var(--color-campfire-orange);
+  background: var(--color-ember);
+  color: #ffffff;
   padding: 2px 8px;
   border-radius: var(--radius-full);
-  font-size: 10px;
+  font-size: 12px;
   font-weight: 600;
   text-transform: uppercase;
 }
 
-/* Buttons - Full 9999px Radius */
+/* Apple Buttons — Pill Shape at 980px Radius */
 .btn {
   display: inline-flex;
   align-items: center;
   justify-content: center;
   gap: 8px;
-  padding: 8px 18px;
-  font-family: var(--font-inter);
-  font-weight: 500;
-  font-size: 14px;
-  border-radius: var(--radius-full);
+  padding: 11px 20px;
+  font-family: var(--font-sf-pro-text);
+  font-weight: 400;
+  font-size: 17px;
+  border-radius: var(--radius-buttons);
   border: none;
   cursor: pointer;
   transition: all 0.2s ease;
   text-decoration: none;
+  line-height: 1.2;
 }
 
+/* Filled Pill Button — High-emphasis action button (#0071e3 Electric Blue fill) */
 .btn-filled {
-  background-color: var(--color-midnight-ink);
+  background-color: var(--color-electric-blue);
   color: #ffffff;
-  box-shadow: var(--shadow-subtle);
+  box-shadow: none;
+  border: none;
 }
 
 .btn-filled:hover:not(:disabled) {
-  background-color: #262626;
-  transform: translateY(-1px);
+  background-color: #0077ed;
+  opacity: 0.94;
+  transform: none;
 }
 
+/* Ghost Pill Button — Medium-emphasis action */
 .btn-ghost {
   background-color: transparent;
-  color: var(--color-slate);
-  border: 1px solid var(--color-linen);
+  color: var(--color-primary-ink);
+  border: 1px solid var(--color-primary-ink);
 }
 
 .btn-ghost:hover:not(:disabled) {
-  background-color: var(--color-fog-gray);
-  color: var(--color-midnight-ink);
+  background-color: var(--color-cool-wash);
+  color: var(--color-primary-ink);
 }
 
 .btn-orange {
-  background-color: var(--color-campfire-orange);
+  background-color: var(--color-ember);
   color: #ffffff;
 }
 
 .btn-orange:hover:not(:disabled) {
-  background-color: #e55a0f;
+  background-color: #a03c00;
 }
 
 .btn:disabled {
-  opacity: 0.5;
+  opacity: 0.4;
   cursor: not-allowed;
 }
 
-/* Inputs */
+/* Inputs — Apple Pill Inputs */
 .form-group {
   display: flex;
   flex-direction: column;
   gap: 6px;
-  margin-bottom: 16px;
+  margin-bottom: 20px;
 }
 
 .form-label {
-  font-size: 13px;
+  font-size: 14px;
   font-weight: 500;
-  color: var(--color-graphite);
+  color: var(--color-deep-gray);
+  letter-spacing: -0.016em;
 }
 
 .form-control {
   width: 100%;
-  padding: 10px 14px;
-  background: var(--color-fog-gray);
-  border: 1px solid var(--color-linen);
+  padding: 12px 20px;
+  background: var(--color-canvas);
+  border: 1px solid transparent;
   border-radius: var(--radius-inputs);
-  color: var(--color-midnight-ink);
-  font-family: var(--font-inter);
-  font-size: 14px;
+  color: var(--color-primary-ink);
+  font-family: var(--font-sf-pro-text);
+  font-size: 17px;
   transition: all 0.2s ease;
 }
 
 .form-control:focus {
   outline: none;
   background: #ffffff;
-  border-color: var(--color-midnight-ink);
-  box-shadow: 0 0 0 2px rgba(23, 23, 23, 0.1);
+  border-color: var(--color-electric-blue);
+  box-shadow: 0 0 0 3px rgba(0, 113, 227, 0.2);
 }
 
 .form-control::placeholder {
-  color: var(--color-ash-gray);
+  color: var(--color-mid-gray);
 }
 
-/* Status / Metadata Tags (9999px Radius) */
+/* Status / Metadata Tags (Pill Radius) */
 .tag-pill {
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  padding: 4px 10px;
+  padding: 5px 14px;
   border-radius: var(--radius-full);
-  font-size: 12px;
+  font-size: 14px;
   font-weight: 500;
 }
 
 .tag-sunlit {
-  background-color: var(--color-sunlit-cream);
-  color: var(--color-ember-brown);
+  background-color: var(--color-starlight);
+  color: var(--color-primary-ink);
 }
 
 .tag-success {
-  background-color: var(--color-forest-pulse);
-  color: #ffffff;
+  background-color: #e6f4ea;
+  color: #137333;
 }
 
 .tag-error {
-  background-color: var(--color-ember-alert);
-  color: #ffffff;
+  background-color: #fce8e6;
+  color: #c5221f;
 }
 
 .tag-active {
-  background-color: var(--color-fog-gray);
-  color: var(--color-midnight-ink);
-  border: 1px solid var(--color-linen);
+  background-color: var(--color-canvas);
+  color: var(--color-primary-ink);
 }
 
 /* Navigation & Tabs Header */
 .tabs-header {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 10px;
   background-color: transparent;
-  border-bottom: 1px solid var(--color-linen);
-  padding-bottom: 12px;
+  border-bottom: 1px solid var(--color-cool-wash);
+  padding-bottom: 14px;
   overflow-x: auto;
   -ms-overflow-style: none;
   scrollbar-width: none;
@@ -322,18 +395,12 @@ html, body {
   box-sizing: border-box;
 }
 
-.tabs-header::-webkit-scrollbar {
-  display: none;
-  width: 0px;
-  height: 0px;
-}
-
 .tab-btn {
-  padding: 8px 16px;
-  border-radius: var(--radius-full);
-  font-size: 13px;
-  font-weight: 500;
-  color: var(--color-slate);
+  padding: 8px 20px;
+  border-radius: var(--radius-buttons);
+  font-size: 14px;
+  font-weight: 400;
+  color: var(--color-mid-gray);
   background: transparent;
   border: none;
   cursor: pointer;
@@ -342,36 +409,36 @@ html, body {
 }
 
 .tab-btn:hover {
-  color: var(--color-midnight-ink);
-  background-color: var(--color-fog-gray);
+  color: var(--color-primary-ink);
+  background-color: var(--color-cool-wash);
 }
 
 .tab-btn.active {
-  color: var(--color-midnight-ink);
-  background-color: var(--color-sunlit-cream);
-  font-weight: 600;
+  color: #ffffff;
+  background-color: var(--color-primary-ink);
+  font-weight: 500;
 }
 
-/* Stats Metric Cards */
+/* Stats Metric Cards — Apple Borderless Cards */
 .stat-card {
-  background: var(--color-paper-white);
+  background: var(--color-paper);
   border-radius: var(--radius-cards);
-  border: 1px solid var(--color-linen);
-  padding: 16px 20px;
+  border: none;
+  padding: 24px;
   display: flex;
   align-items: center;
-  gap: 16px;
-  box-shadow: var(--shadow-sm);
+  gap: 18px;
+  box-shadow: none;
   width: 100%;
   box-sizing: border-box;
 }
 
 .stat-icon {
-  width: 44px;
-  height: 44px;
+  width: 48px;
+  height: 48px;
   border-radius: var(--radius-full);
-  background: var(--color-sunlit-cream);
-  color: var(--color-ember-brown);
+  background: var(--color-canvas);
+  color: var(--color-electric-blue);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -379,14 +446,16 @@ html, body {
 }
 
 .stat-number {
-  font-size: 24px;
+  font-family: var(--font-sf-pro-display);
+  font-size: 32px;
   font-weight: 600;
   line-height: 1.1;
-  color: var(--color-midnight-ink);
+  color: var(--color-primary-ink);
+  letter-spacing: 0.007em;
 }
 
 .stat-label {
-  font-size: 12px;
-  color: var(--color-slate);
-  margin-top: 2px;
+  font-size: 14px;
+  color: var(--color-mid-gray);
+  margin-top: 4px;
 }
