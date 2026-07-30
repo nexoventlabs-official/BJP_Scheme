@@ -1457,51 +1457,70 @@ function MySchemePanel({ epicNo, mobile, onBack }) {
                     <div 
                       key={scheme.id} 
                       className="scheme-card"
-                      style={{ border: `1px solid ${sc.border}`, background: sc.tint, cursor: 'pointer', overflow: 'hidden', padding: 0 }}
+                      style={{
+                        border: `1.5px solid ${sc.border}`,
+                        borderRadius: 16,
+                        padding: '20px 22px',
+                        cursor: 'pointer',
+                        overflow: 'hidden',
+                        position: 'relative',
+                        minHeight: 170,
+                        boxSizing: 'border-box',
+                        background: bgImg
+                          ? `url("${encodeURI(bgImg)}") center / 100% 100% no-repeat`
+                          : sc.tint,
+                        boxShadow: '0 3px 12px rgba(0,0,0,0.06)',
+                        transition: 'all 0.2s ease'
+                      }}
                       onClick={() => openTracking(scheme)}
                     >
-                      {bgImg && (
-                        <div style={{
-                          width: '100%',
-                          height: '110px',
-                          background: `url("${encodeURI(bgImg)}") center / 100% 100% no-repeat`
-                        }} />
-                      )}
-                      <div style={{ padding: '14px 16px' }}>
-                        <div className="scheme-card-header">
+                      <div style={{ maxWidth: '75%', zIndex: 2, position: 'relative' }}>
+                        <div className="scheme-card-header" style={{ marginBottom: 4 }}>
                           <div>
-                            <div className="scheme-meta-cat" style={{ color: '#2ecc71' }}>{t(scheme.category)}</div>
-                            <h3 className="scheme-title">{scheme.id}. {scheme.title}</h3>
+                            <div className="scheme-meta-cat" style={{ color: '#2ecc71', fontWeight: 700, fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                              {t(scheme.category)}
+                            </div>
+                            <h3 className="scheme-title" style={{ fontSize: 18, fontWeight: 700, color: '#1d1d1f', margin: '3px 0 0 0', lineHeight: 1.25 }}>
+                              {scheme.id}. {scheme.title}
+                            </h3>
                           </div>
                           <span style={{
                             display: 'inline-flex',
                             alignItems: 'center',
-                            gap: 4,
+                            gap: 5,
                             background: sc.fg,
                             color: '#fff',
-                            padding: '4px 12px',
+                            padding: '5px 14px',
                             borderRadius: 20,
-                            fontSize: 11,
+                            fontSize: 11.5,
                             fontWeight: 700,
-                            whiteSpace: 'nowrap'
+                            whiteSpace: 'nowrap',
+                            boxShadow: '0 2px 6px rgba(0,0,0,0.12)'
                           }}>
                             <i className={`bi ${sc.icon}`} /> {t(st)}
                           </span>
                         </div>
 
-                        <p className="scheme-overview" style={{ marginTop: 6 }}>{scheme.overview}</p>
+                        <p className="scheme-overview" style={{ marginTop: 8, fontSize: 13, color: '#3b3b3b', lineHeight: 1.45, fontWeight: 500 }}>
+                          {scheme.overview}
+                        </p>
 
-                        <div style={{ display: 'flex', gap: 10, alignItems: 'center', marginTop: 10, flexWrap: 'wrap' }}>
+                        <div style={{ display: 'flex', gap: 12, alignItems: 'center', marginTop: 14, flexWrap: 'wrap' }}>
                           <button
                             className="scheme-toggle-btn"
                             onClick={(e) => { e.stopPropagation(); openTracking(scheme); }}
-                            style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}
+                            style={{
+                              display: 'inline-flex', alignItems: 'center', gap: 6,
+                              background: '#2ecc71', color: '#ffffff', border: 'none',
+                              padding: '7px 16px', borderRadius: 10, fontSize: 12, fontWeight: 700,
+                              cursor: 'pointer', boxShadow: '0 2px 8px rgba(46, 204, 113, 0.3)'
+                            }}
                           >
                             <i className="bi bi-clipboard-check" />
                             <span>{t('Track Application')}</span>
                           </button>
                           {lastUpdate && (
-                            <span style={{ fontSize: 11, color: 'var(--color-ash)' }}>
+                            <span style={{ fontSize: 11.5, color: '#474747', fontWeight: 600 }}>
                               {t('Updated')}: {fmtDateTime(lastUpdate)}
                             </span>
                           )}
@@ -1539,90 +1558,118 @@ function MySchemePanel({ epicNo, mobile, onBack }) {
                     <div 
                       key={scheme.id} 
                       className="scheme-card"
-                      style={{ overflow: 'hidden', padding: 0, cursor: 'pointer' }}
+                      style={{
+                        border: '1px solid #e5e5ea',
+                        borderRadius: 16,
+                        padding: '20px 22px',
+                        cursor: 'pointer',
+                        overflow: 'hidden',
+                        position: 'relative',
+                        minHeight: 180,
+                        boxSizing: 'border-box',
+                        background: bgImg
+                          ? `url("${encodeURI(bgImg)}") center / 100% 100% no-repeat`
+                          : 'var(--color-carbon)',
+                        boxShadow: '0 3px 12px rgba(0,0,0,0.06)',
+                        transition: 'all 0.2s ease'
+                      }}
                       onClick={() => setExpandedId(isExpanded ? null : scheme.id)}
                     >
-                      {bgImg && (
-                        <div style={{
-                          width: '100%',
-                          height: '115px',
-                          background: `url("${encodeURI(bgImg)}") center / 100% 100% no-repeat`
-                        }} />
-                      )}
-                      <div style={{ padding: '14px 16px' }}>
-                        <div className="scheme-card-header">
+                      <div style={{ maxWidth: '75%', zIndex: 2, position: 'relative' }}>
+                        <div className="scheme-card-header" style={{ marginBottom: 6 }}>
                           <div>
-                            <div className="scheme-meta-cat">{t(scheme.category)}</div>
-                            <h3 className="scheme-title">{scheme.id}. {scheme.title}</h3>
+                            <div className="scheme-meta-cat" style={{ color: 'var(--color-saffron, #ea580c)', fontWeight: 700, fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                              {t(scheme.category)}
+                            </div>
+                            <h3 className="scheme-title" style={{ fontSize: 18, fontWeight: 700, color: '#1d1d1f', margin: '3px 0 0 0', lineHeight: 1.25 }}>
+                              {scheme.id}. {scheme.title}
+                            </h3>
                           </div>
-                          {scheme.highlight && <span className="scheme-badge">{scheme.highlight}</span>}
+                          {scheme.highlight && (
+                            <span className="scheme-badge" style={{ background: '#fff', border: '1px solid #FF9933', color: '#ea580c', fontWeight: 700, fontSize: 10.5, padding: '4px 10px', borderRadius: 20 }}>
+                              {scheme.highlight}
+                            </span>
+                          )}
                         </div>
 
-                      <div className="scheme-tags-row">
-                        {scheme.tags.map((tItem, idx) => (
-                          <span key={idx} className="scheme-tag">{tItem}</span>
-                        ))}
-                      </div>
-
-                      <p className="scheme-overview">{scheme.overview}</p>
-
-                      <div style={{ display: 'flex', gap: 12, alignItems: 'center', marginTop: 12, flexWrap: 'wrap' }}>
-                        <button className="scheme-toggle-btn" onClick={(e) => { e.stopPropagation(); setExpandedId(isExpanded ? null : scheme.id); }}>
-                          <i className={`bi bi-chevron-${isExpanded ? 'up' : 'down'}`} />
-                          <span>{isExpanded ? t('Hide Steps') : t('View Details')}</span>
-                        </button>
-
-                        <button
-                          className="btn-apply-scheme"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleOpenApplyModal(scheme);
-                          }}
-                          style={{
-                            display: 'inline-flex',
-                            alignItems: 'center',
-                            gap: 6,
-                            backgroundColor: '#2ecc71',
-                            color: '#FFFFFF',
-                            padding: '6px 16px',
-                            borderRadius: 10,
-                            fontWeight: 700,
-                            border: 'none',
-                            cursor: 'pointer',
-                            fontSize: 12,
-                            transition: 'all 0.15s',
-                            boxShadow: '0 2px 8px rgba(46, 204, 113, 0.25)'
-                          }}
-                        >
-                          <i className="bi bi-send-check-fill" />
-                          {t('Apply Now')}
-                        </button>
-                      </div>
-
-                      {isExpanded && (
-                        <div className="scheme-details-expanded" onClick={(e) => e.stopPropagation()}>
-                          <div>
-                            <div className="details-section-title">
-                              <i className="bi bi-info-circle-fill" /> {t('Eligibility & Benefits')}
-                            </div>
-                            <p className="details-text">{scheme.eligibility}</p>
-                          </div>
-
-                          <div>
-                            <div className="details-section-title">
-                              <i className="bi bi-file-earmark-check-fill" /> {t('Required Documents')}
-                            </div>
-                            <div className="documents-list">
-                              {scheme.documents.map((doc, idx) => (
-                                <div key={idx} className="doc-item">
-                                  <i className="bi bi-check-circle-fill" />
-                                  <span>{doc}</span>
-                                </div>
-                              ))}
-                            </div>
-                          </div>
+                        <div className="scheme-tags-row" style={{ display: 'flex', gap: 6, flexWrap: 'wrap', margin: '8px 0' }}>
+                          {scheme.tags.map((tItem, idx) => (
+                            <span key={idx} className="scheme-tag" style={{ background: 'rgba(255,255,255,0.85)', border: '1px solid #d2d2d7', color: '#1d1d1f', fontSize: 11, fontWeight: 600, padding: '2px 8px', borderRadius: 6 }}>
+                              {tItem}
+                            </span>
+                          ))}
                         </div>
-                      )}
+
+                        <p className="scheme-overview" style={{ fontSize: 13, color: '#33333b', lineHeight: 1.45, fontWeight: 500, margin: '6px 0 12px 0' }}>
+                          {scheme.overview}
+                        </p>
+
+                        <div style={{ display: 'flex', gap: 12, alignItems: 'center', marginTop: 12, flexWrap: 'wrap' }}>
+                          <button
+                            className="scheme-toggle-btn"
+                            onClick={(e) => { e.stopPropagation(); setExpandedId(isExpanded ? null : scheme.id); }}
+                            style={{
+                              display: 'inline-flex', alignItems: 'center', gap: 6,
+                              background: 'rgba(255,255,255,0.92)', border: '1px solid #c2c2c7',
+                              color: '#1d1d1f', padding: '6px 14px', borderRadius: 10, fontSize: 12, fontWeight: 700,
+                              cursor: 'pointer', boxShadow: '0 1px 3px rgba(0,0,0,0.1)'
+                            }}
+                          >
+                            <i className={`bi bi-chevron-${isExpanded ? 'up' : 'down'}`} />
+                            <span>{isExpanded ? t('Hide Steps') : t('View Details')}</span>
+                          </button>
+
+                          <button
+                            className="btn-apply-scheme"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleOpenApplyModal(scheme);
+                            }}
+                            style={{
+                              display: 'inline-flex',
+                              alignItems: 'center',
+                              gap: 6,
+                              backgroundColor: '#2ecc71',
+                              color: '#FFFFFF',
+                              padding: '6px 18px',
+                              borderRadius: 10,
+                              fontWeight: 700,
+                              border: 'none',
+                              cursor: 'pointer',
+                              fontSize: 12.5,
+                              transition: 'all 0.15s',
+                              boxShadow: '0 2px 8px rgba(46, 204, 113, 0.3)'
+                            }}
+                          >
+                            <i className="bi bi-send-check-fill" />
+                            {t('Apply Now')}
+                          </button>
+                        </div>
+
+                        {isExpanded && (
+                          <div className="scheme-details-expanded" onClick={(e) => e.stopPropagation()} style={{ marginTop: 16, background: 'rgba(255,255,255,0.95)', padding: 16, borderRadius: 12, border: '1px solid #e5e5ea' }}>
+                            <div>
+                              <div className="details-section-title" style={{ fontWeight: 700, color: '#1d1d1f' }}>
+                                <i className="bi bi-info-circle-fill" style={{ color: '#ea580c' }} /> {t('Eligibility & Benefits')}
+                              </div>
+                              <p className="details-text" style={{ color: '#333' }}>{scheme.eligibility}</p>
+                            </div>
+
+                            <div style={{ marginTop: 10 }}>
+                              <div className="details-section-title" style={{ fontWeight: 700, color: '#1d1d1f' }}>
+                                <i className="bi bi-file-earmark-check-fill" style={{ color: '#2ecc71' }} /> {t('Required Documents')}
+                              </div>
+                              <div className="documents-list">
+                                {scheme.documents.map((doc, idx) => (
+                                  <div key={idx} className="doc-item" style={{ color: '#333' }}>
+                                    <i className="bi bi-check-circle-fill" style={{ color: '#2ecc71' }} />
+                                    <span>{doc}</span>
+                                  </div>
+                                ))}
+                              </div>
+                            </div>
+                          </div>
+                        )}
                       </div>
                     </div>
                   );
