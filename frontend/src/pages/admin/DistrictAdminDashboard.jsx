@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import API from '../../utils/api';
 import { useAuth } from '../../context/AuthContext';
 import StatusBadge from '../../components/StatusBadge';
-import MemberProfileTimelineView, { formatSchemeName } from '../../components/MemberProfileTimelineView';
+import MemberProfileTimelineView, { formatSchemeName, formatAppliedDateTime } from '../../components/MemberProfileTimelineView';
 import ReportsView from '../../components/ReportsView';
 import { BJP_SCHEMES } from '../../utils/constants';
 import {
@@ -542,6 +542,7 @@ const DistrictAdminDashboard = () => {
                     <th style={{ padding: '12px 10px' }}>Member &amp; EPIC</th>
                     <th style={{ padding: '12px 10px' }}>Mobile</th>
                     <th style={{ padding: '12px 10px' }}>Schemes Applied</th>
+                    <th style={{ padding: '12px 10px' }}>Applied Date &amp; Time</th>
                     <th style={{ padding: '12px 10px' }}>Assembly / Booth</th>
                     <th style={{ padding: '12px 10px' }}>Latest Status</th>
                     <th style={{ padding: '12px 10px', textAlign: 'right' }}>Actions</th>
@@ -552,7 +553,7 @@ const DistrictAdminDashboard = () => {
                     // Skeleton rows while loading
                     Array.from({ length: 8 }).map((_, i) => (
                       <tr key={i} style={{ borderBottom: '1px solid var(--color-linen)' }}>
-                        {Array.from({ length: 7 }).map((_, j) => (
+                        {Array.from({ length: 8 }).map((_, j) => (
                           <td key={j} style={{ padding: '14px 10px' }}>
                             <div style={{ height: '14px', borderRadius: '6px', background: 'var(--color-linen)', animation: 'pulse 1.4s ease-in-out infinite', width: j === 0 ? '24px' : j === 1 ? '80%' : j === 2 ? '70%' : '60%' }} />
                           </td>
@@ -561,7 +562,7 @@ const DistrictAdminDashboard = () => {
                     ))
                   ) : voters.length === 0 ? (
                     <tr>
-                      <td colSpan={7} style={{ padding: '40px', textAlign: 'center', color: 'var(--color-slate)' }}>
+                      <td colSpan={8} style={{ padding: '40px', textAlign: 'center', color: 'var(--color-slate)' }}>
                         <div style={{ fontSize: '32px', marginBottom: '8px' }}>🔍</div>
                         No applications found for {admin.district}.
                       </td>
@@ -585,13 +586,13 @@ const DistrictAdminDashboard = () => {
                           </td>
                           <td style={{ padding: '12px 10px', fontWeight: '600' }}>{voter.mobile}</td>
                           <td style={{ padding: '12px 10px' }}>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexWrap: 'wrap' }}>
-                              <span className="tag-pill tag-sunlit" style={{ fontWeight: '700', fontSize: '11px' }}>
-                                <Award size={12} /> {voter.applications.length} Scheme{voter.applications.length > 1 ? 's' : ''}
-                              </span>
-                              <span style={{ fontSize: '11px', color: 'var(--color-slate)' }}>
-                                {voter.applications.map(a => formatSchemeName(a.schemeName, a.schemeId)).join(', ')}
-                              </span>
+                            <span className="tag-pill tag-sunlit" style={{ fontWeight: '700', fontSize: '11px', padding: '4px 10px' }}>
+                              <Award size={12} /> {voter.applications.length} Scheme{voter.applications.length > 1 ? 's' : ''}
+                            </span>
+                          </td>
+                          <td style={{ padding: '12px 10px', fontSize: '12px', color: 'var(--color-midnight-ink)', whiteSpace: 'nowrap' }}>
+                            <div style={{ fontWeight: '600' }}>
+                              {formatAppliedDateTime(latestApp?.appliedAt || latestApp?.createdAt || voter.createdAt)}
                             </div>
                           </td>
                           <td style={{ padding: '12px 10px', color: 'var(--color-midnight-ink)' }}>
