@@ -9,6 +9,8 @@ import {
   Shield, Users, Building, PhoneCall, RefreshCw, PlusCircle, Search, LogIn, Eye, Award, Share2, ChevronRight, FileText
 } from 'lucide-react';
 import TopReferrersCard from '../../components/TopReferrersCard';
+import SchemePieChart from '../../components/SchemePieChart';
+
 
 const LIMIT = 20;
 
@@ -564,6 +566,12 @@ const SuperAdminDashboard = () => {
               </div>
             </div>
 
+            {/* ── Visual Scheme Distribution Pie Chart ── */}
+            <SchemePieChart
+              schemePopularity={statsData.schemePopularity || []}
+              scopeLabel="Tamil Nadu State"
+            />
+
             {/* ── Top Referral Champions ── */}
             <TopReferrersCard
               topReferrers={statsData.topReferrers || []}
@@ -572,6 +580,7 @@ const SuperAdminDashboard = () => {
                 if (ref && ref.epicNo) { setSubPage('applications'); setSelectedVoterTimeline(ref); }
               }}
             />
+
 
           </div>
         ) : (

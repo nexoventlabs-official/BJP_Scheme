@@ -9,6 +9,8 @@ import {
   Shield, Users, Building, PhoneCall, RefreshCw, Search, Eye, Award, FileText, Share2
 } from 'lucide-react';
 import TopReferrersCard from '../../components/TopReferrersCard';
+import SchemePieChart from '../../components/SchemePieChart';
+
 
 const LIMIT = 20;
 
@@ -297,6 +299,12 @@ const AssemblyAdminDashboard = () => {
               </div>
             </div>
 
+            {/* ── Visual Scheme Distribution Pie Chart ── */}
+            <SchemePieChart
+              schemePopularity={statsData?.schemePopularity || []}
+              scopeLabel={admin?.assemblyName || ''}
+            />
+
             {/* ── Top Referral Champions ── */}
             <TopReferrersCard
               topReferrers={statsData.topReferrers || []}
@@ -305,6 +313,7 @@ const AssemblyAdminDashboard = () => {
                 if (ref && ref.epicNo) { setSubPage('applications'); setSelectedVoterTimeline(ref); }
               }}
             />
+
 
           </div>
         ) : (

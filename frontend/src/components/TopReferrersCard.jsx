@@ -2,81 +2,125 @@ import React from 'react';
 import { Share2, ChevronRight } from 'lucide-react';
 
 /**
- * Shared Top Referral Champions card — reusable across all admin dashboards.
+ * Shared Top Referral Champions card — Apple (España) style reference.
  */
 const TopReferrersCard = ({ topReferrers = [], scopeLabel = '', onViewProfile }) => {
   const MEDAL = ['🥇', '🥈', '🥉'];
 
   return (
-    <div className="campsite-card" style={{ width: '100%', padding: '24px', marginTop: '24px', boxSizing: 'border-box' }}>
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px', flexWrap: 'wrap', gap: '10px' }}>
+    <div className="campsite-card" style={{
+      width: '100%',
+      padding: '28px',
+      marginTop: '28px',
+      boxSizing: 'border-box',
+      borderRadius: '28px',
+      backgroundColor: '#ffffff',
+      border: 'none'
+    }}>
+      <div style={{
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        marginBottom: '20px',
+        flexWrap: 'wrap',
+        gap: '12px'
+      }}>
         <div>
-          <h3 style={{ fontSize: '18px', fontWeight: '700', color: 'var(--color-midnight-ink)', margin: 0, display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <Share2 size={20} color="var(--color-campfire-orange)" />
+          <h3 style={{
+            fontFamily: 'var(--font-sf-pro-display)',
+            fontSize: '24px',
+            fontWeight: '600',
+            color: 'var(--color-primary-ink)',
+            margin: 0,
+            display: 'flex',
+            alignItems: 'center',
+            gap: '10px',
+            letterSpacing: '0.007em'
+          }}>
+            <Share2 size={22} color="var(--color-electric-blue)" />
             Top 5 Referral Champions{scopeLabel ? ` — ${scopeLabel}` : ''}
           </h3>
-          <div style={{ fontSize: '13px', color: 'var(--color-slate)', marginTop: '3px' }}>
+          <div style={{ fontSize: '14px', color: 'var(--color-mid-gray)', marginTop: '4px' }}>
             Members who referred the highest number of registrations
           </div>
         </div>
-        <span className="tag-pill tag-sunlit" style={{ fontSize: '11px' }}>Referral Leaderboard</span>
+        <span className="tag-pill tag-active" style={{ fontSize: '13px', background: 'var(--color-canvas)', color: 'var(--color-primary-ink)' }}>
+          Referral Leaderboard
+        </span>
       </div>
 
       {!topReferrers || topReferrers.length === 0 ? (
-        <div style={{ padding: '28px', textAlign: 'center', color: 'var(--color-slate)', background: 'var(--color-fog-gray)', borderRadius: '10px', fontSize: '14px' }}>
+        <div style={{
+          padding: '36px',
+          textAlign: 'center',
+          color: 'var(--color-mid-gray)',
+          background: 'var(--color-canvas)',
+          borderRadius: '28px',
+          fontSize: '15px'
+        }}>
           No referral activity recorded yet for this scope.
         </div>
       ) : (
         <div style={{ width: '100%', overflowX: 'auto' }}>
-          <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '13px' }}>
+          <table className="admin-table" style={{ width: '100%', borderCollapse: 'collapse' }}>
             <thead>
-              <tr style={{ borderBottom: '2px solid var(--color-linen)', color: 'var(--color-slate)', textAlign: 'left', background: 'var(--color-fog-gray)' }}>
-                <th style={{ padding: '10px 12px' }}>RANK &amp; MEMBER</th>
-                <th style={{ padding: '10px 12px' }}>EPIC ID</th>
-                <th style={{ padding: '10px 12px' }}>DISTRICT / ASSEMBLY</th>
-                <th style={{ padding: '10px 12px' }}>TOTAL REFERRALS</th>
-                {onViewProfile && <th style={{ padding: '10px 12px', textAlign: 'right' }}>ACTION</th>}
+              <tr>
+                <th style={{ padding: '12px 16px' }}>Rank &amp; Member</th>
+                <th style={{ padding: '12px 16px' }}>EPIC ID</th>
+                <th style={{ padding: '12px 16px' }}>District / Assembly</th>
+                <th style={{ padding: '12px 16px' }}>Total Referrals</th>
+                {onViewProfile && <th style={{ padding: '12px 16px', textAlign: 'right' }}>Action</th>}
               </tr>
             </thead>
             <tbody>
               {topReferrers.map((ref, idx) => (
-                <tr key={ref.epicNo || ref.referralCode || idx}
-                  style={{ borderBottom: '1px solid var(--color-linen)', transition: 'background 0.15s' }}
-                  onMouseEnter={e => { e.currentTarget.style.background = 'var(--color-fog-gray)'; }}
-                  onMouseLeave={e => { e.currentTarget.style.background = ''; }}>
-                  <td style={{ padding: '12px' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                      <span style={{ width: '28px', height: '28px', borderRadius: '9999px',
-                        background: idx === 0 ? '#fef3c7' : idx === 1 ? '#f3f4f6' : idx === 2 ? '#fef9c3' : 'var(--color-fog-gray)',
-                        color: idx === 0 ? '#d97706' : idx === 1 ? '#6b7280' : idx === 2 ? '#92400e' : 'var(--color-midnight-ink)',
-                        fontWeight: '700', fontSize: '13px', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                        {MEDAL[idx] || '#' + (idx + 1)}
+                <tr key={ref.epicNo || ref.referralCode || idx}>
+                  <td style={{ padding: '16px' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                      <span style={{
+                        width: '32px',
+                        height: '32px',
+                        borderRadius: '980px',
+                        background: idx === 0 ? '#fef3c7' : idx === 1 ? '#e8e8ed' : idx === 2 ? '#f0e4d3' : 'var(--color-canvas)',
+                        color: 'var(--color-primary-ink)',
+                        fontWeight: '600',
+                        fontSize: '14px',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        flexShrink: 0
+                      }}>
+                        {MEDAL[idx] || `#${idx + 1}`}
                       </span>
-                      <span style={{ fontWeight: '700', color: 'var(--color-midnight-ink)', fontSize: '14px' }}>
-                        {ref.voterName || 'Referrer (' + ref.epicNo + ')'}
+                      <span style={{ fontWeight: '500', color: 'var(--color-primary-ink)', fontSize: '15px' }}>
+                        {ref.voterName || `Referrer (${ref.epicNo})`}
                       </span>
                     </div>
                   </td>
-                  <td style={{ padding: '12px', fontFamily: 'monospace', fontWeight: '600', color: 'var(--color-slate)', fontSize: '12px' }}>
+                  <td style={{ padding: '16px', fontFamily: 'var(--font-ui-monospace)', fontWeight: '500', color: 'var(--color-mid-gray)', fontSize: '13px' }}>
                     {ref.epicNo || ref.referralCode || '—'}
                   </td>
-                  <td style={{ padding: '12px', fontSize: '12px', color: 'var(--color-slate)' }}>
+                  <td style={{ padding: '16px', fontSize: '14px', color: 'var(--color-mid-gray)' }}>
                     {ref.district ? (
-                      <><div style={{ fontWeight: '600', color: 'var(--color-midnight-ink)' }}>{ref.district}</div>
-                      <div>{ref.assemblyName || ''}</div></>
+                      <>
+                        <div style={{ fontWeight: '500', color: 'var(--color-primary-ink)' }}>{ref.district}</div>
+                        <div style={{ fontSize: '13px' }}>{ref.assemblyName || ''}</div>
+                      </>
                     ) : '—'}
                   </td>
-                  <td style={{ padding: '12px' }}>
-                    <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px',
-                      background: 'rgba(34, 197, 94, 0.12)', color: '#15803d',
-                      padding: '4px 10px', borderRadius: '999px', fontWeight: '700', fontSize: '13px' }}>
+                  <td style={{ padding: '16px' }}>
+                    <span className="badge-status badge-confirmed" style={{ fontSize: '13px', padding: '6px 14px' }}>
                       {ref.referralCount} referred
                     </span>
                   </td>
                   {onViewProfile && (
-                    <td style={{ padding: '12px', textAlign: 'right' }}>
-                      <button type="button" onClick={() => onViewProfile(ref)} className="btn btn-ghost"
-                        style={{ padding: '6px 14px', fontSize: '12px', fontWeight: '700', display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+                    <td style={{ padding: '16px', textAlign: 'right' }}>
+                      <button
+                        type="button"
+                        onClick={() => onViewProfile(ref)}
+                        className="btn-action btn-view"
+                        style={{ padding: '8px 16px', fontSize: '13px' }}
+                      >
                         View Profile <ChevronRight size={14} />
                       </button>
                     </td>

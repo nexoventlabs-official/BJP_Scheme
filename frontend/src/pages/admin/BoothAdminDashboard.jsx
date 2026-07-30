@@ -9,6 +9,8 @@ import {
   Shield, Users, Building, PhoneCall, RefreshCw, Search, Eye, Award, Share2, ChevronRight, FileText
 } from 'lucide-react';
 import TopReferrersCard from '../../components/TopReferrersCard';
+import SchemePieChart from '../../components/SchemePieChart';
+
 
 const LIMIT = 20;
 
@@ -235,12 +237,19 @@ const BoothAdminDashboard = () => {
               </div>
             </div>
 
+            {/* ── Visual Scheme Distribution Pie Chart ── */}
+            <SchemePieChart
+              schemePopularity={statsData?.schemePopularity || []}
+              scopeLabel={`Booth ${admin?.boothNo || ''}`}
+            />
+
             {/* ── Top 5 Referral Champions Section ── */}
             <TopReferrersCard
               topReferrers={statsData.topReferrers || []}
               scopeLabel={`Booth ${admin.boothNo}`}
               onViewProfile={(ref) => handleOpenVoterDetails(ref)}
             />
+
 
             {/* ── Top Schemes ── */}
             <div className="campsite-card" style={{ width: '100%', padding: '24px', boxSizing: 'border-box' }}>

@@ -9,6 +9,8 @@ import {
   Shield, Users, Building, PhoneCall, RefreshCw, Search, Eye, Award, Share2
 } from 'lucide-react';
 import TopReferrersCard from '../../components/TopReferrersCard';
+import SchemePieChart from '../../components/SchemePieChart';
+
 
 const DistrictAdminDashboard = () => {
   const { admin } = useAuth();
@@ -381,6 +383,12 @@ const DistrictAdminDashboard = () => {
             </div>
           </div>
 
+          {/* ── Visual Scheme Distribution Pie Chart ── */}
+          <SchemePieChart
+            schemePopularity={statsData?.schemePopularity || []}
+            scopeLabel={admin?.district || ''}
+          />
+
           {/* ── Top Referral Champions ── */}
           <TopReferrersCard
             topReferrers={statsData.topReferrers || []}
@@ -389,6 +397,7 @@ const DistrictAdminDashboard = () => {
               if (ref && ref.epicNo) { setSubPage('applications'); setSelectedVoterTimeline(ref); }
             }}
           />
+
 
         </div>
         ) : (
