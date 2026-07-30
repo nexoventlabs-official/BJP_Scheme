@@ -526,7 +526,7 @@ const SuperAdminDashboard = () => {
                         navigateSubPage('applications');
                       }}
                       style={{
-                        padding: '16px',
+                        padding: '14px 16px',
                         borderRadius: '16px',
                         border: '1px solid #e5e5ea',
                         cursor: 'pointer',
@@ -534,13 +534,15 @@ const SuperAdminDashboard = () => {
                         transition: 'all 0.22s ease',
                         overflow: 'hidden',
                         position: 'relative',
-                        minHeight: '140px',
+                        minHeight: '135px',
+                        height: '135px',
                         display: 'flex',
                         flexDirection: 'column',
                         justifyContent: 'space-between',
                         boxSizing: 'border-box',
+                        width: '100%',
                         background: bgImg
-                          ? `url("${encodeURI(bgImg)}") center/cover no-repeat`
+                          ? `url("${encodeURI(bgImg)}") center / 100% 100% no-repeat`
                           : '#ffffff'
                       }}
                       onMouseEnter={e => {
@@ -556,13 +558,8 @@ const SuperAdminDashboard = () => {
                     >
                       {/* Top Row: Scheme Name & View Link */}
                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '8px', zIndex: 2 }}>
-                        <div>
-                          <div style={{ fontSize: '15px', fontWeight: '700', color: '#1d1d1f', lineHeight: '1.2' }}>
-                            {formatSchemeName(item._id)}
-                          </div>
-                          <div style={{ fontSize: '11px', color: '#474747', marginTop: '3px', fontWeight: '500' }}>
-                            {item.cluster || 'BJP Scheme'}
-                          </div>
+                        <div style={{ fontSize: '15px', fontWeight: '700', color: '#1d1d1f', lineHeight: '1.2' }}>
+                          {formatSchemeName(item._id)}
                         </div>
                         <span style={{ fontSize: '11px', color: 'var(--color-saffron, #ea580c)', fontWeight: '700', whiteSpace: 'nowrap', flexShrink: 0 }}>
                           View →
@@ -570,7 +567,7 @@ const SuperAdminDashboard = () => {
                       </div>
 
                       {/* Bottom Row: Applications Count */}
-                      <div style={{ zIndex: 2, marginTop: '16px' }}>
+                      <div style={{ zIndex: 2 }}>
                         <div style={{ fontSize: '22px', fontWeight: '800', color: '#1d1d1f', lineHeight: '1' }}>
                           {item.count.toLocaleString()} <span style={{ fontSize: '12px', fontWeight: '500', color: '#474747' }}>applications</span>
                         </div>
