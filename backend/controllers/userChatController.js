@@ -7,8 +7,8 @@ const { findVoterByEpic } = require('../services/voterSearchService');
 const jwt = require('jsonwebtoken');
 
 const generateToken = (id) => {
-  return jwt.sign({ id }, process.env.JWT_SECRET || 'bjp_nalam_thittam_secret_2026', {
-    expiresIn: '30d'
+  return jwt.sign({ id }, process.env.JWT_SECRET, {
+    expiresIn: '7d'
   });
 };
 
@@ -62,7 +62,7 @@ const sendOtp = async (req, res) => {
   } catch (error) {
     console.error('[sendOtp Error]:', error);
     if (!res.headersSent) {
-      return res.status(500).json({ success: false, message: 'Failed to send OTP', error: error.message });
+      return res.status(500).json({ success: false, message: 'Failed to send OTP' });
     }
   }
 };
@@ -79,14 +79,25 @@ const verifyOtp = async (req, res) => {
     const cleanMobile = mobile.trim();
     const cleanOtp = otp.trim();
 
-    // Allow dev bypass 123456 or match session
+    // Static dev-bypass OTP is ONLY honoured outside production. In production
+    // (NODE_ENV=production) there is no bypass — a real, matching OTP session
+    // is always required.
+    const allowDevBypass = process.env.NODE_ENV !== 'production';
+    const isDevBypass = allowDevBypass && cleanOtp === '123456';
+
     const session = await OtpSession.findOne({ mobile: cleanMobile, verified: false });
 
-    if (!session && cleanOtp !== '123456') {
+    if (!session && !isDevBypass) {
       return res.status(400).json({ success: false, message: 'OTP session expired. Please request a new OTP.' });
     }
 
-    if (session && session.otp !== cleanOtp && cleanOtp !== '123456') {
+    // Authoritative expiry check — don't rely solely on the TTL index (whose
+    // sweep is approximate). Reject an OTP whose window has already passed.
+    if (session && session.expiresAt && session.expiresAt.getTime() < Date.now() && !isDevBypass) {
+      return res.status(400).json({ success: false, message: 'OTP expired. Please request a new OTP.' });
+    }
+
+    if (session && session.otp !== cleanOtp && !isDevBypass) {
       return res.status(400).json({ success: false, message: 'Invalid OTP entered. Please try again.' });
     }
 
@@ -123,7 +134,7 @@ const verifyOtp = async (req, res) => {
     }
   } catch (error) {
     console.error('[verifyOtp Error]:', error);
-    return res.status(500).json({ success: false, message: 'Failed to verify OTP', error: error.message });
+    return res.status(500).json({ success: false, message: 'Failed to verify OTP' });
   }
 };
 
@@ -143,7 +154,7 @@ const checkMobile = async (req, res) => {
       user: user || null
     });
   } catch (error) {
-    return res.status(500).json({ success: false, message: error.message });
+    return res.status(500).json({ success: false, message: 'Internal server error' });
   }
 };
 
@@ -198,7 +209,7 @@ const validateEpic = async (req, res) => {
     });
   } catch (error) {
     console.error('[validateEpic Error]:', error);
-    return res.status(500).json({ success: false, message: error.message });
+    return res.status(500).json({ success: false, message: 'Internal server error' });
   }
 };
 
@@ -206,24 +217,12 @@ const validateEpic = async (req, res) => {
 // @route   GET /api/profile/:epicNo
 const getProfile = async (req, res) => {
   try {
-    const { epicNo } = req.params;
-    const { mobile } = req.query;
-
-    const orConditions = [];
-    if (epicNo && epicNo !== 'undefined' && epicNo !== 'null' && epicNo.trim()) {
-      orConditions.push({ epicNo: epicNo.trim().toUpperCase() });
-    }
-    if (mobile && mobile !== 'undefined' && mobile !== 'null' && mobile.trim()) {
-      orConditions.push({ mobile: mobile.trim() });
-    }
-
-    if (orConditions.length === 0) {
-      return res.status(400).json({ success: false, message: 'EPIC or Mobile is required' });
-    }
-
-    const user = await User.findOne({ $or: orConditions });
+    // Identity comes from the authenticated token (protectUser), NOT from the
+    // URL param — this prevents anyone from reading another member's profile by
+    // supplying an arbitrary EPIC number (IDOR).
+    const user = req.user;
     if (!user) {
-      return res.status(404).json({ success: false, message: 'User profile not found' });
+      return res.status(401).json({ success: false, message: 'Authentication required' });
     }
 
     const appConditions = [{ userId: user._id }];
@@ -240,7 +239,7 @@ const getProfile = async (req, res) => {
       ntCode: user.referralCode
     });
   } catch (error) {
-    return res.status(500).json({ success: false, message: error.message });
+    return res.status(500).json({ success: false, message: 'Internal server error' });
   }
 };
 
@@ -264,11 +263,32 @@ const registerSchemes = async (req, res) => {
       return res.status(400).json({ success: false, message: 'Mobile or EPIC number is required' });
     }
 
+    // ── Authorisation ──
+    // Accept EITHER a valid user JWT (existing member adding schemes) OR a
+    // verified OTP session for this mobile (brand-new member completing sign-up).
+    // This blocks anonymous callers from creating users / inflating referrals.
+    let tokenUser = null;
+    const authHeader = req.headers.authorization || '';
+    if (authHeader.startsWith('Bearer ')) {
+      try {
+        const decoded = jwt.verify(authHeader.split(' ')[1], process.env.JWT_SECRET);
+        tokenUser = await User.findById(decoded.id);
+      } catch { /* invalid token — fall through to OTP-session check */ }
+    }
+    if (!tokenUser) {
+      const verifiedSession = cleanMobile
+        ? await OtpSession.findOne({ mobile: cleanMobile, verified: true })
+        : null;
+      if (!verifiedSession) {
+        return res.status(401).json({ success: false, message: 'Verification required. Please verify your mobile via OTP first.' });
+      }
+    }
+
     const orConditions = [];
     if (cleanMobile) orConditions.push({ mobile: cleanMobile });
     if (cleanEpic) orConditions.push({ epicNo: cleanEpic });
 
-    let user = await User.findOne({ $or: orConditions });
+    let user = tokenUser || await User.findOne({ $or: orConditions });
 
     if (!user) {
       const ntCode = 'NT-' + Math.random().toString(36).substring(2, 10).toUpperCase();
@@ -343,7 +363,7 @@ const registerSchemes = async (req, res) => {
     });
   } catch (error) {
     console.error('[registerSchemes Error]:', error);
-    return res.status(500).json({ success: false, message: 'Failed to register schemes', error: error.message });
+    return res.status(500).json({ success: false, message: 'Failed to register schemes' });
   }
 };
 
@@ -368,7 +388,7 @@ const getReferralLink = async (req, res) => {
       referralCount
     });
   } catch (error) {
-    return res.status(500).json({ success: false, message: error.message });
+    return res.status(500).json({ success: false, message: 'Internal server error' });
   }
 };
 
@@ -376,10 +396,15 @@ const getReferralLink = async (req, res) => {
 // @route   GET /api/my-members/:ntCode
 const getMyMembers = async (req, res) => {
   try {
-    const { ntCode } = req.params;
-    const cleanNt = ntCode.trim().toUpperCase();
+    // Only the authenticated user's OWN referred members are returned. The
+    // referral code(s) are taken from the token, not the URL param.
+    const user = req.user;
+    if (!user) {
+      return res.status(401).json({ success: false, message: 'Authentication required' });
+    }
+    const matchCodes = [user.referralCode, user.epicNo, user.mobile].filter(Boolean);
 
-    const members = await User.find({ referredBy: cleanNt }).select('voterName epicNo mobile district assemblyName boothNo createdAt');
+    const members = await User.find({ referredBy: { $in: matchCodes } }).select('voterName epicNo mobile district assemblyName boothNo createdAt');
 
     return res.status(200).json({
       success: true,
@@ -387,7 +412,7 @@ const getMyMembers = async (req, res) => {
       members
     });
   } catch (error) {
-    return res.status(500).json({ success: false, message: error.message });
+    return res.status(500).json({ success: false, message: 'Internal server error' });
   }
 };
 
@@ -395,15 +420,10 @@ const getMyMembers = async (req, res) => {
 // @route   GET /api/member-status/:ntCode
 const getMemberStatus = async (req, res) => {
   try {
-    const { ntCode } = req.params;
-    const cleanNt = ntCode.trim().toUpperCase();
-
-    const user = await User.findOne({
-      $or: [{ referralCode: cleanNt }, { epicNo: cleanNt }]
-    });
-
+    // Authenticated member's own status only (identity from token).
+    const user = req.user;
     if (!user) {
-      return res.status(404).json({ success: false, message: 'Member not found' });
+      return res.status(401).json({ success: false, message: 'Authentication required' });
     }
 
     const applications = await SchemeApplication.find({ userId: user._id }).sort({ appliedAt: -1 });
@@ -426,7 +446,7 @@ const getMemberStatus = async (req, res) => {
       boothNo: user.boothNo
     });
   } catch (error) {
-    return res.status(500).json({ success: false, message: error.message });
+    return res.status(500).json({ success: false, message: 'Internal server error' });
   }
 };
 

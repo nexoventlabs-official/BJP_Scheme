@@ -6,9 +6,18 @@ const axios = require('axios');
  * https://2factor.in/API/V1/{SMS_API_KEY}/SMS/{MOBILE_NO}/{OTP_VAL}/{TEMPLATE_NAME}
  */
 const sendSmsOtp = async (mobile, otp) => {
-  const apiKey = process.env.SMS_API_KEY || 'a43191ff-7f8c-11f1-803e-0200cd936042';
+  const apiKey = process.env.SMS_API_KEY;
   const templateName = process.env.SMS_TEMPLATE_NAME || 'OTP1';
   const cleanMobile = mobile.replace(/[^0-9]/g, '');
+
+  if (!apiKey) {
+    console.error('[SMS Service] SMS_API_KEY is not configured — cannot send OTP.');
+    return {
+      success: false,
+      sessionId: null,
+      message: 'SMS gateway not configured'
+    };
+  }
 
   console.log(`[SMS Service] Attempting to send OTP ${otp} to +91${cleanMobile} using 2Factor API...`);
 

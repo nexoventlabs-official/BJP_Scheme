@@ -72,7 +72,7 @@ const applySchemes = async (req, res) => {
     });
   } catch (error) {
     console.error('[applySchemes Error]:', error);
-    return res.status(500).json({ success: false, message: 'Failed to submit scheme applications', error: error.message });
+    return res.status(500).json({ success: false, message: 'Failed to submit scheme applications' });
   }
 };
 
@@ -88,7 +88,8 @@ const getUserRequests = async (req, res) => {
       applications
     });
   } catch (error) {
-    return res.status(500).json({ success: false, message: error.message });
+    console.error('[getUserRequests Error]:', error);
+    return res.status(500).json({ success: false, message: 'Internal server error' });
   }
 };
 

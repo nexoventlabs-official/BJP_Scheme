@@ -1,13 +1,26 @@
 const express = require('express');
 const cors = require('cors');
+const helmet = require('helmet');
+const rateLimit = require('express-rate-limit');
 const dotenv = require('dotenv');
 
 dotenv.config();
 
+// ── Fail fast on missing/weak critical secrets ──
+// Never fall back to a hardcoded JWT secret: an attacker who knows it can forge
+// admin tokens. The process must not start without a strong secret configured.
+const WEAK_SECRETS = new Set(['bjp_nalam_thittam_secret_2026', 'secret', 'changeme', '']);
+if (!process.env.JWT_SECRET || WEAK_SECRETS.has(process.env.JWT_SECRET) || process.env.JWT_SECRET.length < 32) {
+  console.error('[FATAL] JWT_SECRET is missing or too weak. Set a strong (>=32 char) JWT_SECRET in the environment before starting.');
+  process.exit(1);
+}
+if (!process.env.SMS_API_KEY) {
+  console.warn('[WARN] SMS_API_KEY is not set — OTP SMS delivery will fail. Set it in the environment.');
+}
+
 const { connectAppDb, getVoterDbClient } = require('./config/db');
 const Admin = require('./models/Admin');
 
-const authRoutes = require('./routes/authRoutes');
 const voterRoutes = require('./routes/voterRoutes');
 const schemeRoutes = require('./routes/schemeRoutes');
 const adminRoutes = require('./routes/adminRoutes');
@@ -18,11 +31,71 @@ const { getAssemblyMetadata } = require('./services/jurisdictionService');
 const app = express();
 
 // Middlewares
+// Restrict CORS to an explicit allow-list. Extra origins can be added via the
+// CORS_ORIGINS env var (comma-separated). Non-browser clients (curl, server-to-
+// server) send no Origin header and are allowed through.
+const ALLOWED_ORIGINS = [
+  process.env.FRONTEND_URL,
+  process.env.BACKEND_URL,
+  'https://tnbjp.org',
+  'https://www.tnbjp.org',
+  'https://tamilnadubjp.live',
+  'https://www.tamilnadubjp.live',
+  ...(process.env.CORS_ORIGINS ? process.env.CORS_ORIGINS.split(',').map(s => s.trim()) : []),
+  ...(process.env.NODE_ENV !== 'production' ? ['http://localhost:5173', 'http://localhost:3000'] : [])
+].filter(Boolean);
+
 app.use(cors({
-  origin: true, // Allow all origins including vercel app & localhost
+  origin: (origin, callback) => {
+    if (!origin || ALLOWED_ORIGINS.includes(origin)) return callback(null, true);
+    return callback(new Error('Not allowed by CORS'));
+  },
   credentials: true
 }));
-app.use(express.json());
+
+// Secure HTTP headers. crossOriginResourcePolicy is relaxed so the separately
+// served frontend can still consume the API responses.
+app.use(helmet({ crossOriginResourcePolicy: { policy: 'cross-origin' } }));
+
+app.use(express.json({ limit: '1mb' }));
+
+// Behind nginx: trust the first proxy hop so rate-limit / logging see the real
+// client IP from X-Forwarded-For.
+app.set('trust proxy', 1);
+
+// ── Rate limiters (brute-force / abuse protection) ──
+const rlMessage = (msg) => ({ success: false, message: msg });
+
+// OTP dispatch — costs money + can be abused for SMS bombing.
+const otpLimiter = rateLimit({
+  windowMs: 10 * 60 * 1000,
+  max: 6,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: rlMessage('Too many OTP requests. Please wait a few minutes and try again.')
+});
+
+// Admin login — throttle credential guessing.
+const loginLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 15,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: rlMessage('Too many login attempts. Please wait and try again.')
+});
+
+// EPIC lookup — prevents mass voter-roll enumeration.
+const epicLimiter = rateLimit({
+  windowMs: 10 * 60 * 1000,
+  max: 30,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: rlMessage('Too many lookups. Please slow down and try again shortly.')
+});
+
+app.use('/api/send-otp', otpLimiter);
+app.use('/api/admin/login', loginLimiter);
+app.use(['/api/validate-epic', '/api/voter/search-epic'], epicLimiter);
 
 // Root API Status Endpoint
 app.get('/', (req, res) => {
@@ -56,7 +129,6 @@ app.get('/', (req, res) => {
 
 // API Routes
 app.use('/api', userChatRoutes);
-app.use('/api/auth', authRoutes);
 app.use('/api/voter', voterRoutes);
 app.use('/api/schemes', schemeRoutes);
 app.use('/api/admin', adminRoutes);

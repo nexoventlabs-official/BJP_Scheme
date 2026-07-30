@@ -1,9 +1,10 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react'
 import QRCode from 'qrcode'
 import { useNavigate } from 'react-router-dom'
-import { chat, publicApi } from '../api'
+import { chat } from '../api'
 import '../styles/chatbot.css'
 import { useLang } from '../i18n/LanguageContext'
+import { getSchemeBgImage } from '../components/MemberProfileTimelineView'
 
 // ── Scheme application status → colour + icon metadata (tracking timeline) ──
 const SCHEME_STATUS_META = {
@@ -117,7 +118,10 @@ const touchCache = () => {
   } catch { /* ignore */ }
 }
 
-const clearCache = () => localStorage.removeItem(CACHE_KEY)
+const clearCache = () => {
+  localStorage.removeItem(CACHE_KEY)
+  localStorage.removeItem('bjp_user_token')
+}
 
 const maskMobile = (m) => m ? m.slice(0, 5) + 'XXXXX' : ''
 
@@ -838,61 +842,67 @@ function SchemeSelectionMsg({ isLatest, onSubmit, disabled }) {
             gap: 5
           }}>
             {NT_SCHEMES.filter(s => s.cluster === cluster).map(scheme => {
-              const isSelected = selected.has(scheme.id)
+              const isSelected = selected.has(scheme.id);
+              const bgImg = getSchemeBgImage(scheme.name_en);
               return (
                 <div
                   key={scheme.id}
                   onClick={() => toggle(scheme.id)}
                   style={{
-                    padding: '8px 7px',
-                    background: isSelected ? 'rgba(250,93,0,0.08)' : 'var(--color-carbon)',
-                    border: `1.5px solid ${isSelected ? 'var(--color-signal-mint)' : 'var(--color-graphite)'}`,
-                    borderRadius: 8,
+                    padding: '8px 8px',
+                    background: bgImg
+                      ? `url("${encodeURI(bgImg)}") center / 100% 100% no-repeat`
+                      : (isSelected ? 'rgba(250,93,0,0.08)' : 'var(--color-carbon)'),
+                    border: `2px solid ${isSelected ? '#FF9933' : '#e5e5ea'}`,
+                    borderRadius: 10,
                     cursor: submitted || !isLatest ? 'default' : 'pointer',
-                    transition: 'all 0.15s',
+                    transition: 'all 0.18s ease',
                     opacity: submitted && !isSelected ? 0.4 : 1,
-                    display: 'flex', flexDirection: 'column', gap: 4, alignItems: 'flex-start'
+                    display: 'flex', flexDirection: 'column', gap: 4, justifyContent: 'space-between',
+                    minHeight: 90,
+                    height: 90,
+                    position: 'relative',
+                    overflow: 'hidden',
+                    boxSizing: 'border-box',
+                    boxShadow: isSelected ? '0 4px 12px rgba(255,153,51,0.35)' : '0 2px 6px rgba(0,0,0,0.06)'
                   }}
                 >
                   {/* Icon + checkbox row */}
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%' }}>
-                    <span style={{ fontSize: 18, lineHeight: 1 }}>{scheme.icon}</span>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%', zIndex: 2 }}>
+                    <span style={{ fontSize: 16, lineHeight: 1, filter: 'drop-shadow(0 1px 2px rgba(255,255,255,0.8))' }}>{scheme.icon}</span>
                     <div style={{
-                      width: 14, height: 14, borderRadius: 4, flexShrink: 0,
-                      background: isSelected ? 'var(--color-signal-mint)' : 'transparent',
-                      border: `1.5px solid ${isSelected ? 'var(--color-signal-mint)' : 'var(--color-graphite)'}`,
+                      width: 15, height: 15, borderRadius: 4, flexShrink: 0,
+                      background: isSelected ? '#FF9933' : 'rgba(255, 255, 255, 0.95)',
+                      border: `1.5px solid ${isSelected ? '#FF9933' : '#c2c2c7'}`,
                       display: 'flex', alignItems: 'center', justifyContent: 'center',
-                      transition: 'all 0.15s'
+                      transition: 'all 0.15s',
+                      boxShadow: '0 1px 3px rgba(0,0,0,0.15)'
                     }}>
-                      {isSelected && <i className="bi bi-check" style={{ fontSize: 8, color: '#fff', lineHeight: 1 }} />}
+                      {isSelected && <i className="bi bi-check-lg" style={{ fontSize: 9, color: '#fff', fontWeight: 800, lineHeight: 1 }} />}
                     </div>
                   </div>
-                  {/* Scheme name — English only, abbreviated */}
-                  <div style={{
-                    fontSize: 10, fontWeight: 700,
-                    color: isSelected ? 'var(--color-signal-mint)' : 'var(--color-chalk)',
-                    lineHeight: 1.3,
-                    overflow: 'hidden', display: '-webkit-box',
-                    WebkitLineClamp: 2, WebkitBoxOrient: 'vertical'
-                  }}>
-                    {scheme.name_en.replace(/^[A-Z]+\s*—\s*/, '')}
-                  </div>
-                  {/* Benefit + info row */}
-                  <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', width: '100%', gap: 2 }}>
-                    <div style={{
-                      fontSize: 9, color: 'var(--color-ash)', lineHeight: 1.3, flex: 1,
-                      overflow: 'hidden', display: '-webkit-box',
-                      WebkitLineClamp: 2, WebkitBoxOrient: 'vertical'
-                    }}>
-                      {scheme.benefit_en}
+                  {/* Scheme name & Benefit row */}
+                  <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', width: '100%', gap: 2, zIndex: 2 }}>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{
+                        fontSize: 10, fontWeight: 700,
+                        color: '#1d1d1f',
+                        lineHeight: 1.2,
+                        overflow: 'hidden', display: '-webkit-box',
+                        WebkitLineClamp: 2, WebkitBoxOrient: 'vertical'
+                      }}>
+                        {scheme.name_en.replace(/^[A-Z0-9\s]+—\s*/, '')}
+                      </div>
                     </div>
                     <button
                       onClick={(e) => { e.stopPropagation(); setInfoScheme(scheme) }}
                       style={{
-                        flexShrink: 0, background: 'none', border: 'none',
-                        color: 'var(--color-ash)', cursor: 'pointer',
-                        padding: '0 0 0 2px', fontSize: 11, lineHeight: 1,
-                        display: 'flex', alignItems: 'center',
+                        flexShrink: 0, background: 'rgba(255,255,255,0.92)', border: '1px solid #d2d2d7',
+                        borderRadius: '50%', width: 18, height: 18,
+                        color: '#1d1d1f', cursor: 'pointer',
+                        fontSize: 10, lineHeight: 1,
+                        display: 'flex', alignItems: 'center', justifyContent: 'center',
+                        boxShadow: '0 1px 2px rgba(0,0,0,0.1)'
                       }}
                       title="Learn more"
                       aria-label={`Info: ${scheme.name_en}`}
@@ -1028,7 +1038,7 @@ function MySchemePanel({ epicNo, mobile, onBack }) {
     const activeMobile = mobile || localStorage.getItem('bjp_user_mobile') || '';
 
     try {
-      await chat.registerSchemes({
+      const reg = await chat.registerSchemes({
         mobile: activeMobile,
         epicNo: activeEpic,
         voterName: userObj.voter_name || userObj.voterName || 'BJP Member',
@@ -1037,6 +1047,8 @@ function MySchemePanel({ epicNo, mobile, onBack }) {
         boothNo: userObj.part_no || userObj.boothNo || '1',
         schemeIds: [scheme.title]
       });
+      // Store the JWT issued on registration so later protected calls work.
+      if (reg?.token) localStorage.setItem('bjp_user_token', reg.token)
     } catch (err) {
       console.log('Scheme registration note:', err);
     } finally {
@@ -1437,6 +1449,7 @@ function MySchemePanel({ epicNo, mobile, onBack }) {
                   const app = appliedAppsMap[scheme.id] || null;
                   const st = app?.status || 'Submitted';
                   const sc = statusColor(st);
+                  const bgImg = getSchemeBgImage(scheme.title);
                   const lastUpdate = app?.statusHistory?.length
                     ? app.statusHistory[app.statusHistory.length - 1].updatedAt
                     : app?.appliedAt;
@@ -1444,46 +1457,55 @@ function MySchemePanel({ epicNo, mobile, onBack }) {
                     <div 
                       key={scheme.id} 
                       className="scheme-card"
-                      style={{ border: `1px solid ${sc.border}`, background: sc.tint, cursor: 'pointer' }}
+                      style={{ border: `1px solid ${sc.border}`, background: sc.tint, cursor: 'pointer', overflow: 'hidden', padding: 0 }}
                       onClick={() => openTracking(scheme)}
                     >
-                      <div className="scheme-card-header">
-                        <div>
-                          <div className="scheme-meta-cat" style={{ color: '#2ecc71' }}>{t(scheme.category)}</div>
-                          <h3 className="scheme-title">{scheme.id}. {scheme.title}</h3>
-                        </div>
-                        <span style={{
-                          display: 'inline-flex',
-                          alignItems: 'center',
-                          gap: 4,
-                          background: sc.fg,
-                          color: '#fff',
-                          padding: '4px 12px',
-                          borderRadius: 20,
-                          fontSize: 11,
-                          fontWeight: 700,
-                          whiteSpace: 'nowrap'
-                        }}>
-                          <i className={`bi ${sc.icon}`} /> {t(st)}
-                        </span>
-                      </div>
-
-                      <p className="scheme-overview" style={{ marginTop: 6 }}>{scheme.overview}</p>
-
-                      <div style={{ display: 'flex', gap: 10, alignItems: 'center', marginTop: 10, flexWrap: 'wrap' }}>
-                        <button
-                          className="scheme-toggle-btn"
-                          onClick={(e) => { e.stopPropagation(); openTracking(scheme); }}
-                          style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}
-                        >
-                          <i className="bi bi-clipboard-check" />
-                          <span>{t('Track Application')}</span>
-                        </button>
-                        {lastUpdate && (
-                          <span style={{ fontSize: 11, color: 'var(--color-ash)' }}>
-                            {t('Updated')}: {fmtDateTime(lastUpdate)}
+                      {bgImg && (
+                        <div style={{
+                          width: '100%',
+                          height: '110px',
+                          background: `url("${encodeURI(bgImg)}") center / 100% 100% no-repeat`
+                        }} />
+                      )}
+                      <div style={{ padding: '14px 16px' }}>
+                        <div className="scheme-card-header">
+                          <div>
+                            <div className="scheme-meta-cat" style={{ color: '#2ecc71' }}>{t(scheme.category)}</div>
+                            <h3 className="scheme-title">{scheme.id}. {scheme.title}</h3>
+                          </div>
+                          <span style={{
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            gap: 4,
+                            background: sc.fg,
+                            color: '#fff',
+                            padding: '4px 12px',
+                            borderRadius: 20,
+                            fontSize: 11,
+                            fontWeight: 700,
+                            whiteSpace: 'nowrap'
+                          }}>
+                            <i className={`bi ${sc.icon}`} /> {t(st)}
                           </span>
-                        )}
+                        </div>
+
+                        <p className="scheme-overview" style={{ marginTop: 6 }}>{scheme.overview}</p>
+
+                        <div style={{ display: 'flex', gap: 10, alignItems: 'center', marginTop: 10, flexWrap: 'wrap' }}>
+                          <button
+                            className="scheme-toggle-btn"
+                            onClick={(e) => { e.stopPropagation(); openTracking(scheme); }}
+                            style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}
+                          >
+                            <i className="bi bi-clipboard-check" />
+                            <span>{t('Track Application')}</span>
+                          </button>
+                          {lastUpdate && (
+                            <span style={{ fontSize: 11, color: 'var(--color-ash)' }}>
+                              {t('Updated')}: {fmtDateTime(lastUpdate)}
+                            </span>
+                          )}
+                        </div>
                       </div>
                     </div>
                   );
@@ -1512,19 +1534,29 @@ function MySchemePanel({ epicNo, mobile, onBack }) {
               <div className="schemes-list" style={{ gap: 12 }}>
                 {notAppliedSchemes.map((scheme) => {
                   const isExpanded = expandedId === scheme.id;
+                  const bgImg = getSchemeBgImage(scheme.title);
                   return (
                     <div 
                       key={scheme.id} 
                       className="scheme-card"
+                      style={{ overflow: 'hidden', padding: 0, cursor: 'pointer' }}
                       onClick={() => setExpandedId(isExpanded ? null : scheme.id)}
                     >
-                      <div className="scheme-card-header">
-                        <div>
-                          <div className="scheme-meta-cat">{t(scheme.category)}</div>
-                          <h3 className="scheme-title">{scheme.id}. {scheme.title}</h3>
+                      {bgImg && (
+                        <div style={{
+                          width: '100%',
+                          height: '115px',
+                          background: `url("${encodeURI(bgImg)}") center / 100% 100% no-repeat`
+                        }} />
+                      )}
+                      <div style={{ padding: '14px 16px' }}>
+                        <div className="scheme-card-header">
+                          <div>
+                            <div className="scheme-meta-cat">{t(scheme.category)}</div>
+                            <h3 className="scheme-title">{scheme.id}. {scheme.title}</h3>
+                          </div>
+                          {scheme.highlight && <span className="scheme-badge">{scheme.highlight}</span>}
                         </div>
-                        {scheme.highlight && <span className="scheme-badge">{scheme.highlight}</span>}
-                      </div>
 
                       <div className="scheme-tags-row">
                         {scheme.tags.map((tItem, idx) => (
@@ -1591,6 +1623,7 @@ function MySchemePanel({ epicNo, mobile, onBack }) {
                           </div>
                         </div>
                       )}
+                      </div>
                     </div>
                   );
                 })}
@@ -2691,9 +2724,8 @@ export default function ChatbotPage() {
     mobileRef.current  = ''
     epicRef.current    = ''
     try { localStorage.removeItem('bjp_referral') } catch { /* ignore */ }
-    // Best-effort destroy the server session
-    try { await chat.logout() } catch { /* ignore */ }
-    // Reset UI to a logged-out state with a notice (no reload → keep the message)
+    // Logout is client-side (stateless JWT): clearCache() already dropped the
+    // token + cached session above.
     setSidebarOpen(false)
     setActiveView('chat')
     setMessages([])
@@ -2850,6 +2882,9 @@ export default function ChatbotPage() {
       const res = await chat.verifyOtp(mobile, otp)
       setIsTyping(false)
       if (res.success && (res.has_card || res.isExistingUser || res.user)) {
+        // Persist the JWT so subsequent protected calls (profile, my-members,
+        // member-status) are authenticated as this member.
+        if (res.token) localStorage.setItem('bjp_user_token', res.token)
         const u = res.user || {}
         const card = {
           epic_no:       res.epic_no || u.epicNo || '',
@@ -3128,8 +3163,7 @@ export default function ChatbotPage() {
     //    ?ref=&rid= back in the URL) should re-attach a referral.
     try { localStorage.removeItem('bjp_referral') } catch (_) {}
 
-    // 3. Destroy the backend session cookie (fire-and-forget)
-    try { await chat.logout() } catch (_) {}
+    // 3. Logout is client-side (stateless JWT) — token + cache already cleared.
 
     // 4. Reload to the CLEAN base URL (strip ?ref=&rid= query string) after a
     //    tiny delay — ensures a totally clean slate so no cached card / photo

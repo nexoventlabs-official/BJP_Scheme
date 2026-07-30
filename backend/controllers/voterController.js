@@ -5,8 +5,8 @@ const User = require('../models/User');
 const OtpSession = require('../models/OtpSession');
 
 const generateToken = (id) => {
-  return jwt.sign({ id }, process.env.JWT_SECRET || 'bjp_nalam_thittam_secret_2026', {
-    expiresIn: '30d'
+  return jwt.sign({ id }, process.env.JWT_SECRET, {
+    expiresIn: '7d'
   });
 };
 
@@ -65,7 +65,7 @@ const searchEpic = async (req, res) => {
     });
   } catch (error) {
     console.error('[searchEpic Error]:', error);
-    return res.status(500).json({ success: false, message: 'Failed to query voter database', error: error.message });
+    return res.status(500).json({ success: false, message: 'Failed to query voter database' });
   }
 };
 
@@ -129,7 +129,7 @@ const confirmVoterRegistration = async (req, res) => {
     });
   } catch (error) {
     console.error('[confirmVoterRegistration Error]:', error);
-    return res.status(500).json({ success: false, message: 'Registration failed', error: error.message });
+    return res.status(500).json({ success: false, message: 'Registration failed' });
   }
 };
 

@@ -185,7 +185,7 @@ const authenticateDynamicAdmin = async (username, password) => {
       const numericB = parseInt(boothNo) || 1;
       const expectedPasscode = String(60227680 + numericB);
 
-      if (password === expectedPasscode || password === 'BJP@2026' || password === 'admin') {
+      if (password === expectedPasscode) {
         return {
           _id: `DYNAMIC_BOOTH_${targetAssembly.assemblyNo}_${boothNo}`,
           username: cleanUsername,
@@ -208,7 +208,7 @@ const authenticateDynamicAdmin = async (username, password) => {
       const numNo = parseInt(targetAssembly.assemblyNo) || 1;
       const expectedPasscode = String(60227000 + numNo);
 
-      if (password === expectedPasscode || password === '60227000' || password === 'BJP@2026' || password === 'admin') {
+      if (password === expectedPasscode) {
         return {
           _id: `DYNAMIC_ASS_${targetAssembly.assemblyNo}`,
           username: cleanUsername,
@@ -224,7 +224,7 @@ const authenticateDynamicAdmin = async (username, password) => {
   // 3. Check District Admin Username format: e.g. thiruvallur_admin or chengalpattu_admin
   const distObj = districts.find(d => d.username.toLowerCase() === cleanUsername);
   if (distObj) {
-    if (password === distObj.passcode || password === '60228000' || password === 'BJP@2026' || password === 'admin') {
+    if (password === distObj.passcode) {
       return {
         _id: `DYNAMIC_DIST_${cleanSlug(distObj.district)}`,
         username: cleanUsername,

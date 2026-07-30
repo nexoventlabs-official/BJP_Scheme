@@ -7,6 +7,10 @@ const { BJP_SCHEMES } = require('../constants/schemes');
 
 // Resolve a stored schemeName (often the numeric scheme id, since the chatbot
 // submits scheme ids) to a human-readable scheme name for display / exports.
+// Escape a string so it can be embedded safely inside a RegExp. Prevents
+// regex-injection / ReDoS from user-supplied filter and search values.
+const escapeRegex = (str) => String(str == null ? '' : str).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+
 const resolveSchemeName = (schemeName, schemeId) => {
   const raw = String(schemeName == null ? '' : schemeName).trim();
   const byId = BJP_SCHEMES.find(s => String(s.id) === raw || (schemeId != null && String(s.id) === String(schemeId)));
@@ -43,7 +47,7 @@ const generateAdminToken = (admin) => {
       boothNo: admin.boothNo,
       isAdmin: true
     },
-    process.env.JWT_SECRET || 'bjp_nalam_thittam_secret_2026',
+    process.env.JWT_SECRET,
     { expiresIn: '7d' }
   );
 };
@@ -52,13 +56,13 @@ const generateAdminToken = (admin) => {
 const getAdminScopeQuery = (admin) => {
   const query = {};
   if (admin.role === 'DISTRICT_ADMIN' && admin.district) {
-    query.district = new RegExp('^' + admin.district + '$', 'i');
+    query.district = new RegExp('^' + escapeRegex(admin.district) + '$', 'i');
   } else if (admin.role === 'ASSEMBLY_ADMIN') {
-    if (admin.district) query.district = new RegExp('^' + admin.district + '$', 'i');
-    if (admin.assemblyName) query.assemblyName = new RegExp('^' + admin.assemblyName + '$', 'i');
+    if (admin.district) query.district = new RegExp('^' + escapeRegex(admin.district) + '$', 'i');
+    if (admin.assemblyName) query.assemblyName = new RegExp('^' + escapeRegex(admin.assemblyName) + '$', 'i');
   } else if (admin.role === 'BOOTH_ADMIN') {
-    if (admin.district) query.district = new RegExp('^' + admin.district + '$', 'i');
-    if (admin.assemblyName) query.assemblyName = new RegExp('^' + admin.assemblyName + '$', 'i');
+    if (admin.district) query.district = new RegExp('^' + escapeRegex(admin.district) + '$', 'i');
+    if (admin.assemblyName) query.assemblyName = new RegExp('^' + escapeRegex(admin.assemblyName) + '$', 'i');
     if (admin.boothNo) query.boothNo = String(admin.boothNo);
   }
   return query;
@@ -114,7 +118,7 @@ const adminLogin = async (req, res) => {
     return res.status(401).json({ success: false, message: 'Invalid admin credentials' });
   } catch (error) {
     console.error('[adminLogin Error]:', error);
-    return res.status(500).json({ success: false, message: 'Admin login failed', error: error.message });
+    return res.status(500).json({ success: false, message: 'Admin login failed' });
   }
 };
 
@@ -130,7 +134,8 @@ const getAssembliesList = async (req, res) => {
       assemblies
     });
   } catch (error) {
-    return res.status(500).json({ success: false, message: error.message });
+    console.error('[Admin API Error]:', error);
+    return res.status(500).json({ success: false, message: 'Internal server error' });
   }
 };
 
@@ -146,7 +151,8 @@ const getDistrictCredentials = async (req, res) => {
       districts
     });
   } catch (error) {
-    return res.status(500).json({ success: false, message: error.message });
+    console.error('[Admin API Error]:', error);
+    return res.status(500).json({ success: false, message: 'Internal server error' });
   }
 };
 
@@ -162,7 +168,8 @@ const getAssemblyCredentials = async (req, res) => {
       assemblies
     });
   } catch (error) {
-    return res.status(500).json({ success: false, message: error.message });
+    console.error('[Admin API Error]:', error);
+    return res.status(500).json({ success: false, message: 'Internal server error' });
   }
 };
 
@@ -184,7 +191,8 @@ const getAssemblyBoothCredentials = async (req, res) => {
       data
     });
   } catch (error) {
-    return res.status(500).json({ success: false, message: error.message });
+    console.error('[Admin API Error]:', error);
+    return res.status(500).json({ success: false, message: 'Internal server error' });
   }
 };
 
@@ -499,7 +507,7 @@ const getDashboardStats = async (req, res) => {
     });
   } catch (error) {
     console.error('[getDashboardStats Error]:', error);
-    return res.status(500).json({ success: false, message: 'Failed to compute dashboard stats', error: error.message });
+    return res.status(500).json({ success: false, message: 'Failed to compute dashboard stats' });
   }
 };
 
@@ -559,7 +567,7 @@ const getMemberReferrals = async (req, res) => {
     });
   } catch (error) {
     console.error('[getMemberReferrals Error]:', error);
-    return res.status(500).json({ success: false, message: error.message });
+    return res.status(500).json({ success: false, message: 'Internal server error' });
   }
 };
 
@@ -580,10 +588,10 @@ const getApplicationsList = async (req, res) => {
 
     const isValidFilterVal = (val) => val && val !== 'undefined' && val !== 'null' && val !== 'all' && String(val).trim() !== '';
 
-    if (isValidFilterVal(district))     appScopeFilter.district     = new RegExp('^' + district.trim() + '$', 'i');
-    if (isValidFilterVal(assemblyName)) appScopeFilter.assemblyName = new RegExp('^' + assemblyName.trim() + '$', 'i');
+    if (isValidFilterVal(district))     appScopeFilter.district     = new RegExp('^' + escapeRegex(district.trim()) + '$', 'i');
+    if (isValidFilterVal(assemblyName)) appScopeFilter.assemblyName = new RegExp('^' + escapeRegex(assemblyName.trim()) + '$', 'i');
     if (isValidFilterVal(boothNo))      appScopeFilter.boothNo      = String(boothNo).trim();
-    if (isValidFilterVal(status))       appScopeFilter.status       = new RegExp('^' + status.trim() + '$', 'i');
+    if (isValidFilterVal(status))       appScopeFilter.status       = new RegExp('^' + escapeRegex(status.trim()) + '$', 'i');
 
     const targetScheme = schemeName || req.query.scheme || req.query.schemeId;
     if (isValidFilterVal(targetScheme)) {
@@ -624,7 +632,7 @@ const getApplicationsList = async (req, res) => {
     }
 
     if (search) {
-      const r = new RegExp(search.trim(), 'i');
+      const r = new RegExp(escapeRegex(search.trim()), 'i');
       const searchConds = [{ voterName: r }, { epicNo: r }, { mobile: r }, { schemeName: r }];
       if (appScopeFilter.$or) {
         const existingOr = appScopeFilter.$or;
@@ -895,7 +903,7 @@ const getApplicationsList = async (req, res) => {
     });
   } catch (error) {
     console.error('[getApplicationsList Error]:', error);
-    return res.status(500).json({ success: false, message: error.message });
+    return res.status(500).json({ success: false, message: 'Internal server error' });
   }
 };
 
@@ -939,7 +947,8 @@ const updateApplicationStatus = async (req, res) => {
       application: app
     });
   } catch (error) {
-    return res.status(500).json({ success: false, message: error.message });
+    console.error('[Admin API Error]:', error);
+    return res.status(500).json({ success: false, message: 'Internal server error' });
   }
 };
 
@@ -982,7 +991,8 @@ const createAdminCredential = async (req, res) => {
       }
     });
   } catch (error) {
-    return res.status(500).json({ success: false, message: error.message });
+    console.error('[Admin API Error]:', error);
+    return res.status(500).json({ success: false, message: 'Internal server error' });
   }
 };
 
@@ -998,7 +1008,8 @@ const getAllAdmins = async (req, res) => {
       admins
     });
   } catch (error) {
-    return res.status(500).json({ success: false, message: error.message });
+    console.error('[Admin API Error]:', error);
+    return res.status(500).json({ success: false, message: 'Internal server error' });
   }
 };
 
@@ -1013,8 +1024,8 @@ const getFilterMeta = async (req, res) => {
 
     if (assemblyName) {
       // Return sorted booth numbers for the given assembly
-      const boothQuery = { ...scopeQuery, assemblyName: new RegExp('^' + assemblyName.trim() + '$', 'i') };
-      if (district) boothQuery.district = new RegExp('^' + district.trim() + '$', 'i');
+      const boothQuery = { ...scopeQuery, assemblyName: new RegExp('^' + escapeRegex(assemblyName.trim()) + '$', 'i') };
+      if (district) boothQuery.district = new RegExp('^' + escapeRegex(district.trim()) + '$', 'i');
       const rawBooths = await SchemeApplication.distinct('boothNo', boothQuery);
       const booths = rawBooths.filter(Boolean).sort((a, b) => parseInt(a) - parseInt(b));
       return res.status(200).json({ success: true, booths });
@@ -1022,7 +1033,7 @@ const getFilterMeta = async (req, res) => {
 
     if (district) {
       // Return assemblies and booths in the selected district
-      const distQuery = { ...scopeQuery, district: new RegExp('^' + district.trim() + '$', 'i') };
+      const distQuery = { ...scopeQuery, district: new RegExp('^' + escapeRegex(district.trim()) + '$', 'i') };
       const [assemblies, rawBooths] = await Promise.all([
         SchemeApplication.distinct('assemblyName', distQuery),
         SchemeApplication.distinct('boothNo', distQuery)
@@ -1045,7 +1056,7 @@ const getFilterMeta = async (req, res) => {
     return res.status(200).json({ success: true, districts, assemblies, booths });
   } catch (err) {
     console.error('[getFilterMeta Error]:', err);
-    return res.status(500).json({ success: false, message: err.message });
+    return res.status(500).json({ success: false, message: 'Internal server error' });
   }
 };
 
@@ -1093,7 +1104,7 @@ const exportApplicationsCsv = async (req, res) => {
       appScopeFilter.schemeName = { $in: regexes };
     }
     if (search) {
-      const re = new RegExp(search, 'i');
+      const re = new RegExp(escapeRegex(search), 'i');
       appScopeFilter.$or = [{ voterName: re }, { epicNo: re }, { mobile: re }];
     }
 
@@ -1143,7 +1154,7 @@ const exportApplicationsCsv = async (req, res) => {
   } catch (error) {
     console.error('[exportApplicationsCsv Error]:', error);
     if (!res.headersSent) {
-      res.status(500).json({ success: false, message: error.message });
+      res.status(500).json({ success: false, message: 'Failed to export CSV' });
     } else {
       res.end();
     }
@@ -1207,7 +1218,7 @@ const exportApplicationsExcel = async (req, res) => {
       if (endDate)   appScopeFilter.appliedAt.$lte = new Date(new Date(endDate).setHours(23, 59, 59, 999));
     }
     if (search) {
-      const re = { $regex: search, $options: 'i' };
+      const re = { $regex: escapeRegex(search), $options: 'i' };
       appScopeFilter.$or = [{ voterName: re }, { epicNo: re }, { mobile: re }];
     }
 
@@ -1366,7 +1377,7 @@ const exportApplicationsExcel = async (req, res) => {
 
   } catch (error) {
     console.error('[exportApplicationsExcel Error]:', error);
-    if (!res.headersSent) res.status(500).json({ success: false, message: error.message });
+    if (!res.headersSent) res.status(500).json({ success: false, message: 'Failed to export Excel' });
     else res.end();
   }
 };

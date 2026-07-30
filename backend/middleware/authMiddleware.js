@@ -8,7 +8,7 @@ const protectUser = async (req, res, next) => {
   if (req.headers.authorization && req.headers.authorization.startsWith('Bearer')) {
     try {
       token = req.headers.authorization.split(' ')[1];
-      const decoded = jwt.verify(token, process.env.JWT_SECRET || 'bjp_nalam_thittam_secret_2026');
+      const decoded = jwt.verify(token, process.env.JWT_SECRET);
       req.user = await User.findById(decoded.id).select('-__v');
       if (!req.user) {
         return res.status(401).json({ success: false, message: 'User token invalid or user not found' });
@@ -29,7 +29,7 @@ const protectAdmin = async (req, res, next) => {
   if (req.headers.authorization && req.headers.authorization.startsWith('Bearer')) {
     try {
       token = req.headers.authorization.split(' ')[1];
-      const decoded = jwt.verify(token, process.env.JWT_SECRET || 'bjp_nalam_thittam_secret_2026');
+      const decoded = jwt.verify(token, process.env.JWT_SECRET);
       if (!decoded.isAdmin) {
         return res.status(403).json({ success: false, message: 'Forbidden: Admin access required' });
       }

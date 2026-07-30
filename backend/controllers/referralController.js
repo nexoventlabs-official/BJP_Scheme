@@ -36,7 +36,7 @@ const getReferralStats = async (req, res) => {
     });
   } catch (error) {
     console.error('[getReferralStats Error]:', error);
-    return res.status(500).json({ success: false, message: 'Failed to load referral data', error: error.message });
+    return res.status(500).json({ success: false, message: 'Failed to load referral data' });
   }
 };
 
