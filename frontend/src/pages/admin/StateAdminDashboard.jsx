@@ -451,14 +451,11 @@ const StateAdminDashboard = () => {
                         e.currentTarget.style.boxShadow = '0 2px 8px rgba(0,0,0,0.06)';
                       }}
                     >
-                      {/* Top Row: Scheme Name & View Link */}
+                      {/* Top Row: Scheme Name */}
                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '8px', zIndex: 2 }}>
                         <div style={{ fontSize: '15px', fontWeight: '700', color: '#1d1d1f', lineHeight: '1.2' }}>
                           {formatSchemeName(item._id)}
                         </div>
-                        <span style={{ fontSize: '11px', color: 'var(--color-saffron, #ea580c)', fontWeight: '700', whiteSpace: 'nowrap', flexShrink: 0 }}>
-                          View →
-                        </span>
                       </div>
 
                       {/* Bottom Row: Applications Count */}
