@@ -526,6 +526,7 @@ const SuperAdminDashboard = () => {
                         navigateSubPage('applications');
                       }}
                       style={{
+                        padding: '16px',
                         borderRadius: '16px',
                         border: '1px solid #e5e5ea',
                         cursor: 'pointer',
@@ -533,10 +534,11 @@ const SuperAdminDashboard = () => {
                         transition: 'all 0.22s ease',
                         overflow: 'hidden',
                         position: 'relative',
-                        height: '145px',
+                        minHeight: '140px',
                         display: 'flex',
                         flexDirection: 'column',
-                        justifyContent: 'flex-end',
+                        justifyContent: 'space-between',
+                        boxSizing: 'border-box',
                         background: bgImg
                           ? `url("${encodeURI(bgImg)}") center/cover no-repeat`
                           : '#ffffff'
@@ -552,41 +554,27 @@ const SuperAdminDashboard = () => {
                         e.currentTarget.style.boxShadow = '0 2px 8px rgba(0,0,0,0.06)';
                       }}
                     >
-                      {bgImg ? (
-                        <div style={{
-                          margin: '8px',
-                          padding: '8px 12px',
-                          backgroundColor: 'rgba(255, 255, 255, 0.94)',
-                          backdropFilter: 'blur(10px)',
-                          WebkitBackdropFilter: 'blur(10px)',
-                          borderRadius: '12px',
-                          border: '1px solid rgba(255, 255, 255, 0.8)',
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'space-between',
-                          boxShadow: '0 4px 12px rgba(0, 0, 0, 0.12)'
-                        }}>
-                          <div>
-                            <div style={{ fontSize: '15px', fontWeight: '800', color: '#1d1d1f' }}>
-                              {item.count.toLocaleString()} <span style={{ fontSize: '11px', fontWeight: '600', color: '#6e6e73' }}>applications</span>
-                            </div>
+                      {/* Top Row: Scheme Name & View Link */}
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '8px', zIndex: 2 }}>
+                        <div>
+                          <div style={{ fontSize: '15px', fontWeight: '700', color: '#1d1d1f', lineHeight: '1.2' }}>
+                            {formatSchemeName(item._id)}
                           </div>
-                          <span style={{ fontSize: '12px', fontWeight: '700', color: '#ea580c', display: 'flex', alignItems: 'center' }}>
-                            View →
-                          </span>
-                        </div>
-                      ) : (
-                        <div style={{ padding: '16px', height: '100%', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
-                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                            <div style={{ fontSize: '15px', fontWeight: '700', color: 'var(--color-midnight-ink)' }}>{formatSchemeName(item._id)}</div>
-                            <span style={{ fontSize: '11px', color: 'var(--color-saffron)', fontWeight: '700' }}>View →</span>
-                          </div>
-                          <div style={{ fontSize: '11px', color: 'var(--color-slate)' }}>{item.cluster || 'BJP Scheme'}</div>
-                          <div style={{ fontSize: '20px', fontWeight: '800', color: 'var(--color-midnight-ink)' }}>
-                            {item.count.toLocaleString()} <span style={{ fontSize: '12px', fontWeight: '500', color: 'var(--color-slate)' }}>applications</span>
+                          <div style={{ fontSize: '11px', color: '#474747', marginTop: '3px', fontWeight: '500' }}>
+                            {item.cluster || 'BJP Scheme'}
                           </div>
                         </div>
-                      )}
+                        <span style={{ fontSize: '11px', color: 'var(--color-saffron, #ea580c)', fontWeight: '700', whiteSpace: 'nowrap', flexShrink: 0 }}>
+                          View →
+                        </span>
+                      </div>
+
+                      {/* Bottom Row: Applications Count */}
+                      <div style={{ zIndex: 2, marginTop: '16px' }}>
+                        <div style={{ fontSize: '22px', fontWeight: '800', color: '#1d1d1f', lineHeight: '1' }}>
+                          {item.count.toLocaleString()} <span style={{ fontSize: '12px', fontWeight: '500', color: '#474747' }}>applications</span>
+                        </div>
+                      </div>
                     </div>
                   );
                 })}
