@@ -91,45 +91,17 @@ const AdminSidebar = ({
         transition: 'width 0.25s ease, min-width 0.25s ease'
       }}
     >
-      {/* Floating edge toggle button */}
-      <button
-        type="button"
-        onClick={onToggleCollapse}
-        className="admin-sidebar-floating-toggle"
-        title={isCollapsed ? 'Expand Sidebar' : 'Collapse Sidebar'}
-        style={{
-          position: 'absolute',
-          top: '20px',
-          right: '-13px',
-          width: '26px',
-          height: '26px',
-          borderRadius: '50%',
-          backgroundColor: '#ffffff',
-          border: '1px solid #d2d2d7',
-          boxShadow: '0 2px 6px rgba(0, 0, 0, 0.12)',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          cursor: 'pointer',
-          zIndex: 210,
-          color: 'var(--color-midnight-ink, #1d1d1f)',
-          transition: 'all 0.2s ease'
-        }}
-      >
-        {isCollapsed ? <ChevronRight size={14} /> : <ChevronLeft size={14} />}
-      </button>
-
       {/* Header */}
       <div
         className="admin-sidebar-header"
         style={{
-          padding: isCollapsed ? '12px 8px' : '16px 18px',
+          padding: isCollapsed ? '16px 8px' : '16px 18px',
           display: 'flex',
           alignItems: 'center',
           justifyContent: isCollapsed ? 'center' : 'flex-start',
-          gap: isCollapsed ? '6px' : '12px',
+          gap: isCollapsed ? '8px' : '12px',
           borderBottom: '1px solid var(--color-cool-wash, #e8e8ed)',
-          minHeight: '68px',
+          minHeight: '72px',
           boxSizing: 'border-box'
         }}
       >
@@ -139,7 +111,7 @@ const AdminSidebar = ({
               display: 'flex',
               flexDirection: 'column',
               alignItems: 'center',
-              gap: '6px',
+              gap: '8px',
               cursor: 'pointer',
               width: '100%'
             }}
@@ -151,28 +123,33 @@ const AdminSidebar = ({
               alt="BJP Logo"
               className="admin-logo"
               style={{
-                width: '28px',
-                height: '28px',
+                width: '32px',
+                height: '32px',
                 objectFit: 'contain'
               }}
             />
-            <div
+            <button
+              type="button"
+              onClick={(e) => { e.stopPropagation(); onToggleCollapse(); }}
+              className="admin-toggle-btn"
+              title="Expand Sidebar"
               style={{
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                width: '24px',
-                height: '24px',
+                width: '28px',
+                height: '28px',
                 borderRadius: '50%',
                 background: 'var(--color-canvas, #f5f5f7)',
-                border: '1px solid #e8e8ed',
+                border: '1px solid #d2d2d7',
                 color: 'var(--color-electric-blue, #0071e3)',
-                marginTop: '2px'
+                cursor: 'pointer',
+                transition: 'all 0.2s ease',
+                padding: 0
               }}
-              title="Expand Sidebar"
             >
-              <ChevronRight size={14} />
-            </div>
+              <ChevronRight size={16} />
+            </button>
           </div>
         ) : (
           <>
@@ -240,6 +217,7 @@ const AdminSidebar = ({
           </>
         )}
       </div>
+
 
 
       {/* Navigation Links — Vertical Stack */}
