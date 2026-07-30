@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import API from '../../utils/api';
 import { useAuth } from '../../context/AuthContext';
 import StatusBadge from '../../components/StatusBadge';
-import MemberProfileTimelineView, { formatSchemeName, formatAppliedDateTime } from '../../components/MemberProfileTimelineView';
+import MemberProfileTimelineView, { formatSchemeName, formatAppliedDateTime, getSchemeBgImage } from '../../components/MemberProfileTimelineView';
 import ReportsView from '../../components/ReportsView';
 import { BJP_SCHEMES } from '../../utils/constants';
 import {
@@ -338,40 +338,52 @@ const DistrictAdminDashboard = () => {
               <span style={{ fontSize: '12px', color: 'var(--color-slate)' }}>Click any scheme to filter applications</span>
             </div>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(240px, 1fr))', gap: '12px', width: '100%' }}>
-              {statsData.schemePopularity?.map((item) => (
-                <div
-                  key={item._id}
-                  onClick={() => {
-                    setSchemeFilter(item._id);
-                    setStatusFilter('');
-                    navigateSubPage('applications');
-                  }}
-                  style={{
-                    padding: '14px', background: '#fff', borderRadius: '10px',
-                    border: '1px solid var(--color-linen)', cursor: 'pointer',
-                    boxShadow: '0 2px 4px rgba(0,0,0,0.03)', transition: 'all 0.2s ease'
-                  }}
-                  onMouseEnter={e => {
-                    e.currentTarget.style.borderColor = 'var(--color-saffron)';
-                    e.currentTarget.style.transform = 'translateY(-2px)';
-                    e.currentTarget.style.boxShadow = '0 4px 12px rgba(255, 153, 51, 0.18)';
-                  }}
-                  onMouseLeave={e => {
-                    e.currentTarget.style.borderColor = 'var(--color-linen)';
-                    e.currentTarget.style.transform = 'translateY(0)';
-                    e.currentTarget.style.boxShadow = '0 2px 4px rgba(0,0,0,0.03)';
-                  }}
-                >
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <div style={{ fontSize: '14px', fontWeight: '700', color: 'var(--color-midnight-ink)' }}>{formatSchemeName(item._id)}</div>
-                    <span style={{ fontSize: '11px', color: 'var(--color-saffron)', fontWeight: '600' }}>View →</span>
+              {statsData.schemePopularity?.map((item) => {
+                const bgImg = getSchemeBgImage(item._id);
+                return (
+                  <div
+                    key={item._id}
+                    onClick={() => {
+                      setSchemeFilter(item._id);
+                      setStatusFilter('');
+                      navigateSubPage('applications');
+                    }}
+                    style={{
+                      padding: '16px',
+                      background: bgImg
+                        ? `linear-gradient(135deg, rgba(15, 23, 42, 0.72) 0%, rgba(15, 23, 42, 0.88) 100%), url("${encodeURI(bgImg)}") center/cover no-repeat`
+                        : '#fff',
+                      borderRadius: '16px',
+                      border: bgImg ? '1px solid rgba(255, 255, 255, 0.2)' : '1px solid var(--color-linen)',
+                      cursor: 'pointer',
+                      boxShadow: '0 2px 6px rgba(0,0,0,0.04)',
+                      transition: 'all 0.22s ease',
+                      color: bgImg ? '#ffffff' : 'var(--color-midnight-ink)',
+                      overflow: 'hidden',
+                      position: 'relative'
+                    }}
+                    onMouseEnter={e => {
+                      e.currentTarget.style.borderColor = 'var(--color-saffron)';
+                      e.currentTarget.style.transform = 'translateY(-2px)';
+                      e.currentTarget.style.boxShadow = '0 6px 16px rgba(255, 153, 51, 0.25)';
+                    }}
+                    onMouseLeave={e => {
+                      e.currentTarget.style.borderColor = bgImg ? 'rgba(255, 255, 255, 0.2)' : 'var(--color-linen)';
+                      e.currentTarget.style.transform = 'translateY(0)';
+                      e.currentTarget.style.boxShadow = '0 2px 6px rgba(0,0,0,0.04)';
+                    }}
+                  >
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <div style={{ fontSize: '15px', fontWeight: '700', color: bgImg ? '#ffffff' : 'var(--color-midnight-ink)' }}>{formatSchemeName(item._id)}</div>
+                      <span style={{ fontSize: '11px', color: bgImg ? '#ff9933' : 'var(--color-saffron)', fontWeight: '700', background: bgImg ? 'rgba(0,0,0,0.35)' : 'transparent', padding: bgImg ? '3px 8px' : 0, borderRadius: '980px' }}>View →</span>
+                    </div>
+                    <div style={{ fontSize: '11px', color: bgImg ? 'rgba(255, 255, 255, 0.75)' : 'var(--color-slate)', marginTop: '2px', marginBottom: '8px' }}>{item.cluster || 'BJP Scheme'}</div>
+                    <div style={{ fontSize: '20px', fontWeight: '800', color: bgImg ? '#ffffff' : 'var(--color-midnight-ink)' }}>
+                      {item.count.toLocaleString()} <span style={{ fontSize: '12px', fontWeight: '500', color: bgImg ? 'rgba(255, 255, 255, 0.8)' : 'var(--color-slate)' }}>applications</span>
+                    </div>
                   </div>
-                  <div style={{ fontSize: '11px', color: 'var(--color-slate)', marginTop: '2px' }}>{item.cluster}</div>
-                  <div style={{ fontSize: '20px', fontWeight: '700', color: 'var(--color-midnight-ink)', marginTop: '8px' }}>
-                    {item.count} <span style={{ fontSize: '12px', color: 'var(--color-slate)', fontWeight: 'normal' }}>applications</span>
-                  </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           </div>
 

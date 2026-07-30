@@ -38,6 +38,19 @@ export const formatAppliedDateTime = (dateStr) => {
   }
 };
 
+export const getSchemeBgImage = (schemeIdOrName) => {
+  if (!schemeIdOrName) return null;
+  const name = formatSchemeName(schemeIdOrName);
+  if (/svanidhi/i.test(name)) {
+    return '/schemes/PM SVANidhi.png';
+  }
+  if (/shram/i.test(name)) {
+    return '/schemes/e-Shram.png';
+  }
+  return null;
+};
+
+
 
 const MemberProfileTimelineView = ({ voterData, onBack, onUpdateAppStatus, onSelectVoter, targetSchemeName }) => {
   if (!voterData) return null;
