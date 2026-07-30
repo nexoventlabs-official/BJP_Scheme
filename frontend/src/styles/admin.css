@@ -424,30 +424,36 @@
 
 /* ── Reports 5-Column Stat Grid ───────────────────────────── */
 .reports-stat-grid {
-  display: grid;
-  grid-template-columns: repeat(5, 1fr);
-  gap: 16px;
+  display: grid !important;
+  grid-template-columns: repeat(5, 1fr) !important;
+  gap: 12px !important;
   margin-bottom: 24px;
   width: 100%;
 }
 
-@media (max-width: 1280px) {
+.reports-stat-grid .stat-card {
+  padding: 18px 14px !important;
+  min-height: 135px !important;
+}
+
+@media (max-width: 992px) {
   .reports-stat-grid {
-    grid-template-columns: repeat(3, 1fr);
+    grid-template-columns: repeat(3, 1fr) !important;
   }
 }
 
-@media (max-width: 768px) {
+@media (max-width: 640px) {
   .reports-stat-grid {
-    grid-template-columns: repeat(2, 1fr);
+    grid-template-columns: repeat(2, 1fr) !important;
   }
 }
 
-@media (max-width: 480px) {
+@media (max-width: 400px) {
   .reports-stat-grid {
-    grid-template-columns: 1fr;
+    grid-template-columns: 1fr !important;
   }
 }
+
 
 /* ── Admin Filter Dropdowns (Apple Pill Selects) ───────────── */
 .admin-filter-select, select.form-control, .admin-filter-bar select, .campsite-card select {
