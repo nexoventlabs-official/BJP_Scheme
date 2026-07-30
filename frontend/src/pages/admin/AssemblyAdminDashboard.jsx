@@ -10,13 +10,15 @@ import {
 } from 'lucide-react';
 import TopReferrersCard from '../../components/TopReferrersCard';
 import SchemePieChart from '../../components/SchemePieChart';
-
+import AdminSidebar from '../../components/AdminSidebar';
 
 const LIMIT = 20;
 
 const AssemblyAdminDashboard = () => {
-  const { admin } = useAuth();
+  const { admin, logoutAdmin } = useAuth();
   const [subPage, setSubPage] = useState('dashboard');
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
+
 
   // ── Dashboard stats ──
   const [statsData, setStatsData] = useState(null);
@@ -134,43 +136,37 @@ const AssemblyAdminDashboard = () => {
   };
 
   return (
-    <div style={{ width: '100%', paddingBottom: '60px', boxSizing: 'border-box' }}>
+    <div className="admin-layout">
+      <AdminSidebar
+        activeTab={subPage}
+        onSelectTab={navigateSubPage}
+        admin={admin || { role: 'ASSEMBLY_ADMIN', username: 'Assembly Admin' }}
+        isCollapsed={isSidebarCollapsed}
+        onToggleCollapse={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
+        onLogout={logoutAdmin}
+      />
 
-      {/* ── Header ── */}
-      <div className="campsite-card" style={{ width: '100%', padding: '24px', marginBottom: '24px', boxSizing: 'border-box' }}>
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '16px', width: '100%' }}>
-          <div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
-              <span className="tag-pill tag-active"><Shield size={12} /> ASSEMBLY ADMIN</span>
-            </div>
-            <h1 className="text-heading" style={{ margin: 0 }}>
-              {admin.assemblyName || 'Assembly'} Constituency Dashboard
-            </h1>
-            <div style={{ fontSize: '13px', color: 'var(--color-slate)', marginTop: '2px' }}>
-              Scope: {admin.district} District · {admin.assemblyName} Constituency
-            </div>
+      <div className="admin-main">
+        {/* Sticky Topbar */}
+        <header className="admin-topbar">
+          <div className="admin-topbar-brand">
+            {admin?.assemblyName || 'Assembly'} Constituency Dashboard
           </div>
-          <button onClick={fetchDashboardData} className="btn btn-ghost" style={{ padding: '6px 14px', fontSize: '13px' }}>
-            <RefreshCw size={12} /> Refresh
-          </button>
-        </div>
-      </div>
 
-      {/* ── Tabs ── */}
-      <div className="tabs-header" style={{ width: '100%', marginBottom: '24px', boxSizing: 'border-box' }}>
-        <button onClick={() => navigateSubPage('dashboard')} className={`tab-btn ${subPage === 'dashboard' ? 'active' : ''}`}>
-          Overview Dashboard
-        </button>
-        <button onClick={() => navigateSubPage('applications')} className={`tab-btn ${subPage === 'applications' ? 'active' : ''}`}>
-          Applications ({totalVoters} Members)
-        </button>
-        <button onClick={() => navigateSubPage('booths')} className={`tab-btn ${subPage === 'booths' ? 'active' : ''}`}>
-          Booth Breakdown Stats
-        </button>
-        <button onClick={() => navigateSubPage('reports')} className={`tab-btn ${subPage === 'reports' ? 'active' : ''}`}>
-          📊 Reports &amp; Excel Export
-        </button>
-      </div>
+          <div className="admin-topbar-right">
+            <span className="tag-pill tag-active" style={{ fontSize: '13px', background: 'var(--color-canvas)', color: 'var(--color-primary-ink)' }}>
+              <Shield size={12} style={{ marginRight: '4px' }} /> {admin?.assemblyName || 'Assembly Level'}
+            </span>
+
+            <button onClick={fetchDashboardData} className="btn-action btn-view" style={{ padding: '8px 16px', fontSize: '13px' }}>
+              <RefreshCw size={14} /> Refresh Data
+            </button>
+          </div>
+        </header>
+
+        {/* Content Area */}
+        <main className="admin-content">
+
 
       {/* ══════════════════════════════════════════ */}
       {/* PAGE 1: OVERVIEW DASHBOARD                */}
@@ -606,7 +602,10 @@ const AssemblyAdminDashboard = () => {
           initialScheme={schemeFilter}
         />
       )}
+        </main>
+      </div>
     </div>
+
   );
 };
 

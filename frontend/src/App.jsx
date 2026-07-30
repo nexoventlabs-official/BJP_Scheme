@@ -15,17 +15,11 @@ const MainAppContent = () => {
   const isAdminRoute = currentPath.startsWith('/admin') || !!admin;
   const isReferralRoute = currentPath.startsWith('/r/');
 
-  // 1. Render Admin Portal if URL starts with /admin or admin is logged in (UNTOUCHED)
+  // 1. Render Admin Portal if URL starts with /admin or admin is logged in
   if (isAdminRoute) {
-    return (
-      <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
-        <Navbar activeTab="admin" setActiveTab={() => {}} />
-        <main className="container" style={{ flex: 1, padding: '30px 20px' }}>
-          <AdminPortal />
-        </main>
-      </div>
-    );
+    return <AdminPortal />;
   }
+
 
   // 2. Render Referral Handler if URL is /r/:ntCode
   if (isReferralRoute) {

@@ -10,11 +10,13 @@ import {
 } from 'lucide-react';
 import TopReferrersCard from '../../components/TopReferrersCard';
 import SchemePieChart from '../../components/SchemePieChart';
-
+import AdminSidebar from '../../components/AdminSidebar';
 
 const DistrictAdminDashboard = () => {
-  const { admin } = useAuth();
+  const { admin, logoutAdmin } = useAuth();
   const [subPage, setSubPage] = useState('dashboard');
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
+
   const [statsData, setStatsData] = useState(null);
   const [loadingStats, setLoadingStats] = useState(true);
   const [voters, setVoters] = useState([]);
@@ -219,49 +221,37 @@ const DistrictAdminDashboard = () => {
   };
 
   return (
-    <div style={{ width: '100%', paddingBottom: '60px', boxSizing: 'border-box' }}>
-      
-      {/* Page Header Banner */}
-      <div className="campsite-card" style={{ width: '100%', padding: '24px', marginBottom: '24px', boxSizing: 'border-box' }}>
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '16px', width: '100%' }}>
-          <div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
-              <span className="tag-pill tag-active">
-                <Shield size={12} /> DISTRICT ADMIN
-              </span>
-            </div>
-            <h1 className="text-heading" style={{ margin: 0 }}>
-              {admin.district || 'District'} District Admin Dashboard
-            </h1>
-            <div style={{ fontSize: '13px', color: 'var(--color-slate)', marginTop: '2px' }}>
-              Scope: District Level Control — {admin.district || 'District'}
-            </div>
+    <div className="admin-layout">
+      <AdminSidebar
+        activeTab={subPage}
+        onSelectTab={navigateSubPage}
+        admin={admin || { role: 'DISTRICT_ADMIN', username: 'District Admin' }}
+        isCollapsed={isSidebarCollapsed}
+        onToggleCollapse={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
+        onLogout={logoutAdmin}
+      />
+
+      <div className="admin-main">
+        {/* Sticky Topbar */}
+        <header className="admin-topbar">
+          <div className="admin-topbar-brand">
+            {admin?.district || 'District'} District Admin Dashboard
           </div>
 
-          <button onClick={fetchDashboardData} className="btn btn-ghost" style={{ padding: '6px 14px', fontSize: '13px' }}>
-            <RefreshCw size={12} /> Refresh Data
-          </button>
-        </div>
-      </div>
+          <div className="admin-topbar-right">
+            <span className="tag-pill tag-active" style={{ fontSize: '13px', background: 'var(--color-canvas)', color: 'var(--color-primary-ink)' }}>
+              <Shield size={12} style={{ marginRight: '4px' }} /> {admin?.district || 'District Level'}
+            </span>
 
-      {/* Page Navigation Buttons */}
-      <div className="tabs-header" style={{ width: '100%', marginBottom: '24px', boxSizing: 'border-box' }}>
-        <button onClick={() => navigateSubPage('dashboard')} className={`tab-btn ${subPage === 'dashboard' ? 'active' : ''}`}>
-          Overview Dashboard
-        </button>
-        <button onClick={() => navigateSubPage('applications')} className={`tab-btn ${subPage === 'applications' ? 'active' : ''}`}>
-          District Applications ({totalVoters} Members)
-        </button>
-        <button onClick={() => navigateSubPage('assemblies')} className={`tab-btn ${subPage === 'assemblies' ? 'active' : ''}`}>
-          Assembly Constituency Stats
-        </button>
-        <button onClick={() => navigateSubPage('booths')} className={`tab-btn ${subPage === 'booths' ? 'active' : ''}`}>
-          Booth Level Breakdown
-        </button>
-        <button onClick={() => navigateSubPage('reports')} className={`tab-btn ${subPage === 'reports' ? 'active' : ''}`}>
-          📊 Reports &amp; Excel Export
-        </button>
-      </div>
+            <button onClick={fetchDashboardData} className="btn-action btn-view" style={{ padding: '8px 16px', fontSize: '13px' }}>
+              <RefreshCw size={14} /> Refresh Data
+            </button>
+          </div>
+        </header>
+
+        {/* Content Area */}
+        <main className="admin-content">
+
 
       {/* PAGE 1: OVERVIEW DASHBOARD */}
       {subPage === 'dashboard' && (
@@ -767,7 +757,10 @@ const DistrictAdminDashboard = () => {
           initialScheme={schemeFilter}
         />
       )}
+        </main>
+      </div>
     </div>
+
   );
 };
 
