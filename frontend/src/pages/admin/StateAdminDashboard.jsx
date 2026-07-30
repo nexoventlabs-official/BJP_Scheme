@@ -525,8 +525,8 @@ const StateAdminDashboard = () => {
                   setAssemblyFilter('');
                   setBoothFilter('');
                 }}
-                className="form-control"
-                style={{ flex: '1 1 150px', minWidth: '140px', background: '#fff' }}
+                className="admin-filter-select"
+                style={{ flex: '1 1 200px', minWidth: '200px' }}
               >
                 <option value="">All Districts (State-wide)</option>
                 {districts.map(d => (
@@ -542,9 +542,9 @@ const StateAdminDashboard = () => {
                   setAssemblyFilter(val);
                   setBoothFilter('');
                 }}
-                className="form-control"
+                className="admin-filter-select"
                 disabled={loadingAssemblies}
-                style={{ flex: '1 1 150px', minWidth: '140px', background: '#fff' }}
+                style={{ flex: '1 1 160px', minWidth: '160px' }}
               >
                 <option value="">{loadingAssemblies ? 'Loading assemblies…' : 'All Assemblies'}</option>
                 {assemblies.map(a => (
@@ -556,9 +556,9 @@ const StateAdminDashboard = () => {
               <select
                 value={boothFilter}
                 onChange={(e) => setBoothFilter(e.target.value)}
-                className="form-control"
+                className="admin-filter-select"
                 disabled={loadingBooths}
-                style={{ flex: '1 1 130px', minWidth: '120px', background: '#fff' }}
+                style={{ flex: '1 1 140px', minWidth: '140px' }}
               >
                 <option value="">{loadingBooths ? 'Loading booths…' : 'All Booths'}</option>
                 {booths.map(b => (
@@ -573,8 +573,8 @@ const StateAdminDashboard = () => {
               <select
                 value={statusFilter}
                 onChange={(e) => setStatusFilter(e.target.value)}
-                className="form-control"
-                style={{ flex: '1 1 140px', minWidth: '130px', background: '#fff' }}
+                className="admin-filter-select"
+                style={{ flex: '1 1 150px', minWidth: '150px' }}
               >
                 <option value="">All Statuses</option>
                 <option value="Pending">Pending</option>
@@ -591,8 +591,8 @@ const StateAdminDashboard = () => {
               <select
                 value={BJP_SCHEMES.find(s => s.name.toLowerCase() === (schemeFilter || '').toLowerCase() || (s.fullTitle && s.fullTitle.toLowerCase() === (schemeFilter || '').toLowerCase()))?.name || schemeFilter || ''}
                 onChange={(e) => setSchemeFilter(e.target.value)}
-                className="form-control"
-                style={{ flex: '1 1 160px', minWidth: '150px', background: '#fff' }}
+                className="admin-filter-select"
+                style={{ flex: '1 1 220px', minWidth: '220px' }}
               >
                 <option value="">All 23 Central BJP Schemes</option>
                 {BJP_SCHEMES.map(s => (
@@ -601,6 +601,7 @@ const StateAdminDashboard = () => {
                   </option>
                 ))}
               </select>
+
 
               {/* Clear All button */}
               {(districtFilter || assemblyFilter || boothFilter || statusFilter || schemeFilter || searchQuery) && (

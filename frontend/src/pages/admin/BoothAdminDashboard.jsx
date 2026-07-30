@@ -345,7 +345,7 @@ const BoothAdminDashboard = () => {
 
             {/* ── Filter Row 2: Status + Scheme + Clear ── */}
             <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap', marginBottom: '16px', width: '100%', alignItems: 'center' }}>
-              <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)} className="form-control" style={{ minWidth: '150px', flex: '1 1 150px', maxWidth: '180px' }}>
+              <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)} className="admin-filter-select" style={{ flex: '1 1 150px', minWidth: '150px' }}>
                 <option value="">All Statuses</option>
                 <option value="Pending">Pending</option>
                 <option value="Submitted">Submitted</option>
@@ -361,8 +361,8 @@ const BoothAdminDashboard = () => {
               <select
                 value={BJP_SCHEMES.find(s => s.name.toLowerCase() === (schemeFilter || '').toLowerCase() || (s.fullTitle && s.fullTitle.toLowerCase() === (schemeFilter || '').toLowerCase()))?.name || schemeFilter || ''}
                 onChange={(e) => setSchemeFilter(e.target.value)}
-                className="form-control"
-                style={{ flex: '1 1 160px', minWidth: '150px', background: '#fff' }}
+                className="admin-filter-select"
+                style={{ flex: '1 1 220px', minWidth: '220px' }}
               >
                 <option value="">All 23 Central BJP Schemes</option>
                 {BJP_SCHEMES.map(s => (
@@ -371,6 +371,7 @@ const BoothAdminDashboard = () => {
                   </option>
                 ))}
               </select>
+
 
               {(statusFilter || schemeFilter || searchQuery) && (
                 <button

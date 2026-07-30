@@ -362,7 +362,7 @@ const AssemblyAdminDashboard = () => {
             {/* ── Filter Row 2: Status + Booth + Chips ── */}
             <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap', marginBottom: '16px', width: '100%', alignItems: 'center' }}>
               {/* Status */}
-              <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)} className="form-control" style={{ minWidth: '150px', flex: '1 1 150px', maxWidth: '180px' }}>
+              <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)} className="admin-filter-select" style={{ flex: '1 1 150px', minWidth: '150px' }}>
                 <option value="">All Statuses</option>
                 <option value="Pending">Pending</option>
                 <option value="Submitted">Submitted</option>
@@ -378,8 +378,8 @@ const AssemblyAdminDashboard = () => {
               <select
                 value={BJP_SCHEMES.find(s => s.name.toLowerCase() === (schemeFilter || '').toLowerCase() || (s.fullTitle && s.fullTitle.toLowerCase() === (schemeFilter || '').toLowerCase()))?.name || schemeFilter || ''}
                 onChange={(e) => setSchemeFilter(e.target.value)}
-                className="form-control"
-                style={{ flex: '1 1 160px', minWidth: '150px', background: '#fff' }}
+                className="admin-filter-select"
+                style={{ flex: '1 1 220px', minWidth: '220px' }}
               >
                 <option value="">All 23 Central BJP Schemes</option>
                 {BJP_SCHEMES.map(s => (
@@ -393,11 +393,12 @@ const AssemblyAdminDashboard = () => {
               <select
                 value={boothFilter}
                 onChange={(e) => setBoothFilter(e.target.value)}
-                className="form-control"
+                className="admin-filter-select"
                 disabled={loadingBooths}
-                style={{ minWidth: '150px', flex: '1 1 150px', maxWidth: '200px' }}
+                style={{ flex: '1 1 150px', minWidth: '150px' }}
               >
                 <option value="">{loadingBooths ? 'Loading booths…' : 'All Booths'}</option>
+
                 {booths.map(b => <option key={b} value={b}>Booth {b}</option>)}
                 {boothFilter && !booths.includes(boothFilter) && (
                   <option key={boothFilter} value={boothFilter}>Booth {boothFilter}</option>

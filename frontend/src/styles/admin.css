@@ -422,7 +422,51 @@
 
 
 
-/* ── Admin card (table wrapper) ───────────────────────────── */
+/* ── Admin Filter Dropdowns (Apple Pill Selects) ───────────── */
+.admin-filter-select, select.form-control, .admin-filter-bar select, .campsite-card select {
+  appearance: none !important;
+  -webkit-appearance: none !important;
+  -moz-appearance: none !important;
+  background-color: #ffffff !important;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%230071e3' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E") !important;
+  background-repeat: no-repeat !important;
+  background-position: right 14px center !important;
+  padding: 10px 38px 10px 18px !important;
+  border-radius: 980px !important;
+  border: 1px solid #d2d2d7 !important;
+  font-family: var(--font-sf-pro-text, system-ui, -apple-system, sans-serif) !important;
+  font-size: 13px !important;
+  font-weight: 500 !important;
+  color: #1d1d1f !important;
+  cursor: pointer !important;
+  outline: none !important;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.04) !important;
+  transition: all 0.2s ease !important;
+  white-space: nowrap !important;
+  text-overflow: ellipsis !important;
+  height: 42px !important;
+  box-sizing: border-box !important;
+  min-width: 170px;
+}
+
+.admin-filter-select:hover, select.form-control:hover, .admin-filter-bar select:hover, .campsite-card select:hover {
+  border-color: #0071e3 !important;
+  box-shadow: 0 2px 8px rgba(0, 113, 227, 0.12) !important;
+}
+
+.admin-filter-select:focus, select.form-control:focus, .admin-filter-bar select:focus, .campsite-card select:focus {
+  border-color: #0071e3 !important;
+  box-shadow: 0 0 0 3px rgba(0, 113, 227, 0.18) !important;
+}
+
+.admin-filter-select option, select.form-control option, .admin-filter-bar select option, .campsite-card select option {
+  background-color: #ffffff !important;
+  color: #1d1d1f !important;
+  font-size: 14px !important;
+  padding: 12px 16px !important;
+  font-weight: 500 !important;
+}
+
 .admin-card {
   background: var(--color-paper);
   border-radius: var(--radius-cards);

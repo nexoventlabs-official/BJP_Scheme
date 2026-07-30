@@ -444,8 +444,8 @@ const DistrictAdminDashboard = () => {
               <select
                 value={statusFilter}
                 onChange={(e) => setStatusFilter(e.target.value)}
-                className="form-control"
-                style={{ minWidth: '150px', flex: '1 1 150px', maxWidth: '180px' }}
+                className="admin-filter-select"
+                style={{ flex: '1 1 150px', minWidth: '150px' }}
               >
                 <option value="">All Statuses</option>
                 <option value="Pending">Pending</option>
@@ -462,8 +462,8 @@ const DistrictAdminDashboard = () => {
               <select
                 value={BJP_SCHEMES.find(s => s.name.toLowerCase() === (schemeFilter || '').toLowerCase() || (s.fullTitle && s.fullTitle.toLowerCase() === (schemeFilter || '').toLowerCase()))?.name || schemeFilter || ''}
                 onChange={(e) => setSchemeFilter(e.target.value)}
-                className="form-control"
-                style={{ flex: '1 1 160px', minWidth: '150px', background: '#fff' }}
+                className="admin-filter-select"
+                style={{ flex: '1 1 220px', minWidth: '220px' }}
               >
                 <option value="">All 23 Central BJP Schemes</option>
                 {BJP_SCHEMES.map(s => (
@@ -481,8 +481,8 @@ const DistrictAdminDashboard = () => {
                   setAssemblyFilter(val);
                   setBoothFilter('');
                 }}
-                className="form-control"
-                style={{ minWidth: '180px', flex: '2 1 180px', maxWidth: '260px' }}
+                className="admin-filter-select"
+                style={{ flex: '1 1 180px', minWidth: '180px' }}
               >
                 <option value="">All Assemblies</option>
                 {assemblies.map(a => (
@@ -494,9 +494,9 @@ const DistrictAdminDashboard = () => {
               <select
                 value={boothFilter}
                 onChange={(e) => setBoothFilter(e.target.value)}
-                className="form-control"
+                className="admin-filter-select"
                 disabled={loadingBooths}
-                style={{ minWidth: '140px', flex: '1 1 140px', maxWidth: '180px' }}
+                style={{ flex: '1 1 140px', minWidth: '140px' }}
               >
                 <option value="">{loadingBooths ? 'Loading booths…' : 'All Booths'}</option>
                 {booths.map(b => (
@@ -506,6 +506,7 @@ const DistrictAdminDashboard = () => {
                   <option key={boothFilter} value={boothFilter}>Booth {boothFilter}</option>
                 )}
               </select>
+
 
               {/* Active filter chips + Clear All */}
               {(statusFilter || schemeFilter || assemblyFilter || boothFilter || searchQuery) && (
