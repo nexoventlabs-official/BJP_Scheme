@@ -349,38 +349,67 @@ const DistrictAdminDashboard = () => {
                       navigateSubPage('applications');
                     }}
                     style={{
-                      padding: '16px',
-                      background: bgImg
-                        ? `linear-gradient(135deg, rgba(15, 23, 42, 0.72) 0%, rgba(15, 23, 42, 0.88) 100%), url("${encodeURI(bgImg)}") center/cover no-repeat`
-                        : '#fff',
                       borderRadius: '16px',
-                      border: bgImg ? '1px solid rgba(255, 255, 255, 0.2)' : '1px solid var(--color-linen)',
+                      border: '1px solid #e5e5ea',
                       cursor: 'pointer',
-                      boxShadow: '0 2px 6px rgba(0,0,0,0.04)',
+                      boxShadow: '0 2px 8px rgba(0,0,0,0.06)',
                       transition: 'all 0.22s ease',
-                      color: bgImg ? '#ffffff' : 'var(--color-midnight-ink)',
                       overflow: 'hidden',
-                      position: 'relative'
+                      position: 'relative',
+                      height: '145px',
+                      display: 'flex',
+                      flexDirection: 'column',
+                      justifyContent: 'flex-end',
+                      background: bgImg
+                        ? `url("${encodeURI(bgImg)}") center/cover no-repeat`
+                        : '#ffffff'
                     }}
                     onMouseEnter={e => {
                       e.currentTarget.style.borderColor = 'var(--color-saffron)';
-                      e.currentTarget.style.transform = 'translateY(-2px)';
-                      e.currentTarget.style.boxShadow = '0 6px 16px rgba(255, 153, 51, 0.25)';
+                      e.currentTarget.style.transform = 'translateY(-3px)';
+                      e.currentTarget.style.boxShadow = '0 8px 20px rgba(255, 153, 51, 0.25)';
                     }}
                     onMouseLeave={e => {
-                      e.currentTarget.style.borderColor = bgImg ? 'rgba(255, 255, 255, 0.2)' : 'var(--color-linen)';
+                      e.currentTarget.style.borderColor = '#e5e5ea';
                       e.currentTarget.style.transform = 'translateY(0)';
-                      e.currentTarget.style.boxShadow = '0 2px 6px rgba(0,0,0,0.04)';
+                      e.currentTarget.style.boxShadow = '0 2px 8px rgba(0,0,0,0.06)';
                     }}
                   >
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                      <div style={{ fontSize: '15px', fontWeight: '700', color: bgImg ? '#ffffff' : 'var(--color-midnight-ink)' }}>{formatSchemeName(item._id)}</div>
-                      <span style={{ fontSize: '11px', color: bgImg ? '#ff9933' : 'var(--color-saffron)', fontWeight: '700', background: bgImg ? 'rgba(0,0,0,0.35)' : 'transparent', padding: bgImg ? '3px 8px' : 0, borderRadius: '980px' }}>View →</span>
-                    </div>
-                    <div style={{ fontSize: '11px', color: bgImg ? 'rgba(255, 255, 255, 0.75)' : 'var(--color-slate)', marginTop: '2px', marginBottom: '8px' }}>{item.cluster || 'BJP Scheme'}</div>
-                    <div style={{ fontSize: '20px', fontWeight: '800', color: bgImg ? '#ffffff' : 'var(--color-midnight-ink)' }}>
-                      {item.count.toLocaleString()} <span style={{ fontSize: '12px', fontWeight: '500', color: bgImg ? 'rgba(255, 255, 255, 0.8)' : 'var(--color-slate)' }}>applications</span>
-                    </div>
+                    {bgImg ? (
+                      <div style={{
+                        margin: '8px',
+                        padding: '8px 12px',
+                        backgroundColor: 'rgba(255, 255, 255, 0.94)',
+                        backdropFilter: 'blur(10px)',
+                        WebkitBackdropFilter: 'blur(10px)',
+                        borderRadius: '12px',
+                        border: '1px solid rgba(255, 255, 255, 0.8)',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'space-between',
+                        boxShadow: '0 4px 12px rgba(0, 0, 0, 0.12)'
+                      }}>
+                        <div>
+                          <div style={{ fontSize: '15px', fontWeight: '800', color: '#1d1d1f' }}>
+                            {item.count.toLocaleString()} <span style={{ fontSize: '11px', fontWeight: '600', color: '#6e6e73' }}>applications</span>
+                          </div>
+                        </div>
+                        <span style={{ fontSize: '12px', fontWeight: '700', color: '#ea580c', display: 'flex', alignItems: 'center' }}>
+                          View →
+                        </span>
+                      </div>
+                    ) : (
+                      <div style={{ padding: '16px', height: '100%', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                          <div style={{ fontSize: '15px', fontWeight: '700', color: 'var(--color-midnight-ink)' }}>{formatSchemeName(item._id)}</div>
+                          <span style={{ fontSize: '11px', color: 'var(--color-saffron)', fontWeight: '700' }}>View →</span>
+                        </div>
+                        <div style={{ fontSize: '11px', color: 'var(--color-slate)' }}>{item.cluster || 'BJP Scheme'}</div>
+                        <div style={{ fontSize: '20px', fontWeight: '800', color: 'var(--color-midnight-ink)' }}>
+                          {item.count.toLocaleString()} <span style={{ fontSize: '12px', fontWeight: '500', color: 'var(--color-slate)' }}>applications</span>
+                        </div>
+                      </div>
+                    )}
                   </div>
                 );
               })}

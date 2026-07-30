@@ -38,17 +38,45 @@ export const formatAppliedDateTime = (dateStr) => {
   }
 };
 
+const SCHEME_IMAGE_MAP = {
+  'PMSBY': '/schemes/PMSBY.png',
+  'PMJJBY': '/schemes/PMJJBY.png',
+  'APY': '/schemes/APY.png',
+  'PM SVANidhi': '/schemes/PM SVANidhi.png',
+  'PM Mudra Shishu': '/schemes/PM Mudra Shishu.png',
+  'PM Mudra Kishor': '/schemes/PM Mudra Kishor.png',
+  'Udyam': '/schemes/Udyam.png',
+  'Stand Up India': '/schemes/Stand Up India.png',
+  'Startup Seed Fund': '/schemes/Startup Seed Fund.png',
+  'PM Kisan': '/schemes/PM Kisan.png',
+  'PM Fasal Bima': '/schemes/PM Fasal Bima.png',
+  'PM Kisan Maan Dhan': '/schemes/PM Kisan Maan Dhan.png',
+  'Ayushman Bharat': '/schemes/Ayushman Bharat.png',
+  'ABHA': '/schemes/ABHA.png',
+  'PM Ujjwala': '/schemes/PM Ujjwala.png',
+  'PM Matru Vandana': '/schemes/PM Matru Vandana.png',
+  'Sukanya Samridhi': '/schemes/Sukanya Samridhi.png',
+  'PM Awas Yojana': '/schemes/PM Awas Yojana.png',
+  'PMKVY': '/schemes/PMKVY.png',
+  'NSP Scholarship': '/schemes/NSP Scholarship.png',
+  'PM Vishwakarma': '/schemes/PM Vishwakarma.png',
+  'Jan Dhan': '/schemes/Jan Dhan.png',
+  'e-Shram': '/schemes/e-Shram.png'
+};
+
 export const getSchemeBgImage = (schemeIdOrName) => {
   if (!schemeIdOrName) return null;
   const name = formatSchemeName(schemeIdOrName);
-  if (/svanidhi/i.test(name)) {
-    return '/schemes/PM SVANidhi.png';
-  }
-  if (/shram/i.test(name)) {
-    return '/schemes/e-Shram.png';
+  if (SCHEME_IMAGE_MAP[name]) return SCHEME_IMAGE_MAP[name];
+  const lower = name.toLowerCase().trim();
+  for (const [key, path] of Object.entries(SCHEME_IMAGE_MAP)) {
+    if (key.toLowerCase() === lower || lower.includes(key.toLowerCase()) || key.toLowerCase().includes(lower)) {
+      return path;
+    }
   }
   return null;
 };
+
 
 
 
