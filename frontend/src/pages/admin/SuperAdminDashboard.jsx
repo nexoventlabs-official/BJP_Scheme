@@ -765,9 +765,11 @@ const SuperAdminDashboard = () => {
                       const rowNum = (currentPage - 1) * LIMIT + idx + 1;
                       return (
                         <tr key={voter.epicNo || idx}
-                          style={{ borderBottom: '1px solid var(--color-linen)', transition: 'background 0.15s' }}
+                          style={{ borderBottom: '1px solid var(--color-linen)', transition: 'background 0.15s', cursor: 'pointer' }}
+                          onClick={() => setSelectedVoterTimeline(voter)}
                           onMouseEnter={e => e.currentTarget.style.background = 'var(--color-fog-gray)'}
                           onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
+                          title="Click anywhere on row to view details"
                         >
                           <td style={{ padding: '12px 10px', color: 'var(--color-ash-gray)', fontSize: '12px', fontWeight: '600' }}>{rowNum}</td>
                           <td style={{ padding: '12px 10px' }}>
@@ -793,10 +795,11 @@ const SuperAdminDashboard = () => {
                           </td>
                           <td style={{ padding: '12px 10px', textAlign: 'right' }}>
                             <div style={{ display: 'inline-flex', gap: '6px' }}>
-                              <button onClick={() => setSelectedVoterTimeline(voter)} className="btn btn-ghost" style={{ padding: '5px 10px', fontSize: '12px' }}>
-                                <Eye size={13} /> View
-                              </button>
-                              <button onClick={() => handleDirectCallVoter(voter)} className="btn btn-ghost" style={{ padding: '5px 10px', fontSize: '12px' }}>
+                              <button
+                                onClick={(e) => { e.stopPropagation(); handleDirectCallVoter(voter); }}
+                                className="btn btn-ghost"
+                                style={{ padding: '5px 10px', fontSize: '12px' }}
+                              >
                                 <PhoneCall size={13} /> Call
                               </button>
                             </div>
