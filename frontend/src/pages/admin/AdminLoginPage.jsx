@@ -4,12 +4,13 @@ import { useAuth } from '../../context/AuthContext';
 import { Shield } from 'lucide-react';
 
 const AdminLoginPage = () => {
-  const { loginAdmin } = useAuth();
+  const { loginAdmin, sessionExpiredNotice } = useAuth();
 
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [loginError, setLoginError] = useState('');
   const [loginLoading, setLoginLoading] = useState(false);
+
 
   const handleAdminLogin = async (e) => {
     if (e) e.preventDefault();
@@ -84,6 +85,26 @@ const AdminLoginPage = () => {
           </p>
         </div>
 
+        {sessionExpiredNotice && !loginError && (
+          <div style={{
+            width: '100%',
+            borderRadius: '980px',
+            padding: '10px 16px',
+            marginBottom: '20px',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            boxSizing: 'border-box',
+            backgroundColor: '#fffbebf0',
+            color: '#b45309',
+            border: '1px solid #fde68a',
+            fontSize: '13px',
+            fontWeight: '500'
+          }}>
+            ⏱️ Session expired after 30 minutes of inactivity. Please sign in again.
+          </div>
+        )}
+
         {loginError && (
           <div className="tag-pill tag-error" style={{
             width: '100%',
@@ -96,6 +117,7 @@ const AdminLoginPage = () => {
             {loginError}
           </div>
         )}
+
 
         <form onSubmit={handleAdminLogin}>
           <div className="form-group" style={{ marginBottom: '20px' }}>
