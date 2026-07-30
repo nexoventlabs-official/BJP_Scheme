@@ -422,6 +422,33 @@
 
 
 
+/* ── Reports 5-Column Stat Grid ───────────────────────────── */
+.reports-stat-grid {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 16px;
+  margin-bottom: 24px;
+  width: 100%;
+}
+
+@media (max-width: 1280px) {
+  .reports-stat-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+@media (max-width: 768px) {
+  .reports-stat-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 480px) {
+  .reports-stat-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
 /* ── Admin Filter Dropdowns (Apple Pill Selects) ───────────── */
 .admin-filter-select, select.form-control, .admin-filter-bar select, .campsite-card select {
   appearance: none !important;

@@ -427,15 +427,15 @@ const ReportsView = ({
         )}
       </div>
 
-      {/* ── Summary Stats Cards ── */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '16px', marginBottom: '24px', width: '100%' }}>
+      {/* ── Summary Stats Cards (5 Column Grid) ── */}
+      <div className="reports-stat-grid">
         
         {/* Total Members */}
         <div className="stat-card">
           <div className="stat-icon" style={{ background: '#eff6ff', color: '#2563eb' }}>
             <Users size={18} />
           </div>
-          <div>
+          <div style={{ width: '100%' }}>
             <div className="stat-number" style={{ color: '#2563eb' }}>{totalRecords}</div>
             <div className="stat-label">Unique Members</div>
           </div>
@@ -446,7 +446,7 @@ const ReportsView = ({
           <div className="stat-icon" style={{ background: '#fff7ed', color: '#ea580c' }}>
             <FileText size={18} />
           </div>
-          <div>
+          <div style={{ width: '100%' }}>
             <div className="stat-number" style={{ color: '#ea580c' }}>{totalAppsCount}</div>
             <div className="stat-label">Scheme Applications</div>
           </div>
@@ -457,7 +457,7 @@ const ReportsView = ({
           <div className="stat-icon" style={{ background: '#f0fdf4', color: '#16a34a' }}>
             <CheckCircle2 size={18} />
           </div>
-          <div>
+          <div style={{ width: '100%' }}>
             <div className="stat-number" style={{ color: '#16a34a' }}>{approvedCount}</div>
             <div className="stat-label">Approved Directives</div>
           </div>
@@ -468,7 +468,7 @@ const ReportsView = ({
           <div className="stat-icon" style={{ background: '#fefce8', color: '#ca8a04' }}>
             <Clock size={18} />
           </div>
-          <div>
+          <div style={{ width: '100%' }}>
             <div className="stat-number" style={{ color: '#ca8a04' }}>{pendingCount}</div>
             <div className="stat-label">Pending Verification</div>
           </div>
@@ -479,13 +479,14 @@ const ReportsView = ({
           <div className="stat-icon" style={{ background: '#fef2f2', color: '#dc2626' }}>
             <XCircle size={18} />
           </div>
-          <div>
+          <div style={{ width: '100%' }}>
             <div className="stat-number" style={{ color: '#dc2626' }}>{rejectedCount}</div>
             <div className="stat-label">Rejected / Action Needed</div>
           </div>
         </div>
 
       </div>
+
 
       {/* ── Report Data Table View ── */}
       <div className="campsite-card" style={{ width: '100%', padding: '24px', boxSizing: 'border-box' }}>
