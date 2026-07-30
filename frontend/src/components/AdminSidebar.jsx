@@ -76,10 +76,11 @@ const AdminSidebar = ({
       style={{
         width: isCollapsed ? '68px' : '240px',
         minWidth: isCollapsed ? '68px' : '240px',
-        minHeight: '100vh',
         height: '100vh',
-        position: 'sticky',
+        maxHeight: '100vh',
+        position: 'relative',
         top: 0,
+        left: 0,
         backgroundColor: '#ffffff',
         borderRight: '1px solid var(--color-cool-wash, #e8e8ed)',
         display: 'flex',
@@ -87,7 +88,7 @@ const AdminSidebar = ({
         flexShrink: 0,
         zIndex: 200,
         boxSizing: 'border-box',
-        transition: 'width 0.25s ease'
+        transition: 'width 0.25s ease, min-width 0.25s ease'
       }}
     >
       {/* Header */}
