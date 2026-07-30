@@ -91,82 +91,156 @@ const AdminSidebar = ({
         transition: 'width 0.25s ease, min-width 0.25s ease'
       }}
     >
+      {/* Floating edge toggle button */}
+      <button
+        type="button"
+        onClick={onToggleCollapse}
+        className="admin-sidebar-floating-toggle"
+        title={isCollapsed ? 'Expand Sidebar' : 'Collapse Sidebar'}
+        style={{
+          position: 'absolute',
+          top: '20px',
+          right: '-13px',
+          width: '26px',
+          height: '26px',
+          borderRadius: '50%',
+          backgroundColor: '#ffffff',
+          border: '1px solid #d2d2d7',
+          boxShadow: '0 2px 6px rgba(0, 0, 0, 0.12)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          cursor: 'pointer',
+          zIndex: 210,
+          color: 'var(--color-midnight-ink, #1d1d1f)',
+          transition: 'all 0.2s ease'
+        }}
+      >
+        {isCollapsed ? <ChevronRight size={14} /> : <ChevronLeft size={14} />}
+      </button>
+
       {/* Header */}
       <div
         className="admin-sidebar-header"
         style={{
-          padding: '16px 18px',
+          padding: isCollapsed ? '12px 8px' : '16px 18px',
           display: 'flex',
           alignItems: 'center',
-          gap: '12px',
+          justifyContent: isCollapsed ? 'center' : 'flex-start',
+          gap: isCollapsed ? '6px' : '12px',
           borderBottom: '1px solid var(--color-cool-wash, #e8e8ed)',
           minHeight: '68px',
           boxSizing: 'border-box'
         }}
       >
-        <img
-          src="/bjp_logo.svg"
-          alt="BJP Logo"
-          className="admin-logo"
-          style={{
-            width: '36px',
-            height: '36px',
-            maxWidth: '36px',
-            maxHeight: '36px',
-            objectFit: 'contain',
-            flexShrink: 0
-          }}
-        />
-        {!isCollapsed && (
-          <div style={{ minWidth: 0, flex: 1, overflow: 'hidden' }}>
-            <div
-              className="admin-brand"
+        {isCollapsed ? (
+          <div
+            style={{
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              gap: '6px',
+              cursor: 'pointer',
+              width: '100%'
+            }}
+            onClick={onToggleCollapse}
+            title="Click to Expand Sidebar"
+          >
+            <img
+              src="/bjp_logo.svg"
+              alt="BJP Logo"
+              className="admin-logo"
               style={{
-                fontFamily: 'var(--font-sf-pro-display)',
-                fontSize: '14px',
-                fontWeight: '600',
-                color: 'var(--color-primary-ink, #1d1d1f)',
-                whiteSpace: 'nowrap',
-                overflow: 'hidden',
-                textOverflow: 'ellipsis'
+                width: '28px',
+                height: '28px',
+                objectFit: 'contain'
               }}
-            >
-              BJP Nalam Thittam
-            </div>
+            />
             <div
-              className="admin-tagline"
               style={{
-                fontSize: '11px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                width: '24px',
+                height: '24px',
+                borderRadius: '50%',
+                background: 'var(--color-canvas, #f5f5f7)',
+                border: '1px solid #e8e8ed',
                 color: 'var(--color-electric-blue, #0071e3)',
-                whiteSpace: 'nowrap',
-                fontWeight: '500'
+                marginTop: '2px'
               }}
+              title="Expand Sidebar"
             >
-              {role.replace('_', ' ')}
+              <ChevronRight size={14} />
             </div>
           </div>
+        ) : (
+          <>
+            <img
+              src="/bjp_logo.svg"
+              alt="BJP Logo"
+              className="admin-logo"
+              style={{
+                width: '36px',
+                height: '36px',
+                maxWidth: '36px',
+                maxHeight: '36px',
+                objectFit: 'contain',
+                flexShrink: 0
+              }}
+            />
+            <div style={{ minWidth: 0, flex: 1, overflow: 'hidden' }}>
+              <div
+                className="admin-brand"
+                style={{
+                  fontFamily: 'var(--font-sf-pro-display)',
+                  fontSize: '14px',
+                  fontWeight: '600',
+                  color: 'var(--color-primary-ink, #1d1d1f)',
+                  whiteSpace: 'nowrap',
+                  overflow: 'hidden',
+                  textOverflow: 'ellipsis'
+                }}
+              >
+                BJP Nalam Thittam
+              </div>
+              <div
+                className="admin-tagline"
+                style={{
+                  fontSize: '11px',
+                  color: 'var(--color-electric-blue, #0071e3)',
+                  whiteSpace: 'nowrap',
+                  fontWeight: '500'
+                }}
+              >
+                {role.replace('_', ' ')}
+              </div>
+            </div>
+            <button
+              type="button"
+              onClick={onToggleCollapse}
+              className="admin-toggle-btn"
+              title="Collapse Sidebar"
+              style={{
+                marginLeft: 'auto',
+                background: 'none',
+                border: 'none',
+                cursor: 'pointer',
+                padding: '6px',
+                borderRadius: '980px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                color: 'var(--color-deep-gray, #474747)',
+                flexShrink: 0
+              }}
+            >
+              <ChevronLeft size={18} />
+            </button>
+          </>
         )}
-        <button
-          type="button"
-          onClick={onToggleCollapse}
-          className="admin-toggle-btn"
-          title={isCollapsed ? 'Expand Sidebar' : 'Collapse Sidebar'}
-          style={{
-            marginLeft: 'auto',
-            background: 'none',
-            border: 'none',
-            cursor: 'pointer',
-            padding: '6px',
-            borderRadius: '980px',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            color: 'var(--color-deep-gray, #474747)'
-          }}
-        >
-          {isCollapsed ? <ChevronRight size={18} /> : <ChevronLeft size={18} />}
-        </button>
       </div>
+
 
       {/* Navigation Links — Vertical Stack */}
       <nav
