@@ -1460,11 +1460,11 @@ function MySchemePanel({ epicNo, mobile, onBack }) {
                       style={{
                         border: `1.5px solid ${sc.border}`,
                         borderRadius: 16,
-                        padding: '20px 22px',
+                        padding: '22px 24px',
                         cursor: 'pointer',
                         overflow: 'hidden',
                         position: 'relative',
-                        minHeight: 170,
+                        minHeight: 210,
                         boxSizing: 'border-box',
                         background: bgImg
                           ? `url("${encodeURI(bgImg)}") center / 100% 100% no-repeat`
@@ -1474,15 +1474,10 @@ function MySchemePanel({ epicNo, mobile, onBack }) {
                       }}
                       onClick={() => openTracking(scheme)}
                     >
-                      <div style={{ maxWidth: '75%', zIndex: 2, position: 'relative' }}>
-                        <div className="scheme-card-header" style={{ marginBottom: 4 }}>
-                          <div>
-                            <div className="scheme-meta-cat" style={{ color: '#2ecc71', fontWeight: 700, fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.5px' }}>
-                              {t(scheme.category)}
-                            </div>
-                            <h3 className="scheme-title" style={{ fontSize: 18, fontWeight: 700, color: '#1d1d1f', margin: '3px 0 0 0', lineHeight: 1.25 }}>
-                              {scheme.id}. {scheme.title}
-                            </h3>
+                      <div style={{ maxWidth: '50%', zIndex: 2, position: 'relative' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 4, flexWrap: 'wrap' }}>
+                          <div className="scheme-meta-cat" style={{ color: '#2ecc71', fontWeight: 700, fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                            {t(scheme.category)}
                           </div>
                           <span style={{
                             display: 'inline-flex',
@@ -1490,29 +1485,33 @@ function MySchemePanel({ epicNo, mobile, onBack }) {
                             gap: 5,
                             background: sc.fg,
                             color: '#fff',
-                            padding: '5px 14px',
+                            padding: '3px 10px',
                             borderRadius: 20,
-                            fontSize: 11.5,
+                            fontSize: 10.5,
                             fontWeight: 700,
                             whiteSpace: 'nowrap',
-                            boxShadow: '0 2px 6px rgba(0,0,0,0.12)'
+                            boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
                           }}>
                             <i className={`bi ${sc.icon}`} /> {t(st)}
                           </span>
                         </div>
 
-                        <p className="scheme-overview" style={{ marginTop: 8, fontSize: 13, color: '#3b3b3b', lineHeight: 1.45, fontWeight: 500 }}>
+                        <h3 className="scheme-title" style={{ fontSize: 18, fontWeight: 700, color: '#1d1d1f', margin: '2px 0 0 0', lineHeight: 1.25 }}>
+                          {scheme.id}. {scheme.title}
+                        </h3>
+
+                        <p className="scheme-overview" style={{ marginTop: 8, marginBottom: 14, fontSize: 13, color: '#2d2d32', lineHeight: 1.5, fontWeight: 500 }}>
                           {scheme.overview}
                         </p>
 
-                        <div style={{ display: 'flex', gap: 12, alignItems: 'center', marginTop: 14, flexWrap: 'wrap' }}>
+                        <div style={{ display: 'flex', gap: 12, alignItems: 'center', flexWrap: 'wrap' }}>
                           <button
                             className="scheme-toggle-btn"
                             onClick={(e) => { e.stopPropagation(); openTracking(scheme); }}
                             style={{
                               display: 'inline-flex', alignItems: 'center', gap: 6,
                               background: '#2ecc71', color: '#ffffff', border: 'none',
-                              padding: '7px 16px', borderRadius: 10, fontSize: 12, fontWeight: 700,
+                              padding: '8px 18px', borderRadius: 10, fontSize: 12.5, fontWeight: 700,
                               cursor: 'pointer', boxShadow: '0 2px 8px rgba(46, 204, 113, 0.3)'
                             }}
                           >
@@ -1561,11 +1560,11 @@ function MySchemePanel({ epicNo, mobile, onBack }) {
                       style={{
                         border: '1px solid #e5e5ea',
                         borderRadius: 16,
-                        padding: '20px 22px',
+                        padding: '22px 24px',
                         cursor: 'pointer',
                         overflow: 'hidden',
                         position: 'relative',
-                        minHeight: 180,
+                        minHeight: 210,
                         boxSizing: 'border-box',
                         background: bgImg
                           ? `url("${encodeURI(bgImg)}") center / 100% 100% no-repeat`
@@ -1575,43 +1574,35 @@ function MySchemePanel({ epicNo, mobile, onBack }) {
                       }}
                       onClick={() => setExpandedId(isExpanded ? null : scheme.id)}
                     >
-                      <div style={{ maxWidth: '75%', zIndex: 2, position: 'relative' }}>
-                        <div className="scheme-card-header" style={{ marginBottom: 6 }}>
-                          <div>
-                            <div className="scheme-meta-cat" style={{ color: 'var(--color-saffron, #ea580c)', fontWeight: 700, fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.5px' }}>
-                              {t(scheme.category)}
-                            </div>
-                            <h3 className="scheme-title" style={{ fontSize: 18, fontWeight: 700, color: '#1d1d1f', margin: '3px 0 0 0', lineHeight: 1.25 }}>
-                              {scheme.id}. {scheme.title}
-                            </h3>
-                          </div>
-                          {scheme.highlight && (
-                            <span className="scheme-badge" style={{ background: '#fff', border: '1px solid #FF9933', color: '#ea580c', fontWeight: 700, fontSize: 10.5, padding: '4px 10px', borderRadius: 20 }}>
-                              {scheme.highlight}
-                            </span>
-                          )}
+                      <div style={{ maxWidth: '50%', zIndex: 2, position: 'relative' }}>
+                        <div className="scheme-meta-cat" style={{ color: 'var(--color-saffron, #ea580c)', fontWeight: 700, fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: 4 }}>
+                          {t(scheme.category)}
                         </div>
+
+                        <h3 className="scheme-title" style={{ fontSize: 18, fontWeight: 700, color: '#1d1d1f', margin: 0, lineHeight: 1.25 }}>
+                          {scheme.id}. {scheme.title}
+                        </h3>
 
                         <div className="scheme-tags-row" style={{ display: 'flex', gap: 6, flexWrap: 'wrap', margin: '8px 0' }}>
                           {scheme.tags.map((tItem, idx) => (
-                            <span key={idx} className="scheme-tag" style={{ background: 'rgba(255,255,255,0.85)', border: '1px solid #d2d2d7', color: '#1d1d1f', fontSize: 11, fontWeight: 600, padding: '2px 8px', borderRadius: 6 }}>
+                            <span key={idx} className="scheme-tag" style={{ background: 'rgba(255,255,255,0.88)', border: '1px solid #d2d2d7', color: '#1d1d1f', fontSize: 11, fontWeight: 600, padding: '2px 8px', borderRadius: 6 }}>
                               {tItem}
                             </span>
                           ))}
                         </div>
 
-                        <p className="scheme-overview" style={{ fontSize: 13, color: '#33333b', lineHeight: 1.45, fontWeight: 500, margin: '6px 0 12px 0' }}>
+                        <p className="scheme-overview" style={{ fontSize: 13, color: '#2d2d32', lineHeight: 1.5, fontWeight: 500, margin: '8px 0 14px 0' }}>
                           {scheme.overview}
                         </p>
 
-                        <div style={{ display: 'flex', gap: 12, alignItems: 'center', marginTop: 12, flexWrap: 'wrap' }}>
+                        <div style={{ display: 'flex', gap: 12, alignItems: 'center', flexWrap: 'wrap' }}>
                           <button
                             className="scheme-toggle-btn"
                             onClick={(e) => { e.stopPropagation(); setExpandedId(isExpanded ? null : scheme.id); }}
                             style={{
                               display: 'inline-flex', alignItems: 'center', gap: 6,
                               background: 'rgba(255,255,255,0.92)', border: '1px solid #c2c2c7',
-                              color: '#1d1d1f', padding: '6px 14px', borderRadius: 10, fontSize: 12, fontWeight: 700,
+                              color: '#1d1d1f', padding: '7px 16px', borderRadius: 10, fontSize: 12, fontWeight: 700,
                               cursor: 'pointer', boxShadow: '0 1px 3px rgba(0,0,0,0.1)'
                             }}
                           >
@@ -1631,7 +1622,7 @@ function MySchemePanel({ epicNo, mobile, onBack }) {
                               gap: 6,
                               backgroundColor: '#2ecc71',
                               color: '#FFFFFF',
-                              padding: '6px 18px',
+                              padding: '7px 20px',
                               borderRadius: 10,
                               fontWeight: 700,
                               border: 'none',
@@ -1647,7 +1638,7 @@ function MySchemePanel({ epicNo, mobile, onBack }) {
                         </div>
 
                         {isExpanded && (
-                          <div className="scheme-details-expanded" onClick={(e) => e.stopPropagation()} style={{ marginTop: 16, background: 'rgba(255,255,255,0.95)', padding: 16, borderRadius: 12, border: '1px solid #e5e5ea' }}>
+                          <div className="scheme-details-expanded" onClick={(e) => e.stopPropagation()} style={{ marginTop: 16, background: 'rgba(255,255,255,0.95)', padding: 16, borderRadius: 12, border: '1px solid #e5e5ea', width: '190%' }}>
                             <div>
                               <div className="details-section-title" style={{ fontWeight: 700, color: '#1d1d1f' }}>
                                 <i className="bi bi-info-circle-fill" style={{ color: '#ea580c' }} /> {t('Eligibility & Benefits')}
