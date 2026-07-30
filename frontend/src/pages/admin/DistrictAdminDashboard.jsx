@@ -261,10 +261,11 @@ const DistrictAdminDashboard = () => {
             <div style={{ fontSize: '14px', color: 'var(--color-slate)', fontWeight: '500' }}>Loading district stats for {admin.district}...</div>
             <div style={{ fontSize: '12px', color: 'var(--color-ash-gray)' }}>This may take a moment on first load</div>
             <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
-          </div>
         ) : statsData ? (
-        <div style={{ width: '100%', boxSizing: 'border-box' }}>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '16px', marginBottom: '24px', width: '100%' }}>
+          <div style={{ width: '100%', boxSizing: 'border-box' }}>
+            <div className="stat-cards-grid">
+
+
             {/* Stat 1: Total Voters in Electoral Roll (from READ DB) */}
             <div className="stat-card">
               <div className="stat-icon" style={{ background: '#eff6ff', color: '#2563eb' }}>
@@ -390,6 +391,7 @@ const DistrictAdminDashboard = () => {
 
 
         </div>
+      </div>
         ) : (
           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '80px 24px', gap: '12px' }}>
             <div style={{ fontSize: '32px' }}>⚠️</div>

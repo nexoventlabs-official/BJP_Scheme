@@ -168,7 +168,8 @@ const BoothAdminDashboard = () => {
           <div style={{ width: '100%', boxSizing: 'border-box' }}>
 
             {/* ── 4 Stat Cards ── */}
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '16px', marginBottom: '24px', width: '100%' }}>
+            <div className="stat-cards-grid">
+
 
               {/* Card 1: Total Voters in Electoral Roll (Read DB) */}
               <div className="stat-card">

@@ -423,7 +423,8 @@ const SuperAdminDashboard = () => {
           <div style={{ width: '100%', boxSizing: 'border-box' }}>
 
             {/* ── 4 Stat Cards ── */}
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '16px', marginBottom: '24px', width: '100%' }}>
+            <div className="stat-cards-grid">
+
 
               {/* Card 1: Total Voters in Electoral Roll (Read DB) */}
               <div className="stat-card">
@@ -1050,93 +1051,114 @@ const SuperAdminDashboard = () => {
       {/* ══════════════════════════════════════════ */}
       {/* PAGE 4: DISTRICT STATS                    */}
       {/* ══════════════════════════════════════════ */}
-      {subPage === 'districts' && statsData && (
-        <div className="campsite-card" style={{ width: '100%', padding: '24px', boxSizing: 'border-box' }}>
-          <h3 style={{ fontSize: '18px', fontWeight: '600', color: 'var(--color-midnight-ink)', marginBottom: '16px' }}>
-            District-wise Application Analytics
-          </h3>
-          <div style={{ width: '100%', overflowX: 'auto' }}>
-            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '13px' }}>
-              <thead>
-                <tr style={{ borderBottom: '2px solid var(--color-linen)', color: 'var(--color-slate)', textAlign: 'left', background: 'var(--color-fog-gray)' }}>
-                  <th style={{ padding: '10px' }}>District Name</th>
-                  <th style={{ padding: '10px' }}>Total Voters</th>
-                  <th style={{ padding: '10px' }}>Applied Voters</th>
-                  <th style={{ padding: '10px' }}>Total Applications</th>
-                  <th style={{ padding: '10px' }}>Approved</th>
-                  <th style={{ padding: '10px' }}>Pending</th>
-                </tr>
-              </thead>
-              <tbody>
-                {(statsData.districtStats || []).slice((distStatsPage - 1) * 10, distStatsPage * 10).map((row) => (
-                  <tr key={row._id} style={{ borderBottom: '1px solid var(--color-linen)', cursor: 'pointer' }}
-                    onClick={() => { setDistrictFilter(row._id); setAssemblyFilter(''); setBoothFilter(''); setStatusFilter(''); setSchemeFilter(''); navigateSubPage('applications'); }}
-                    onMouseEnter={e => e.currentTarget.style.background = 'var(--color-fog-gray)'}
-                    onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
-                  >
-                    <td style={{ padding: '10px', fontWeight: '600', color: 'var(--color-midnight-ink)' }}>{row._id}</td>
-                    <td style={{ padding: '10px', color: 'var(--color-slate)' }}>{row.totalVoters ? row.totalVoters.toLocaleString('en-IN') : '—'}</td>
-                    <td style={{ padding: '10px', color: '#0284c7', fontWeight: '700' }}>{row.appliedVoters ?? '—'}</td>
-                    <td style={{ padding: '10px', fontWeight: '600' }}>{row.totalApps}</td>
-                    <td style={{ padding: '10px', color: 'var(--color-forest-pulse)', fontWeight: '600' }}>{row.approved}</td>
-                    <td style={{ padding: '10px', color: 'var(--color-slate)' }}>{row.pending}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+      {(subPage === 'districts' || subPage === 'districtStats') && (
+        loadingStats ? (
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '80px 24px', gap: '16px' }}>
+            <div style={{ width: '40px', height: '40px', border: '4px solid var(--color-linen)', borderTopColor: 'var(--color-saffron)', borderRadius: '50%', animation: 'spin 0.8s linear infinite' }} />
+            <div style={{ fontSize: '14px', color: 'var(--color-slate)', fontWeight: '500' }}>Loading District Stats...</div>
           </div>
-          {renderPagination(distStatsPage, statsData.districtStats?.length || 0, 10, setDistStatsPage)}
-        </div>
+        ) : (
+          <div className="campsite-card" style={{ width: '100%', padding: '24px', boxSizing: 'border-box' }}>
+            <h3 style={{ fontSize: '18px', fontWeight: '600', color: 'var(--color-midnight-ink)', marginBottom: '16px' }}>
+              District-wise Application Analytics
+            </h3>
+            <div style={{ width: '100%', overflowX: 'auto' }}>
+              <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '13px' }}>
+                <thead>
+                  <tr style={{ borderBottom: '2px solid var(--color-linen)', color: 'var(--color-slate)', textAlign: 'left', background: 'var(--color-fog-gray)' }}>
+                    <th style={{ padding: '10px' }}>District Name</th>
+                    <th style={{ padding: '10px' }}>Total Voters</th>
+                    <th style={{ padding: '10px' }}>Applied Voters</th>
+                    <th style={{ padding: '10px' }}>Total Applications</th>
+                    <th style={{ padding: '10px' }}>Approved</th>
+                    <th style={{ padding: '10px' }}>Pending</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {(statsData?.districtStats || []).slice((distStatsPage - 1) * 10, distStatsPage * 10).map((row) => (
+                    <tr key={row._id} style={{ borderBottom: '1px solid var(--color-linen)', cursor: 'pointer' }}
+                      onClick={() => { setDistrictFilter(row._id); setAssemblyFilter(''); setBoothFilter(''); setStatusFilter(''); setSchemeFilter(''); navigateSubPage('applications'); }}
+                      onMouseEnter={e => e.currentTarget.style.background = 'var(--color-fog-gray)'}
+                      onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
+                    >
+                      <td style={{ padding: '10px', fontWeight: '600', color: 'var(--color-midnight-ink)' }}>{row._id}</td>
+                      <td style={{ padding: '10px', color: 'var(--color-slate)' }}>{row.totalVoters ? row.totalVoters.toLocaleString('en-IN') : '—'}</td>
+                      <td style={{ padding: '10px', color: '#0284c7', fontWeight: '700' }}>{row.appliedVoters ?? '—'}</td>
+                      <td style={{ padding: '10px', fontWeight: '600' }}>{row.totalApps}</td>
+                      <td style={{ padding: '10px', color: 'var(--color-forest-pulse)', fontWeight: '600' }}>{row.approved}</td>
+                      <td style={{ padding: '10px', color: 'var(--color-slate)' }}>{row.pending}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+            {renderPagination(distStatsPage, statsData?.districtStats?.length || 0, 10, setDistStatsPage)}
+          </div>
+        )
       )}
 
       {/* ══════════════════════════════════════════ */}
       {/* PAGE 5: ASSEMBLY STATS                    */}
       {/* ══════════════════════════════════════════ */}
-      {subPage === 'assemblies' && statsData && (
-        <div className="campsite-card" style={{ width: '100%', padding: '24px', boxSizing: 'border-box' }}>
-          <h3 style={{ fontSize: '18px', fontWeight: '600', color: 'var(--color-midnight-ink)', marginBottom: '16px' }}>
-            Assembly Constituency-wise Stats
-          </h3>
-          <div style={{ width: '100%', overflowX: 'auto' }}>
-            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '13px' }}>
-              <thead>
-                <tr style={{ borderBottom: '2px solid var(--color-linen)', color: 'var(--color-slate)', textAlign: 'left', background: 'var(--color-fog-gray)' }}>
-                  <th style={{ padding: '10px' }}>Assembly Constituency</th>
-                  <th style={{ padding: '10px' }}>District</th>
-                  <th style={{ padding: '10px' }}>Total Voters</th>
-                  <th style={{ padding: '10px' }}>Applied Voters</th>
-                  <th style={{ padding: '10px' }}>Total Applications</th>
-                  <th style={{ padding: '10px' }}>Approved</th>
-                  <th style={{ padding: '10px' }}>Pending</th>
-                </tr>
-              </thead>
-              <tbody>
-                {(statsData.assemblyStats || []).slice((assStatsPage - 1) * 15, assStatsPage * 15).map((row, idx) => (
-                  <tr key={idx} style={{ borderBottom: '1px solid var(--color-linen)', cursor: 'pointer' }}
-                    onClick={() => { setDistrictFilter(row._id.district); setAssemblyFilter(row._id.assemblyName); setBoothFilter(''); setStatusFilter(''); setSchemeFilter(''); navigateSubPage('applications'); }}
-                    onMouseEnter={e => e.currentTarget.style.background = 'var(--color-fog-gray)'}
-                    onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
-                  >
-                    <td style={{ padding: '10px', fontWeight: '600', color: 'var(--color-midnight-ink)' }}>{row._id.assemblyName}</td>
-                    <td style={{ padding: '10px', color: 'var(--color-slate)' }}>{row._id.district}</td>
-                    <td style={{ padding: '10px', color: 'var(--color-slate)' }}>{row.totalVoters ? row.totalVoters.toLocaleString('en-IN') : '—'}</td>
-                    <td style={{ padding: '10px', color: '#0284c7', fontWeight: '700' }}>{row.appliedVoters ?? '—'}</td>
-                    <td style={{ padding: '10px', fontWeight: '600' }}>{row.totalApps}</td>
-                    <td style={{ padding: '10px', color: 'var(--color-forest-pulse)', fontWeight: '600' }}>{row.approved}</td>
-                    <td style={{ padding: '10px', color: 'var(--color-slate)' }}>{row.pending}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+      {(subPage === 'assemblies' || subPage === 'assemblyStats') && (
+        loadingStats ? (
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '80px 24px', gap: '16px' }}>
+            <div style={{ width: '40px', height: '40px', border: '4px solid var(--color-linen)', borderTopColor: 'var(--color-saffron)', borderRadius: '50%', animation: 'spin 0.8s linear infinite' }} />
+            <div style={{ fontSize: '14px', color: 'var(--color-slate)', fontWeight: '500' }}>Loading Assembly Stats...</div>
           </div>
-          {renderPagination(assStatsPage, statsData.assemblyStats?.length || 0, 15, setAssStatsPage)}
-        </div>
+        ) : (
+          <div className="campsite-card" style={{ width: '100%', padding: '24px', boxSizing: 'border-box' }}>
+            <h3 style={{ fontSize: '18px', fontWeight: '600', color: 'var(--color-midnight-ink)', marginBottom: '16px' }}>
+              Assembly Constituency-wise Stats
+            </h3>
+            <div style={{ width: '100%', overflowX: 'auto' }}>
+              <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '13px' }}>
+                <thead>
+                  <tr style={{ borderBottom: '2px solid var(--color-linen)', color: 'var(--color-slate)', textAlign: 'left', background: 'var(--color-fog-gray)' }}>
+                    <th style={{ padding: '10px' }}>Assembly Constituency</th>
+                    <th style={{ padding: '10px' }}>District</th>
+                    <th style={{ padding: '10px' }}>Total Voters</th>
+                    <th style={{ padding: '10px' }}>Applied Voters</th>
+                    <th style={{ padding: '10px' }}>Total Applications</th>
+                    <th style={{ padding: '10px' }}>Approved</th>
+                    <th style={{ padding: '10px' }}>Pending</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {(statsData?.assemblyStats || []).slice((assStatsPage - 1) * 15, assStatsPage * 15).map((row, idx) => (
+                    <tr key={idx} style={{ borderBottom: '1px solid var(--color-linen)', cursor: 'pointer' }}
+                      onClick={() => { setDistrictFilter(row._id.district); setAssemblyFilter(row._id.assemblyName); setBoothFilter(''); setStatusFilter(''); setSchemeFilter(''); navigateSubPage('applications'); }}
+                      onMouseEnter={e => e.currentTarget.style.background = 'var(--color-fog-gray)'}
+                      onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
+                    >
+                      <td style={{ padding: '10px', fontWeight: '600', color: 'var(--color-midnight-ink)' }}>{row._id.assemblyName}</td>
+                      <td style={{ padding: '10px', color: 'var(--color-slate)' }}>{row._id.district}</td>
+                      <td style={{ padding: '10px', color: 'var(--color-slate)' }}>{row.totalVoters ? row.totalVoters.toLocaleString('en-IN') : '—'}</td>
+                      <td style={{ padding: '10px', color: '#0284c7', fontWeight: '700' }}>{row.appliedVoters ?? '—'}</td>
+                      <td style={{ padding: '10px', fontWeight: '600' }}>{row.totalApps}</td>
+                      <td style={{ padding: '10px', color: 'var(--color-forest-pulse)', fontWeight: '600' }}>{row.approved}</td>
+                      <td style={{ padding: '10px', color: 'var(--color-slate)' }}>{row.pending}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+            {renderPagination(assStatsPage, statsData?.assemblyStats?.length || 0, 15, setAssStatsPage)}
+          </div>
+        )
       )}
 
       {/* ══════════════════════════════════════════ */}
       {/* PAGE 6: BOOTH STATS                       */}
       {/* ══════════════════════════════════════════ */}
-      {subPage === 'booths' && statsData && (
+      {(subPage === 'booths' || subPage === 'boothStats') && (
+        loadingStats ? (
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '80px 24px', gap: '16px' }}>
+            <div style={{ width: '40px', height: '40px', border: '4px solid var(--color-linen)', borderTopColor: 'var(--color-saffron)', borderRadius: '50%', animation: 'spin 0.8s linear infinite' }} />
+            <div style={{ fontSize: '14px', color: 'var(--color-slate)', fontWeight: '500' }}>Loading Booth Stats...</div>
+          </div>
+        ) : (
+
         <div className="campsite-card" style={{ width: '100%', padding: '24px', boxSizing: 'border-box' }}>
           <h3 style={{ fontSize: '18px', fontWeight: '600', color: 'var(--color-midnight-ink)', marginBottom: '16px' }}>
             Polling Booth-wise Breakdown Stats
@@ -1175,9 +1197,11 @@ const SuperAdminDashboard = () => {
               </tbody>
             </table>
           </div>
-          {renderPagination(boothStatsPage, statsData.boothStats?.length || 0, 15, setBoothStatsPage)}
+          {renderPagination(boothStatsPage, statsData?.boothStats?.length || 0, 15, setBoothStatsPage)}
         </div>
+        )
       )}
+
 
       {/* ══════════════════════════════════════════ */}
       {/* PAGE 7: REPORTS & EXCEL EXPORT             */}

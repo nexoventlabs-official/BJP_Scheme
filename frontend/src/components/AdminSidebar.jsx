@@ -24,9 +24,9 @@ const AdminSidebar = ({
           { id: 'applications', label: 'Scheme Applications', icon: Users },
           { id: 'reports', label: 'Analytics & Reports', icon: BarChart3 },
           { id: 'logins', label: 'Admin Credentials', icon: KeyRound },
-          { id: 'districtStats', label: 'District Stats', icon: Building },
-          { id: 'assemblyStats', label: 'Assembly Stats', icon: MapPin },
-          { id: 'boothStats', label: 'Booth Stats', icon: Shield }
+          { id: 'districts', label: 'District Stats', icon: Building },
+          { id: 'assemblies', label: 'Assembly Stats', icon: MapPin },
+          { id: 'booths', label: 'Booth Stats', icon: Shield }
         ];
 
       case 'STATE_ADMIN':
@@ -195,7 +195,7 @@ const AdminSidebar = ({
 
         {navItems.map((item) => {
           const Icon = item.icon;
-          const isActive = activeTab === item.id;
+          const isActive = activeTab === item.id || (activeTab === 'districtStats' && item.id === 'districts') || (activeTab === 'assemblyStats' && item.id === 'assemblies') || (activeTab === 'boothStats' && item.id === 'booths');
 
           return (
             <a
