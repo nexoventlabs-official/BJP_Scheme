@@ -5,6 +5,15 @@ const THIRTY_MINUTES_MS = 30 * 60 * 1000; // 30 minutes inactivity limit
 
 export const AuthProvider = ({ children }) => {
   const isExpired = () => {
+    const cardCache = localStorage.getItem('bjp_card_cache');
+    if (cardCache) {
+      try {
+        const parsed = JSON.parse(cardCache);
+        if (parsed?.timestamp && (Date.now() - parsed.timestamp < THIRTY_MINUTES_MS)) {
+          return false;
+        }
+      } catch (_) {}
+    }
     const lastActive = localStorage.getItem('bjp_last_activity');
     if (!lastActive) return false;
     return Date.now() - parseInt(lastActive, 10) > THIRTY_MINUTES_MS;

@@ -15,8 +15,12 @@ api.interceptors.request.use((cfg) => {
   try {
     const userToken = localStorage.getItem('bjp_user_token')
     if (userToken) {
-      cfg.headers = cfg.headers || {}
-      cfg.headers['Authorization'] = `Bearer ${userToken}`
+      if (typeof cfg.headers?.set === 'function') {
+        cfg.headers.set('Authorization', `Bearer ${userToken}`)
+      } else {
+        cfg.headers = cfg.headers || {}
+        cfg.headers.Authorization = `Bearer ${userToken}`
+      }
     }
   } catch (_) { /* ignore storage errors */ }
   return cfg
@@ -26,6 +30,32 @@ api.interceptors.response.use(
   (response) => response.data,
   (error) => {
     if (error.response) {
+      // ONLY trigger session revocation when backend explicitly signals SESSION_REVOKED
+      // (e.g. user logged in on another device). Do NOT clear storage on standard 401s or missing tokens on page load.
+      const isSessionRevoked = error.response.data?.code === 'SESSION_REVOKED'
+      if (isSessionRevoked) {
+        try {
+          const reqAuth = error.config?.headers?.['Authorization'] || error.config?.headers?.['authorization'] || ''
+          const failedToken = String(reqAuth).replace(/^Bearer\s+/i, '').trim()
+          const currentToken = String(localStorage.getItem('bjp_user_token') || '').trim()
+
+          // Only clear localStorage if the failed token is STILL the current token.
+          // If a new login occurred and updated localStorage with a fresh token, preserve it!
+          if (!failedToken || !currentToken || failedToken === currentToken) {
+            localStorage.removeItem('bjp_user_token')
+            localStorage.removeItem('bjp_card_cache')
+            localStorage.removeItem('bjp_user_card')
+            localStorage.removeItem('bjp_user_epic')
+            localStorage.removeItem('bjp_user_mobile')
+            localStorage.removeItem('bjp_user_profile')
+            localStorage.removeItem('bjp_app_cache_v2')
+            sessionStorage.clear()
+          }
+        } catch (_) {}
+        if (typeof window !== 'undefined') {
+          window.dispatchEvent(new CustomEvent('bjp_session_revoked', { detail: error.response.data }))
+        }
+      }
       return Promise.reject(error.response.data || { message: 'Server error' })
     }
     if (error.code === 'ECONNABORTED') {

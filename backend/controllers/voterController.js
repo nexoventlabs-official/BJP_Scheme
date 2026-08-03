@@ -4,8 +4,8 @@ const { findVoterByEpic } = require('../services/voterSearchService');
 const User = require('../models/User');
 const OtpSession = require('../models/OtpSession');
 
-const generateToken = (id) => {
-  return jwt.sign({ id }, process.env.JWT_SECRET, {
+const generateToken = (id, tokenVersion = 1) => {
+  return jwt.sign({ id, tokenVersion }, process.env.JWT_SECRET, {
     expiresIn: '7d'
   });
 };
@@ -92,7 +92,9 @@ const confirmVoterRegistration = async (req, res) => {
     // Check duplicate
     let user = await User.findOne({ $or: [{ mobile: cleanMobile }, { epicNo: cleanEpic }] });
     if (user) {
-      const token = generateToken(user._id);
+      user.tokenVersion = (user.tokenVersion || 1) + 1;
+      await user.save();
+      const token = generateToken(user._id, user.tokenVersion);
       return res.status(200).json({
         success: true,
         message: 'User already registered. Logging in...',
@@ -116,10 +118,11 @@ const confirmVoterRegistration = async (req, res) => {
       boothNo: boothNo.trim(),
       gender: gender || 'Unspecified',
       referralCode,
-      referredBy: referredBy ? referredBy.trim() : null
+      referredBy: referredBy ? referredBy.trim() : null,
+      tokenVersion: 1
     });
 
-    const token = generateToken(user._id);
+    const token = generateToken(user._id, user.tokenVersion || 1);
 
     return res.status(201).json({
       success: true,

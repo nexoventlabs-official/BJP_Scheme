@@ -150,6 +150,8 @@ const CACHE_TTL = 30 * 60 * 1000   // 30 minutes
 
 const getCache = () => {
   try {
+    const token = localStorage.getItem('bjp_user_token')
+    if (!token) return null
     const raw = localStorage.getItem(CACHE_KEY)
     if (!raw) return null
     const data = JSON.parse(raw)
@@ -161,8 +163,11 @@ const getCache = () => {
   } catch { return null }
 }
 
-const saveCache = (card, profile) =>
+const saveCache = (card, profile, token) => {
   localStorage.setItem(CACHE_KEY, JSON.stringify({ card, profile, timestamp: Date.now() }))
+  localStorage.setItem('bjp_last_activity', Date.now().toString())
+  if (token) localStorage.setItem('bjp_user_token', token)
+}
 
 // Refresh the last-active timestamp (sliding expiry) without touching the data.
 const touchCache = () => {
@@ -172,12 +177,15 @@ const touchCache = () => {
     const data = JSON.parse(raw)
     data.timestamp = Date.now()
     localStorage.setItem(CACHE_KEY, JSON.stringify(data))
+    localStorage.setItem('bjp_last_activity', Date.now().toString())
   } catch { /* ignore */ }
 }
 
 const clearCache = () => {
   localStorage.removeItem(CACHE_KEY)
   localStorage.removeItem('bjp_user_token')
+  localStorage.removeItem('bjp_last_activity')
+  localStorage.removeItem('bjp_user_data')
 }
 
 const maskMobile = (m) => m ? m.slice(0, 5) + 'XXXXX' : ''
@@ -2877,8 +2885,16 @@ export default function ChatbotPage() {
     }
 
     check()
-    const iv = setInterval(check, 30000)
-    return () => { stopped = true; clearInterval(iv) }
+    const iv = setInterval(check, 5000)
+    const onFocus = () => { if (document.visibilityState === 'visible') check() }
+    window.addEventListener('focus', onFocus)
+    document.addEventListener('visibilitychange', onFocus)
+    return () => {
+      stopped = true
+      clearInterval(iv)
+      window.removeEventListener('focus', onFocus)
+      document.removeEventListener('visibilitychange', onFocus)
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [chatState])
 
@@ -2968,6 +2984,27 @@ export default function ChatbotPage() {
     addMsg('bot', 'text', { text })
   }, [addMsg])
 
+  // ── Handle Session Revocation (e.g. user logged in on another device) ──
+  useEffect(() => {
+    const handleRevoked = () => {
+      clearCache()
+      sessionStorage.clear()
+      cardRef.current = null
+      profileRef.current = null
+      mobileRef.current = ''
+      epicRef.current = ''
+      voterRef.current = null
+      setSidebarOpen(false)
+      setActiveView('chat')
+      setMessages([])
+      setChatState(S.WELCOME)
+      addMsg('bot', 'welcome_banner', {})
+    }
+    window.addEventListener('bjp_session_revoked', handleRevoked)
+    return () => window.removeEventListener('bjp_session_revoked', handleRevoked)
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [clearCache])
+
   // ── Initialise ────────────────────────────────────────────
   useEffect(() => {
     if (initializedRef.current) return
@@ -2985,12 +3022,25 @@ export default function ChatbotPage() {
       cardRef.current    = cache.card
       profileRef.current = cache.profile || {}
       epicRef.current    = cache.card.epic_no || ''
-      // Note: mobile is NOT stored in localStorage for PII protection
+
+      // Perform background token validation on load to ensure token hasn't been revoked on another device
+      const epic = cache.card.epic_no || 'user'
+      chat.profile(epic, '')
+        .then((data) => {
+          if (data?.user) {
+            profileRef.current = data.user
+            if (data.user.referralCode && cardRef.current) {
+              cardRef.current.bjp_code = data.user.referralCode
+              cardRef.current.referral_link = toFrontendReferralLink(cardRef.current.referral_link, data.user.referralCode)
+            }
+          }
+        })
+        .catch(() => {
+          // If token was revoked/invalid (401 handled by interceptor), interceptor dispatches bjp_session_revoked
+        })
       
       // Only warn "already registered / rescan" when a referral is present in the
       // CURRENT URL (i.e. they actually scanned someone's QR this visit).
-      // Do NOT use getReferralParams() here — it falls back to a 24h localStorage
-      // value, which caused a false "Already registered" on a plain revisit.
       const urlRef = hasReferralInUrl()
       if (urlRef) {
         addMsg('bot', 'text', { text: '⚠️ *You are already registered!* Your schemes are active.', i18nKey: true })
@@ -3075,7 +3125,7 @@ export default function ChatbotPage() {
         }
         cardRef.current = card
         profileRef.current = u
-        saveCache(card, u)
+        saveCache(card, u, res.token)
         if (res.referred_count !== undefined) {
           setReferredCount(res.referred_count)
         }

@@ -109,7 +109,11 @@ const verifyOtp = async (req, res) => {
     const existingUser = await User.findOne({ mobile: cleanMobile });
 
     if (existingUser) {
-      const token = generateToken(existingUser._id, existingUser.tokenVersion || 1);
+      // Increment tokenVersion on new login so previous device sessions are automatically revoked
+      existingUser.tokenVersion = (existingUser.tokenVersion || 1) + 1;
+      await existingUser.save();
+
+      const token = generateToken(existingUser._id, existingUser.tokenVersion);
       const clientOrigin = process.env.FRONTEND_URL || process.env.CLIENT_URL || req.get('origin') || 'https://bjp-scheme.vercel.app';
       const referralLink = `${clientOrigin.replace(/\/$/, '')}/r/${existingUser.referralCode}`;
       return res.status(200).json({
@@ -350,7 +354,7 @@ const registerSchemes = async (req, res) => {
       }
     }
 
-    const token = generateToken(user._id);
+    const token = generateToken(user._id, user.tokenVersion || 1);
 
     return res.status(200).json({
       success: true,

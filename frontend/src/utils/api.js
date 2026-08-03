@@ -9,10 +9,14 @@ API.interceptors.request.use((config) => {
   const userToken = localStorage.getItem('bjp_user_token');
   const adminToken = localStorage.getItem('bjp_admin_token');
 
-  if (config.url?.startsWith('/admin') && adminToken) {
-    config.headers.Authorization = `Bearer ${adminToken}`;
-  } else if (userToken) {
-    config.headers.Authorization = `Bearer ${userToken}`;
+  const token = (config.url?.startsWith('/admin') && adminToken) ? adminToken : userToken;
+  if (token) {
+    if (typeof config.headers?.set === 'function') {
+      config.headers.set('Authorization', `Bearer ${token}`);
+    } else {
+      config.headers = config.headers || {};
+      config.headers.Authorization = `Bearer ${token}`;
+    }
   }
 
   return config;

@@ -13,8 +13,10 @@ const protectUser = async (req, res, next) => {
       if (!req.user) {
         return res.status(401).json({ success: false, message: 'User token invalid or user not found' });
       }
-      if (decoded.tokenVersion !== undefined && req.user.tokenVersion !== undefined && decoded.tokenVersion !== req.user.tokenVersion) {
-        return res.status(401).json({ success: false, message: 'User session has been revoked. Please log in again.' });
+      const userTokenVersion = req.user.tokenVersion || 1;
+      const decodedTokenVersion = decoded.tokenVersion || 1;
+      if (decodedTokenVersion < userTokenVersion) {
+        return res.status(401).json({ success: false, code: 'SESSION_REVOKED', message: 'User session has been revoked because you logged in on another device.' });
       }
       return next();
     } catch (error) {
