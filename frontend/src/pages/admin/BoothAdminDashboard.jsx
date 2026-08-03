@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import API from '../../utils/api';
 import { useAuth } from '../../context/AuthContext';
 import StatusBadge from '../../components/StatusBadge';
-import MemberProfileTimelineView, { formatSchemeName, formatAppliedDateTime } from '../../components/MemberProfileTimelineView';
+import MemberProfileTimelineView, { formatSchemeName, formatAppliedDateTime, getSchemeBgImage } from '../../components/MemberProfileTimelineView';
 import ReportsView from '../../components/ReportsView';
 import { BJP_SCHEMES } from '../../utils/constants';
 import {
@@ -36,6 +36,22 @@ const BoothAdminDashboard = () => {
   const [statusFilter, setStatusFilter] = useState('');
   const [schemeFilter, setSchemeFilter] = useState('');
   const [selectedVoterTimeline, setSelectedVoterTimeline] = useState(null);
+
+  // ── My Voter Stats Page State ──
+  const [boothVoters, setBoothVoters] = useState([]);
+  const [loadingBoothVoters, setLoadingBoothVoters] = useState(false);
+  const [boothVotersTotalCount, setBoothVotersTotalCount] = useState(0);
+  const [boothVotersTotalPages, setBoothVotersTotalPages] = useState(1);
+  const [boothVotersPage, setBoothVotersPage] = useState(1);
+  const [boothVotersSearch, setBoothVotersSearch] = useState('');
+  const [boothVoterCategoryFilter, setBoothVoterCategoryFilter] = useState('');
+  const [boothVoterStatsSummary, setBoothVoterStatsSummary] = useState({
+    totalVoters: 0,
+    completedCount: 0,
+    inProgressCount: 0,
+    rejectedCount: 0,
+    notAppliedCount: 0
+  });
 
   const navigateSubPage = (pageKey) => {
     setSubPage(pageKey);
@@ -80,10 +96,42 @@ const BoothAdminDashboard = () => {
     }
   };
 
+  // ── Fetch Booth Voter Roll (Color-Coded & Filtered) ──
+  const fetchBoothVoterRoll = async (page = 1) => {
+    try {
+      setLoadingBoothVoters(true);
+      const params = new URLSearchParams({
+        page,
+        limit: LIMIT,
+        ...(boothVotersSearch && { search: boothVotersSearch }),
+        ...(boothVoterCategoryFilter && { statusCategory: boothVoterCategoryFilter })
+      });
+      const res = await API.get(`/admin/booth-voter-roll?${params}`);
+      if (res.data.success) {
+        setBoothVoters(res.data.voters || []);
+        setBoothVotersTotalCount(res.data.totalVoters || 0);
+        setBoothVotersTotalPages(res.data.totalPages || 1);
+        setBoothVotersPage(res.data.page || 1);
+        if (res.data.summaryStats) {
+          setBoothVoterStatsSummary(res.data.summaryStats);
+        }
+      }
+    } catch (err) {
+      console.error('Error fetching booth voter roll:', err);
+    } finally {
+      setLoadingBoothVoters(false);
+    }
+  };
+
   const fetchDashboardData = () => { fetchStats(); fetchVoters(1); };
 
   useEffect(() => { fetchStats(); }, []);
   useEffect(() => { fetchVoters(1); setCurrentPage(1); }, [searchQuery, statusFilter, schemeFilter]);
+  useEffect(() => {
+    if (subPage === 'voter_stats') {
+      fetchBoothVoterRoll(1);
+    }
+  }, [subPage, boothVotersSearch, boothVoterCategoryFilter]);
 
   const handleUpdateAppStatus = async (appId, updatePayload) => {
     try {
@@ -260,40 +308,69 @@ const BoothAdminDashboard = () => {
                 <span style={{ fontSize: '12px', color: 'var(--color-slate)' }}>Click any scheme to filter applications</span>
               </div>
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: '12px', width: '100%' }}>
-                {statsData.schemePopularity?.map((item) => (
-                  <div
-                    key={item._id}
-                    onClick={() => {
-                      setSchemeFilter(item._id);
-                      setStatusFilter('');
-                      navigateSubPage('applications');
-                    }}
-                    style={{
-                      padding: '14px', background: '#fff', borderRadius: '10px',
-                      border: '1px solid var(--color-linen)', cursor: 'pointer',
-                      boxShadow: '0 2px 4px rgba(0,0,0,0.03)', transition: 'all 0.2s ease'
-                    }}
-                    onMouseEnter={e => {
-                      e.currentTarget.style.borderColor = 'var(--color-saffron)';
-                      e.currentTarget.style.transform = 'translateY(-2px)';
-                      e.currentTarget.style.boxShadow = '0 4px 12px rgba(255, 153, 51, 0.18)';
-                    }}
-                    onMouseLeave={e => {
-                      e.currentTarget.style.borderColor = 'var(--color-linen)';
-                      e.currentTarget.style.transform = 'translateY(0)';
-                      e.currentTarget.style.boxShadow = '0 2px 4px rgba(0,0,0,0.03)';
-                    }}
-                  >
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                      <div style={{ fontSize: '14px', fontWeight: '700', color: 'var(--color-midnight-ink)' }}>{formatSchemeName(item._id)}</div>
-                      <span style={{ fontSize: '11px', color: 'var(--color-saffron)', fontWeight: '600' }}>View →</span>
+                {statsData.schemePopularity?.map((item) => {
+                  const bgImg = getSchemeBgImage(item._id);
+                  return (
+                    <div
+                      key={item._id}
+                      onClick={() => {
+                        setSchemeFilter(item._id);
+                        setStatusFilter('');
+                        navigateSubPage('applications');
+                      }}
+                      style={{
+                        padding: '14px 16px',
+                        borderRadius: '16px',
+                        border: '1px solid #e5e5ea',
+                        cursor: 'pointer',
+                        boxShadow: '0 2px 8px rgba(0,0,0,0.06)',
+                        transition: 'all 0.22s ease',
+                        overflow: 'hidden',
+                        position: 'relative',
+                        minHeight: '135px',
+                        height: '135px',
+                        display: 'flex',
+                        flexDirection: 'column',
+                        justifyContent: 'space-between',
+                        boxSizing: 'border-box',
+                        width: '100%',
+                        background: bgImg
+                          ? `url("${encodeURI(bgImg)}") center / 100% 100% no-repeat`
+                          : '#ffffff'
+                      }}
+                      onMouseEnter={e => {
+                        e.currentTarget.style.borderColor = 'var(--color-saffron)';
+                        e.currentTarget.style.transform = 'translateY(-3px)';
+                        e.currentTarget.style.boxShadow = '0 8px 20px rgba(255, 153, 51, 0.25)';
+                      }}
+                      onMouseLeave={e => {
+                        e.currentTarget.style.borderColor = '#e5e5ea';
+                        e.currentTarget.style.transform = 'translateY(0)';
+                        e.currentTarget.style.boxShadow = '0 2px 8px rgba(0,0,0,0.06)';
+                      }}
+                    >
+                      <div style={{ zIndex: 2, position: 'relative', maxWidth: '65%' }}>
+                        <div style={{ fontSize: '14px', fontWeight: '700', color: '#1d1d1f', lineHeight: '1.25' }}>
+                          {formatSchemeName(item._id)}
+                        </div>
+                        <div style={{ fontSize: '11px', color: '#555', marginTop: '2px', fontWeight: '500' }}>
+                          {item.cluster || 'Central Welfare Scheme'}
+                        </div>
+                      </div>
+                      <div style={{ zIndex: 2, position: 'relative' }}>
+                        <div style={{ fontSize: '22px', fontWeight: '800', color: '#1d1d1f' }}>
+                          {item.count}{' '}
+                          <span style={{ fontSize: '12px', color: '#555', fontWeight: '500' }}>
+                            applications
+                          </span>
+                        </div>
+                        <div style={{ fontSize: '11px', color: 'var(--color-saffron)', fontWeight: '700', marginTop: '2px' }}>
+                          View Applications →
+                        </div>
+                      </div>
                     </div>
-                    <div style={{ fontSize: '11px', color: 'var(--color-slate)', marginTop: '2px' }}>{item.cluster}</div>
-                    <div style={{ fontSize: '20px', fontWeight: '700', color: 'var(--color-midnight-ink)', marginTop: '8px' }}>
-                      {item.count} <span style={{ fontSize: '12px', color: 'var(--color-slate)', fontWeight: 'normal' }}>applications</span>
-                    </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             </div>
 
@@ -505,6 +582,338 @@ const BoothAdminDashboard = () => {
                 <style>{`@keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }`}</style>
               </div>
             )}
+          </div>
+        )
+      )}
+
+      {/* ══════════════════════════════════════════ */}
+      {/* PAGE 3: MY VOTER STATS (Color-Coded Roll)  */}
+      {/* ══════════════════════════════════════════ */}
+      {subPage === 'voter_stats' && (
+        selectedVoterTimeline ? (
+          <MemberProfileTimelineView
+            voterData={selectedVoterTimeline}
+            onBack={() => setSelectedVoterTimeline(null)}
+            onUpdateAppStatus={handleUpdateAppStatus}
+            onSelectVoter={(voter) => setSelectedVoterTimeline(voter)}
+          />
+        ) : (
+          <div style={{ width: '100%', display: 'flex', flexDirection: 'column', gap: '20px' }}>
+            
+            {/* ── Summary Cards Header (Click to Filter) ── */}
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '12px', width: '100%' }}>
+              
+              {/* Total Booth Voters */}
+              <div
+                onClick={() => setBoothVoterCategoryFilter('')}
+                style={{
+                  padding: '16px 20px', borderRadius: '16px', background: '#ffffff',
+                  border: !boothVoterCategoryFilter ? '2px solid var(--color-saffron)' : '1px solid #e5e5ea',
+                  boxShadow: !boothVoterCategoryFilter ? '0 4px 12px rgba(255, 153, 51, 0.2)' : '0 2px 8px rgba(0,0,0,0.04)',
+                  cursor: 'pointer', transition: 'all 0.2s ease'
+                }}
+                title="Click to view all voters"
+              >
+                <div style={{ fontSize: '12px', color: '#64748b', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '0.04em' }}>Total Booth Voters</div>
+                <div style={{ fontSize: '26px', fontWeight: '800', color: '#0f172a', marginTop: '4px' }}>
+                  {boothVoterStatsSummary.totalVoters.toLocaleString()}
+                </div>
+                <div style={{ fontSize: '11px', color: 'var(--color-saffron)', fontWeight: '600', marginTop: '2px' }}>
+                  {!boothVoterCategoryFilter ? '✓ Viewing All' : 'Click to View All →'}
+                </div>
+              </div>
+
+              {/* Completed / Approved (Light Green) */}
+              <div
+                onClick={() => setBoothVoterCategoryFilter(boothVoterCategoryFilter === 'completed' ? '' : 'completed')}
+                style={{
+                  padding: '16px 20px', borderRadius: '16px', background: '#f0fdf4',
+                  border: boothVoterCategoryFilter === 'completed' ? '2px solid #10b981' : '1px solid #bbf7d0',
+                  boxShadow: boothVoterCategoryFilter === 'completed' ? '0 4px 12px rgba(16, 185, 129, 0.25)' : '0 2px 8px rgba(16, 185, 129, 0.08)',
+                  cursor: 'pointer', transition: 'all 0.2s ease'
+                }}
+                title="Click to filter Completed / Approved voters"
+              >
+                <div style={{ fontSize: '12px', color: '#166534', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '0.04em' }}>🟢 Completed / Approved</div>
+                <div style={{ fontSize: '26px', fontWeight: '800', color: '#15803d', marginTop: '4px' }}>
+                  {boothVoterStatsSummary.completedCount.toLocaleString()}
+                </div>
+                <div style={{ fontSize: '11px', color: '#15803d', fontWeight: '600', marginTop: '2px' }}>
+                  {boothVoterCategoryFilter === 'completed' ? '✓ Filter Active' : 'Click to Filter →'}
+                </div>
+              </div>
+
+              {/* Applied / In Progress (Light Blue) */}
+              <div
+                onClick={() => setBoothVoterCategoryFilter(boothVoterCategoryFilter === 'in_progress' ? '' : 'in_progress')}
+                style={{
+                  padding: '16px 20px', borderRadius: '16px', background: '#eff6ff',
+                  border: boothVoterCategoryFilter === 'in_progress' ? '2px solid #3b82f6' : '1px solid #bfdbfe',
+                  boxShadow: boothVoterCategoryFilter === 'in_progress' ? '0 4px 12px rgba(59, 130, 246, 0.25)' : '0 2px 8px rgba(59, 130, 246, 0.08)',
+                  cursor: 'pointer', transition: 'all 0.2s ease'
+                }}
+                title="Click to filter Applied (In Progress) voters"
+              >
+                <div style={{ fontSize: '12px', color: '#1e40af', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '0.04em' }}>🔵 Applied (In Progress)</div>
+                <div style={{ fontSize: '26px', fontWeight: '800', color: '#1d4ed8', marginTop: '4px' }}>
+                  {boothVoterStatsSummary.inProgressCount.toLocaleString()}
+                </div>
+                <div style={{ fontSize: '11px', color: '#1d4ed8', fontWeight: '600', marginTop: '2px' }}>
+                  {boothVoterCategoryFilter === 'in_progress' ? '✓ Filter Active' : 'Click to Filter →'}
+                </div>
+              </div>
+
+              {/* Rejected (Light Red) */}
+              <div
+                onClick={() => setBoothVoterCategoryFilter(boothVoterCategoryFilter === 'rejected' ? '' : 'rejected')}
+                style={{
+                  padding: '16px 20px', borderRadius: '16px', background: '#fef2f2',
+                  border: boothVoterCategoryFilter === 'rejected' ? '2px solid #ef4444' : '1px solid #fecaca',
+                  boxShadow: boothVoterCategoryFilter === 'rejected' ? '0 4px 12px rgba(239, 68, 68, 0.25)' : '0 2px 8px rgba(239, 68, 68, 0.08)',
+                  cursor: 'pointer', transition: 'all 0.2s ease'
+                }}
+                title="Click to filter Rejected voters"
+              >
+                <div style={{ fontSize: '12px', color: '#991b1b', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '0.04em' }}>🔴 Rejected</div>
+                <div style={{ fontSize: '26px', fontWeight: '800', color: '#b91c1c', marginTop: '4px' }}>
+                  {boothVoterStatsSummary.rejectedCount.toLocaleString()}
+                </div>
+                <div style={{ fontSize: '11px', color: '#b91c1c', fontWeight: '600', marginTop: '2px' }}>
+                  {boothVoterCategoryFilter === 'rejected' ? '✓ Filter Active' : 'Click to Filter →'}
+                </div>
+              </div>
+
+              {/* Not Applied (Light Gray) */}
+              <div
+                onClick={() => setBoothVoterCategoryFilter(boothVoterCategoryFilter === 'not_applied' ? '' : 'not_applied')}
+                style={{
+                  padding: '16px 20px', borderRadius: '16px', background: '#f8fafc',
+                  border: boothVoterCategoryFilter === 'not_applied' ? '2px solid #64748b' : '1px solid #e2e8f0',
+                  boxShadow: boothVoterCategoryFilter === 'not_applied' ? '0 4px 12px rgba(100, 116, 139, 0.25)' : '0 2px 8px rgba(0,0,0,0.02)',
+                  cursor: 'pointer', transition: 'all 0.2s ease'
+                }}
+                title="Click to filter Not Applied voters"
+              >
+                <div style={{ fontSize: '12px', color: '#475569', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '0.04em' }}>⚪ Not Applied</div>
+                <div style={{ fontSize: '26px', fontWeight: '800', color: '#334155', marginTop: '4px' }}>
+                  {boothVoterStatsSummary.notAppliedCount.toLocaleString()}
+                </div>
+                <div style={{ fontSize: '11px', color: '#334155', fontWeight: '600', marginTop: '2px' }}>
+                  {boothVoterCategoryFilter === 'not_applied' ? '✓ Filter Active' : 'Click to Filter →'}
+                </div>
+              </div>
+
+            </div>
+
+            {/* ── Table Card ── */}
+            <div className="campsite-card" style={{ width: '100%', padding: '24px', boxSizing: 'border-box' }}>
+              
+              {/* Search & Filter Pills Row */}
+              <div style={{ display: 'flex', gap: '14px', flexWrap: 'wrap', marginBottom: '18px', width: '100%', alignItems: 'center', justifyContent: 'space-between' }}>
+                <div style={{ flex: '1 1 280px', position: 'relative' }}>
+                  <Search size={16} style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: 'var(--color-ash-gray)' }} />
+                  <input
+                    type="text"
+                    placeholder={`Search Booth ${admin.boothNo} voters by name, EPIC, or mobile...`}
+                    value={boothVotersSearch}
+                    onChange={(e) => setBoothVotersSearch(e.target.value)}
+                    className="form-control"
+                    style={{ paddingLeft: '38px' }}
+                  />
+                </div>
+
+                <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', alignItems: 'center', fontSize: '12px', fontWeight: '600' }}>
+                  <button
+                    type="button"
+                    onClick={() => setBoothVoterCategoryFilter(boothVoterCategoryFilter === 'completed' ? '' : 'completed')}
+                    style={{
+                      display: 'inline-flex', alignItems: 'center', gap: '5px', padding: '6px 14px', borderRadius: '20px',
+                      background: boothVoterCategoryFilter === 'completed' ? '#10b981' : '#f0fdf4',
+                      color: boothVoterCategoryFilter === 'completed' ? '#ffffff' : '#166534',
+                      border: '1.5px solid #10b981', cursor: 'pointer', transition: 'all 0.15s ease', fontWeight: '700'
+                    }}
+                  >
+                    🟢 Completed ({boothVoterStatsSummary.completedCount})
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => setBoothVoterCategoryFilter(boothVoterCategoryFilter === 'in_progress' ? '' : 'in_progress')}
+                    style={{
+                      display: 'inline-flex', alignItems: 'center', gap: '5px', padding: '6px 14px', borderRadius: '20px',
+                      background: boothVoterCategoryFilter === 'in_progress' ? '#3b82f6' : '#eff6ff',
+                      color: boothVoterCategoryFilter === 'in_progress' ? '#ffffff' : '#1e40af',
+                      border: '1.5px solid #3b82f6', cursor: 'pointer', transition: 'all 0.15s ease', fontWeight: '700'
+                    }}
+                  >
+                    🔵 Applied ({boothVoterStatsSummary.inProgressCount})
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => setBoothVoterCategoryFilter(boothVoterCategoryFilter === 'rejected' ? '' : 'rejected')}
+                    style={{
+                      display: 'inline-flex', alignItems: 'center', gap: '5px', padding: '6px 14px', borderRadius: '20px',
+                      background: boothVoterCategoryFilter === 'rejected' ? '#ef4444' : '#fef2f2',
+                      color: boothVoterCategoryFilter === 'rejected' ? '#ffffff' : '#991b1b',
+                      border: '1.5px solid #ef4444', cursor: 'pointer', transition: 'all 0.15s ease', fontWeight: '700'
+                    }}
+                  >
+                    🔴 Rejected ({boothVoterStatsSummary.rejectedCount})
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => setBoothVoterCategoryFilter(boothVoterCategoryFilter === 'not_applied' ? '' : 'not_applied')}
+                    style={{
+                      display: 'inline-flex', alignItems: 'center', gap: '5px', padding: '6px 14px', borderRadius: '20px',
+                      background: boothVoterCategoryFilter === 'not_applied' ? '#64748b' : '#f8fafc',
+                      color: boothVoterCategoryFilter === 'not_applied' ? '#ffffff' : '#475569',
+                      border: '1.5px solid #64748b', cursor: 'pointer', transition: 'all 0.15s ease', fontWeight: '700'
+                    }}
+                  >
+                    ⚪ Not Applied ({boothVoterStatsSummary.notAppliedCount})
+                  </button>
+                </div>
+              </div>
+
+              {/* Voter Table */}
+              <div style={{ width: '100%', overflowX: 'auto' }}>
+                <table style={{ width: '100%', borderCollapse: 'separate', borderSpacing: '0 6px', fontSize: '13px' }}>
+                  <thead>
+                    <tr style={{ color: 'var(--color-slate)', textAlign: 'left', background: 'var(--color-fog-gray)' }}>
+                      <th style={{ padding: '12px 12px', borderRadius: '8px 0 0 8px' }}>SL#</th>
+                      <th style={{ padding: '12px 12px' }}>Voter Name &amp; EPIC</th>
+                      <th style={{ padding: '12px 12px' }}>Booth / House No.</th>
+                      <th style={{ padding: '12px 12px' }}>Age / Gender</th>
+                      <th style={{ padding: '12px 12px' }}>Mobile</th>
+                      <th style={{ padding: '12px 12px' }}>Status</th>
+                      <th style={{ padding: '12px 12px' }}>Schemes</th>
+                      <th style={{ padding: '12px 12px', textAlign: 'right', borderRadius: '0 8px 8px 0' }}>Action</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {loadingBoothVoters ? (
+                      Array.from({ length: 8 }).map((_, i) => (
+                        <tr key={i}>
+                          {Array.from({ length: 8 }).map((_, j) => (
+                            <td key={j} style={{ padding: '14px 12px', background: '#fff' }}>
+                              <div style={{ height: '14px', borderRadius: '6px', background: 'var(--color-linen)', animation: 'pulse 1.4s ease-in-out infinite', width: '70%' }} />
+                            </td>
+                          ))}
+                        </tr>
+                      ))
+                    ) : boothVoters.length === 0 ? (
+                      <tr>
+                        <td colSpan={8} style={{ padding: '40px', textAlign: 'center', color: 'var(--color-slate)', background: '#fff', borderRadius: '12px' }}>
+                          <div style={{ fontSize: '32px', marginBottom: '8px' }}>🔍</div>
+                          No voters found in Booth {admin.boothNo} matching your search.
+                        </td>
+                      </tr>
+                    ) : (
+                      boothVoters.map((voter) => {
+                        let rowBg = '#f8fafc';
+                        let leftBorder = '4px solid #94a3b8';
+                        let statusBadge = <span style={{ padding: '4px 10px', borderRadius: '12px', fontSize: '11px', fontWeight: '700', background: '#e2e8f0', color: '#475569' }}>⚪ Not Applied</span>;
+
+                        if (voter.statusCategory === 'completed') {
+                          rowBg = '#f0fdf4';
+                          leftBorder = '4px solid #10b981';
+                          statusBadge = <span style={{ padding: '4px 10px', borderRadius: '12px', fontSize: '11px', fontWeight: '700', background: '#dcfce7', color: '#15803d' }}>🟢 {voter.latestStatus}</span>;
+                        } else if (voter.statusCategory === 'in_progress') {
+                          rowBg = '#eff6ff';
+                          leftBorder = '4px solid #3b82f6';
+                          statusBadge = <span style={{ padding: '4px 10px', borderRadius: '12px', fontSize: '11px', fontWeight: '700', background: '#dbeafe', color: '#1d4ed8' }}>🔵 {voter.latestStatus}</span>;
+                        } else if (voter.statusCategory === 'rejected') {
+                          rowBg = '#fef2f2';
+                          leftBorder = '4px solid #ef4444';
+                          statusBadge = <span style={{ padding: '4px 10px', borderRadius: '12px', fontSize: '11px', fontWeight: '700', background: '#fee2e2', color: '#b91c1c' }}>🔴 Rejected</span>;
+                        }
+
+                        return (
+                          <tr
+                            key={voter.epicNo}
+                            style={{
+                              background: rowBg,
+                              borderLeft: leftBorder,
+                              borderRadius: '8px',
+                              boxShadow: '0 1px 3px rgba(0,0,0,0.03)',
+                              cursor: voter.applicationsCount > 0 ? 'pointer' : 'default',
+                              transition: 'transform 0.15s ease'
+                            }}
+                            onClick={() => {
+                              if (voter.applicationsCount > 0) {
+                                setSelectedVoterTimeline({
+                                  voterName: voter.voterName,
+                                  epicNo: voter.epicNo,
+                                  mobile: voter.mobile,
+                                  applications: voter.applications
+                                });
+                              }
+                            }}
+                          >
+                            <td style={{ padding: '12px 12px', fontWeight: '700', color: '#64748b' }}>{voter.slNo}</td>
+                            <td style={{ padding: '12px 12px' }}>
+                              <div style={{ fontWeight: '700', color: '#0f172a' }}>{voter.voterName}</div>
+                              <div style={{ fontSize: '11px', color: '#64748b', fontFamily: 'monospace' }}>{voter.epicNo}</div>
+                            </td>
+                            <td style={{ padding: '12px 12px', color: '#475569', fontWeight: '600' }}>{voter.houseNo || '—'}</td>
+                            <td style={{ padding: '12px 12px', color: '#475569' }}>{voter.age > 0 ? `${voter.age} yrs / ${voter.gender}` : voter.gender}</td>
+                            <td style={{ padding: '12px 12px', fontWeight: '600', color: '#0f172a' }}>{voter.mobile}</td>
+                            <td style={{ padding: '12px 12px' }}>{statusBadge}</td>
+                            <td style={{ padding: '12px 12px' }}>
+                              {voter.applicationsCount > 0 ? (
+                                <span style={{ fontSize: '12px', fontWeight: '700', color: '#0f172a' }}>
+                                  {voter.applicationsCount} Scheme{voter.applicationsCount > 1 ? 's' : ''}
+                                </span>
+                              ) : (
+                                <span style={{ fontSize: '12px', color: '#94a3b8' }}>0 Schemes</span>
+                              )}
+                            </td>
+                            <td style={{ padding: '12px 12px', textAlign: 'right' }}>
+                              {voter.mobile && voter.mobile !== '—' && (
+                                <button
+                                  onClick={(e) => { e.stopPropagation(); window.location.href = `tel:${voter.mobile}`; }}
+                                  className="btn btn-ghost"
+                                  style={{ padding: '5px 10px', fontSize: '12px' }}
+                                >
+                                  <PhoneCall size={13} /> Call
+                                </button>
+                              )}
+                            </td>
+                          </tr>
+                        );
+                      })
+                    )}
+                  </tbody>
+                </table>
+              </div>
+
+              {/* Pagination */}
+              {!loadingBoothVoters && boothVotersTotalPages > 1 && (
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', marginTop: '24px', flexWrap: 'wrap' }}>
+                  <button
+                    onClick={() => fetchBoothVoterRoll(boothVotersPage - 1)}
+                    disabled={boothVotersPage === 1}
+                    className="btn btn-ghost"
+                    style={{ padding: '6px 14px', fontSize: '13px', opacity: boothVotersPage === 1 ? 0.4 : 1 }}
+                  >← Prev</button>
+
+                  <span style={{ fontSize: '13px', color: '#64748b', fontWeight: '600', padding: '0 8px' }}>
+                    Page {boothVotersPage} of {boothVotersTotalPages}
+                  </span>
+
+                  <button
+                    onClick={() => fetchBoothVoterRoll(boothVotersPage + 1)}
+                    disabled={boothVotersPage === boothVotersTotalPages}
+                    className="btn btn-ghost"
+                    style={{ padding: '6px 14px', fontSize: '13px', opacity: boothVotersPage === boothVotersTotalPages ? 0.4 : 1 }}
+                  >Next →</button>
+                </div>
+              )}
+
+            </div>
+
           </div>
         )
       )}

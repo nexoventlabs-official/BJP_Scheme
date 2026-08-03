@@ -14,7 +14,8 @@ const {
   getFilterMeta,
   updateApplicationStatus,
   createAdminCredential,
-  getAllAdmins
+  getAllAdmins,
+  getBoothVoterRoll
 } = require('../controllers/adminController');
 const { protectAdmin, authorizeRoles } = require('../middleware/authMiddleware');
 
@@ -30,6 +31,7 @@ router.get('/dashboard-stats', protectAdmin, getDashboardStats);
 router.get('/filter-meta', protectAdmin, getFilterMeta);
 router.get('/member-referrals', protectAdmin, getMemberReferrals);
 router.get('/applications', protectAdmin, getApplicationsList);
+router.get('/booth-voter-roll', protectAdmin, getBoothVoterRoll);
 router.get('/export-csv', protectAdmin, exportApplicationsCsv);
 router.get('/export-excel', protectAdmin, exportApplicationsExcel);
 router.put('/applications/:id/status', protectAdmin, updateApplicationStatus);

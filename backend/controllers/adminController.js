@@ -1383,6 +1383,209 @@ const exportApplicationsExcel = async (req, res) => {
   }
 };
 
+// @desc    Get Booth Voter Roll with Application Status & Color Coding
+// @route   GET /api/admin/booth-voter-roll
+// @access  Private (Admin)
+const getBoothVoterRoll = async (req, res) => {
+  try {
+    const admin = req.admin;
+    const {
+      page = 1,
+      limit = 20,
+      search = '',
+      statusCategory = '', // 'completed', 'in_progress' / 'applied', 'rejected', 'not_applied'
+      boothNo: queryBoothNo,
+      assemblyName: queryAssemblyName
+    } = req.query;
+
+    const targetBooth = queryBoothNo || admin.boothNo;
+    const targetAssembly = queryAssemblyName || admin.assemblyName;
+
+    if (!targetBooth || !targetAssembly) {
+      return res.status(400).json({ success: false, message: 'Assembly name and booth number are required' });
+    }
+
+    const assemblies = await getAssemblyMetadata();
+    const match = assemblies.find(a => a.assemblyName.toUpperCase() === targetAssembly.toUpperCase());
+    if (!match) {
+      return res.status(404).json({ success: false, message: `Assembly '${targetAssembly}' not found` });
+    }
+
+    const voterDb = await getVoterDbClient();
+    const col = voterDb.collection(match.colName);
+
+    const COMPLETED_STATUSES = new Set(['Completed', 'Verified', 'Approved']);
+    const REJECTED_STATUSES = new Set(['Rejected']);
+
+    // Fetch all scheme applications for this booth to compute category sets & summary stats
+    const allBoothApps = await SchemeApplication.find({
+      district: new RegExp('^' + escapeRegex(admin.district || match.district) + '$', 'i'),
+      assemblyName: new RegExp('^' + escapeRegex(targetAssembly) + '$', 'i'),
+      boothNo: String(targetBooth)
+    }).select('epicNo status');
+
+    const boothAppEpicsMap = {};
+    allBoothApps.forEach(a => {
+      if (!boothAppEpicsMap[a.epicNo]) boothAppEpicsMap[a.epicNo] = [];
+      boothAppEpicsMap[a.epicNo].push(a.status);
+    });
+
+    const completedEpics = [];
+    const inProgressEpics = [];
+    const rejectedEpics = [];
+    const allAppliedEpics = Object.keys(boothAppEpicsMap);
+
+    Object.entries(boothAppEpicsMap).forEach(([epic, statuses]) => {
+      if (statuses.some(s => COMPLETED_STATUSES.has(s))) {
+        completedEpics.push(epic);
+      } else if (statuses.every(s => REJECTED_STATUSES.has(s))) {
+        rejectedEpics.push(epic);
+      } else {
+        inProgressEpics.push(epic);
+      }
+    });
+
+    // Build MongoDB filter query for voter roll collection
+    const filter = { PART_NO: String(targetBooth) };
+
+    if (search && search.trim() !== '') {
+      const cleanSearch = escapeRegex(search.trim());
+      filter.$or = [
+        { EPIC_NO: new RegExp(cleanSearch, 'i') },
+        { VOTER_NAME: new RegExp(cleanSearch, 'i') },
+        { MOBILE: new RegExp(cleanSearch, 'i') }
+      ];
+    }
+
+    // Apply status category filter if provided
+    const cleanCategory = String(statusCategory || '').trim().toLowerCase();
+    if (cleanCategory === 'completed') {
+      filter.EPIC_NO = { $in: completedEpics };
+    } else if (cleanCategory === 'in_progress' || cleanCategory === 'applied') {
+      filter.EPIC_NO = { $in: inProgressEpics };
+    } else if (cleanCategory === 'rejected') {
+      filter.EPIC_NO = { $in: rejectedEpics };
+    } else if (cleanCategory === 'not_applied') {
+      filter.EPIC_NO = { $nin: allAppliedEpics };
+    }
+
+    const pageNum = Math.max(1, parseInt(page) || 1);
+    const limitNum = Math.min(100, Math.max(1, parseInt(limit) || 20));
+    const skip = (pageNum - 1) * limitNum;
+
+    // Total voter count in booth matching current filter
+    const totalFilteredVoters = await col.countDocuments(filter);
+    
+    // Overall total voters in booth (unfiltered)
+    const overallBoothVotersCount = await col.countDocuments({ PART_NO: String(targetBooth) });
+
+    // Fetch page of voters
+    const rawVoters = await col.find(filter)
+      .sort({ SL_NO: 1 })
+      .skip(skip)
+      .limit(limitNum)
+      .toArray();
+
+    const epicNos = rawVoters.map(v => v.EPIC_NO).filter(Boolean);
+
+    // Fetch matching SchemeApplications for current page
+    const pageApplications = await SchemeApplication.find({
+      epicNo: { $in: epicNos }
+    }).sort({ appliedAt: -1 });
+
+    const appMap = {};
+    pageApplications.forEach(app => {
+      if (!appMap[app.epicNo]) appMap[app.epicNo] = [];
+      appMap[app.epicNo].push(app);
+    });
+
+    // Also fetch registered Users for mobile numbers
+    const registeredUsers = await User.find({
+      epicNo: { $in: epicNos }
+    }).select('epicNo mobile');
+
+    const userMobileMap = {};
+    registeredUsers.forEach(u => {
+      userMobileMap[u.epicNo] = u.mobile;
+    });
+
+    const formattedVoters = rawVoters.map((v, idx) => {
+      const epic = v.EPIC_NO;
+      const apps = appMap[epic] || [];
+      const mobile = userMobileMap[epic] || v.MOBILE_NUMBER || v.MOBILE || '—';
+      const rawHouse = v.HOUSE_NO || v.DOOR_NO || v.HOUSE_NUMBER || v.HOUSE_NMBR || v.SECTION_NO;
+      const houseNo = rawHouse && String(rawHouse).trim() !== '' && String(rawHouse).trim() !== '-' 
+        ? String(rawHouse).trim() 
+        : `Booth ${v.PART_NO || targetBooth}`;
+      const rawAge = parseInt(v.AGE);
+      const age = (!isNaN(rawAge) && rawAge > 0) ? rawAge : 0;
+
+      let cat = 'not_applied'; // gray
+      let latestStatus = 'Not Applied';
+
+      if (apps.length > 0) {
+        const hasCompleted = apps.some(a => COMPLETED_STATUSES.has(a.status));
+        const hasRejected = apps.some(a => REJECTED_STATUSES.has(a.status));
+
+        if (hasCompleted) {
+          cat = 'completed'; // green
+          latestStatus = apps.find(a => COMPLETED_STATUSES.has(a.status))?.status || 'Approved';
+        } else if (hasRejected && apps.every(a => REJECTED_STATUSES.has(a.status))) {
+          cat = 'rejected'; // red
+          latestStatus = 'Rejected';
+        } else {
+          cat = 'in_progress'; // blue
+          latestStatus = apps[0]?.status || 'In Progress';
+        }
+      }
+
+      return {
+        slNo: v.SL_NO || String(skip + idx + 1),
+        epicNo: epic,
+        voterName: v.VOTER_NAME,
+        fatherName: v.RELATION_NAME || v.FATHER_NAME || '—',
+        houseNo,
+        gender: v.GENDER || 'Unspecified',
+        age,
+        mobile,
+        partNo: v.PART_NO || String(targetBooth),
+        applicationsCount: apps.length,
+        applications: apps.map(a => ({
+          id: a._id,
+          schemeName: a.schemeName,
+          status: a.status,
+          appliedAt: a.appliedAt
+        })),
+        statusCategory: cat,
+        latestStatus
+      };
+    });
+
+    const notAppliedCount = Math.max(0, overallBoothVotersCount - allAppliedEpics.length);
+
+    return res.status(200).json({
+      success: true,
+      boothNo: String(targetBooth),
+      assemblyName: targetAssembly,
+      district: match.district,
+      totalVoters: totalFilteredVoters,
+      page: pageNum,
+      totalPages: Math.ceil(totalFilteredVoters / limitNum) || 1,
+      voters: formattedVoters,
+      summaryStats: {
+        totalVoters: overallBoothVotersCount,
+        completedCount: completedEpics.length,
+        inProgressCount: inProgressEpics.length,
+        rejectedCount: rejectedEpics.length,
+        notAppliedCount
+      }
+    });
+  } catch (error) {
+    console.error('[getBoothVoterRoll Error]:', error);
+    return res.status(500).json({ success: false, message: 'Failed to fetch booth voter roll' });
+  }
+};
+
 module.exports = {
   adminLogin,
   getAssembliesList,
@@ -1397,5 +1600,6 @@ module.exports = {
   getFilterMeta,
   updateApplicationStatus,
   createAdminCredential,
-  getAllAdmins
+  getAllAdmins,
+  getBoothVoterRoll
 };

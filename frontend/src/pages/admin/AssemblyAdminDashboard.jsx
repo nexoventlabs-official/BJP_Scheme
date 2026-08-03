@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import API from '../../utils/api';
 import { useAuth } from '../../context/AuthContext';
 import StatusBadge from '../../components/StatusBadge';
-import MemberProfileTimelineView, { formatSchemeName, formatAppliedDateTime } from '../../components/MemberProfileTimelineView';
+import MemberProfileTimelineView, { formatSchemeName, formatAppliedDateTime, getSchemeBgImage } from '../../components/MemberProfileTimelineView';
 import ReportsView from '../../components/ReportsView';
 import { BJP_SCHEMES } from '../../utils/constants';
 import {
@@ -260,40 +260,69 @@ const AssemblyAdminDashboard = () => {
                 <span style={{ fontSize: '12px', color: 'var(--color-slate)' }}>Click any scheme to filter applications</span>
               </div>
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: '12px', width: '100%' }}>
-                {statsData.schemePopularity?.map((item) => (
-                  <div
-                    key={item._id}
-                    onClick={() => {
-                      setSchemeFilter(item._id);
-                      setStatusFilter('');
-                      navigateSubPage('applications');
-                    }}
-                    style={{
-                      padding: '14px', background: '#fff', borderRadius: '10px',
-                      border: '1px solid var(--color-linen)', cursor: 'pointer',
-                      boxShadow: '0 2px 4px rgba(0,0,0,0.03)', transition: 'all 0.2s ease'
-                    }}
-                    onMouseEnter={e => {
-                      e.currentTarget.style.borderColor = 'var(--color-saffron)';
-                      e.currentTarget.style.transform = 'translateY(-2px)';
-                      e.currentTarget.style.boxShadow = '0 4px 12px rgba(255, 153, 51, 0.18)';
-                    }}
-                    onMouseLeave={e => {
-                      e.currentTarget.style.borderColor = 'var(--color-linen)';
-                      e.currentTarget.style.transform = 'translateY(0)';
-                      e.currentTarget.style.boxShadow = '0 2px 4px rgba(0,0,0,0.03)';
-                    }}
-                  >
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                      <div style={{ fontSize: '14px', fontWeight: '700', color: 'var(--color-midnight-ink)' }}>{formatSchemeName(item._id)}</div>
-                      <span style={{ fontSize: '11px', color: 'var(--color-saffron)', fontWeight: '600' }}>View →</span>
+                {statsData.schemePopularity?.map((item) => {
+                  const bgImg = getSchemeBgImage(item._id);
+                  return (
+                    <div
+                      key={item._id}
+                      onClick={() => {
+                        setSchemeFilter(item._id);
+                        setStatusFilter('');
+                        navigateSubPage('applications');
+                      }}
+                      style={{
+                        padding: '14px 16px',
+                        borderRadius: '16px',
+                        border: '1px solid #e5e5ea',
+                        cursor: 'pointer',
+                        boxShadow: '0 2px 8px rgba(0,0,0,0.06)',
+                        transition: 'all 0.22s ease',
+                        overflow: 'hidden',
+                        position: 'relative',
+                        minHeight: '135px',
+                        height: '135px',
+                        display: 'flex',
+                        flexDirection: 'column',
+                        justifyContent: 'space-between',
+                        boxSizing: 'border-box',
+                        width: '100%',
+                        background: bgImg
+                          ? `url("${encodeURI(bgImg)}") center / 100% 100% no-repeat`
+                          : '#ffffff'
+                      }}
+                      onMouseEnter={e => {
+                        e.currentTarget.style.borderColor = 'var(--color-saffron)';
+                        e.currentTarget.style.transform = 'translateY(-3px)';
+                        e.currentTarget.style.boxShadow = '0 8px 20px rgba(255, 153, 51, 0.25)';
+                      }}
+                      onMouseLeave={e => {
+                        e.currentTarget.style.borderColor = '#e5e5ea';
+                        e.currentTarget.style.transform = 'translateY(0)';
+                        e.currentTarget.style.boxShadow = '0 2px 8px rgba(0,0,0,0.06)';
+                      }}
+                    >
+                      <div style={{ zIndex: 2, position: 'relative', maxWidth: '65%' }}>
+                        <div style={{ fontSize: '14px', fontWeight: '700', color: '#1d1d1f', lineHeight: '1.25' }}>
+                          {formatSchemeName(item._id)}
+                        </div>
+                        <div style={{ fontSize: '11px', color: '#555', marginTop: '2px', fontWeight: '500' }}>
+                          {item.cluster || 'Central Welfare Scheme'}
+                        </div>
+                      </div>
+                      <div style={{ zIndex: 2, position: 'relative' }}>
+                        <div style={{ fontSize: '22px', fontWeight: '800', color: '#1d1d1f' }}>
+                          {item.count}{' '}
+                          <span style={{ fontSize: '12px', color: '#555', fontWeight: '500' }}>
+                            applications
+                          </span>
+                        </div>
+                        <div style={{ fontSize: '11px', color: 'var(--color-saffron)', fontWeight: '700', marginTop: '2px' }}>
+                          View Applications →
+                        </div>
+                      </div>
                     </div>
-                    <div style={{ fontSize: '11px', color: 'var(--color-slate)', marginTop: '2px' }}>{item.cluster}</div>
-                    <div style={{ fontSize: '20px', fontWeight: '700', color: 'var(--color-midnight-ink)', marginTop: '8px' }}>
-                      {item.count} <span style={{ fontSize: '12px', color: 'var(--color-slate)', fontWeight: 'normal' }}>applications</span>
-                    </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             </div>
 

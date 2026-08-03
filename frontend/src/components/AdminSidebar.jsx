@@ -1,6 +1,6 @@
 import React from 'react';
 import {
-  LayoutDashboard, Users, Building, Shield, LogOut, ChevronLeft, ChevronRight, KeyRound, BarChart3, MapPin
+  LayoutDashboard, Users, Building, Shield, LogOut, ChevronLeft, ChevronRight, KeyRound, BarChart3, MapPin, FileText
 } from 'lucide-react';
 
 /**
@@ -57,7 +57,8 @@ const AdminSidebar = ({
       case 'BOOTH_ADMIN':
         return [
           { id: 'dashboard', label: 'Overview Dashboard', icon: LayoutDashboard },
-          { id: 'applications', label: 'Booth Members', icon: Users }
+          { id: 'applications', label: 'Application Requests', icon: FileText },
+          { id: 'voter_stats', label: 'My Voter Stats', icon: Users }
         ];
 
       default:
