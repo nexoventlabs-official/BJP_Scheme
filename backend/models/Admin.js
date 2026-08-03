@@ -33,6 +33,10 @@ const adminSchema = new mongoose.Schema({
     type: String,
     default: 'SYSTEM'
   },
+  tokenVersion: {
+    type: Number,
+    default: 1
+  },
   createdAt: {
     type: Date,
     default: Date.now

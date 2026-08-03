@@ -134,83 +134,84 @@ app.use('/api/schemes', schemeRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/referrals', referralRoutes);
 
-// Health Check
-app.get('/api/health', (req, res) => {
-  res.json({ status: 'OK', message: 'BJP Nalam Thittam API is running smoothly' });
+// Health Check (Verifies Application & Database Readiness)
+app.get('/api/health', async (req, res) => {
+  try {
+    const mongooseState = mongoose.connection.readyState;
+    const isDbConnected = mongooseState === 1;
+
+    let voterDbConnected = false;
+    try {
+      const voterDb = await getVoterDbClient();
+      const pingRes = await voterDb.admin().ping();
+      voterDbConnected = pingRes && pingRes.ok === 1;
+    } catch {
+      voterDbConnected = false;
+    }
+
+    const healthy = isDbConnected && voterDbConnected;
+
+    res.status(healthy ? 200 : 503).json({
+      status: healthy ? 'OK' : 'DEGRADED',
+      message: healthy ? 'BJP Nalam Thittam API is running smoothly' : 'Database connection issues detected',
+      timestamp: new Date().toISOString(),
+      databases: {
+        app_db: isDbConnected ? 'CONNECTED' : 'DISCONNECTED',
+        voter_db: voterDbConnected ? 'CONNECTED' : 'DISCONNECTED'
+      }
+    });
+  } catch (error) {
+    res.status(503).json({ status: 'ERROR', message: error.message });
+  }
 });
 
 // Seed Required Default Admin Credentials
 const seedDefaultAdmins = async () => {
   try {
-    // 1. Super Admin: admin / admin
+    const superAdminPassword = process.env.SUPER_ADMIN_PASSWORD || 'SetStrongSuperAdminPassword2026!';
+    const stateAdminPassword = process.env.STATE_ADMIN_PASSWORD || 'SetStrongStateAdminPassword2026!';
+
+    // 1. Super Admin: admin
     const superAdmin = await Admin.findOne({ username: 'admin' });
     if (!superAdmin) {
       await Admin.create({
         username: 'admin',
-        password: 'admin',
+        password: superAdminPassword,
         role: 'SUPER_ADMIN',
         createdBy: 'SYSTEM_SEED'
       });
-      console.log('[Admin Seed] Created Super Admin: admin / admin');
+      console.log('[Admin Seed] Created Super Admin: admin');
     }
 
-    // 2. State Admin: BJP / BJP@2026
+    // 2. State Admin: BJP
     const stateAdmin = await Admin.findOne({ username: 'BJP' });
     if (!stateAdmin) {
       await Admin.create({
         username: 'BJP',
-        password: 'BJP@2026',
+        password: stateAdminPassword,
         role: 'STATE_ADMIN',
         createdBy: 'SYSTEM_SEED'
       });
-      console.log('[Admin Seed] Created State Admin: BJP / BJP@2026');
-    }
-
-    // 3. Sample District Admin (Chengalpattu)
-    const distAdmin = await Admin.findOne({ username: 'district_chengalpattu' });
-    if (!distAdmin) {
-      await Admin.create({
-        username: 'district_chengalpattu',
-        password: 'BJP@2026',
-        role: 'DISTRICT_ADMIN',
-        district: 'CHENGALPATTU',
-        createdBy: 'SYSTEM_SEED'
-      });
-      console.log('[Admin Seed] Created District Admin: district_chengalpattu / BJP@2026');
-    }
-
-    // 4. Sample Assembly Admin (Thiruporur)
-    const assAdmin = await Admin.findOne({ username: 'ass_thiruporur' });
-    if (!assAdmin) {
-      await Admin.create({
-        username: 'ass_thiruporur',
-        password: 'BJP@2026',
-        role: 'ASSEMBLY_ADMIN',
-        district: 'CHENGALPATTU',
-        assemblyName: 'Thiruporur',
-        createdBy: 'SYSTEM_SEED'
-      });
-      console.log('[Admin Seed] Created Assembly Admin: ass_thiruporur / BJP@2026');
-    }
-
-    // 5. Sample Booth Admin (Thiruporur Booth 1)
-    const boothAdmin = await Admin.findOne({ username: 'booth_thiruporur_1' });
-    if (!boothAdmin) {
-      await Admin.create({
-        username: 'booth_thiruporur_1',
-        password: 'BJP@2026',
-        role: 'BOOTH_ADMIN',
-        district: 'CHENGALPATTU',
-        assemblyName: 'Thiruporur',
-        boothNo: '1',
-        createdBy: 'SYSTEM_SEED'
-      });
-      console.log('[Admin Seed] Created Booth Admin: booth_thiruporur_1 / BJP@2026');
+      console.log('[Admin Seed] Created State Admin: BJP');
     }
   } catch (err) {
     console.error('[Admin Seed Error]:', err.message);
   }
 };
+
+// Global Express Error Handler Middleware
+app.use((err, req, res, next) => {
+  console.error('[Unhandled Global Error]:', err);
+  if (res.headersSent) {
+    return next(err);
+  }
+  res.status(err.status || 500).json({
+    success: false,
+    message: process.env.NODE_ENV === 'production' 
+      ? 'An unexpected server error occurred.' 
+      : (err.message || 'Internal server error')
+  });
+});
 
 const PORT = process.env.PORT || 5000;
 

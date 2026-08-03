@@ -45,7 +45,8 @@ const generateAdminToken = (admin) => {
       district: admin.district,
       assemblyName: admin.assemblyName,
       boothNo: admin.boothNo,
-      isAdmin: true
+      isAdmin: true,
+      tokenVersion: admin.tokenVersion || 1
     },
     process.env.JWT_SECRET,
     { expiresIn: '7d' }

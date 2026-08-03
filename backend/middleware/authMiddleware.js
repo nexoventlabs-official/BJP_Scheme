@@ -13,6 +13,9 @@ const protectUser = async (req, res, next) => {
       if (!req.user) {
         return res.status(401).json({ success: false, message: 'User token invalid or user not found' });
       }
+      if (decoded.tokenVersion !== undefined && req.user.tokenVersion !== undefined && decoded.tokenVersion !== req.user.tokenVersion) {
+        return res.status(401).json({ success: false, message: 'User session has been revoked. Please log in again.' });
+      }
       return next();
     } catch (error) {
       return res.status(401).json({ success: false, message: 'Unauthorized: Invalid token' });
@@ -49,6 +52,9 @@ const protectAdmin = async (req, res, next) => {
 
       if (!req.admin) {
         return res.status(401).json({ success: false, message: 'Admin session expired or admin deleted' });
+      }
+      if (decoded.tokenVersion !== undefined && req.admin.tokenVersion !== undefined && decoded.tokenVersion !== req.admin.tokenVersion) {
+        return res.status(401).json({ success: false, message: 'Admin session has been revoked. Please log in again.' });
       }
       return next();
     } catch (error) {

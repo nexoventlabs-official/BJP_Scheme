@@ -51,10 +51,17 @@ const userSchema = new mongoose.Schema({
     type: String, // referral code of inviter
     default: null
   },
+  tokenVersion: {
+    type: Number,
+    default: 1
+  },
   createdAt: {
     type: Date,
     default: Date.now
   }
 });
+
+userSchema.index({ district: 1, assemblyName: 1, boothNo: 1 });
+userSchema.index({ createdAt: -1 });
 
 module.exports = mongoose.model('User', userSchema);

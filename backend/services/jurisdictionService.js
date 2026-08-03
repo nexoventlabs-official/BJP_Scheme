@@ -83,16 +83,17 @@ const getAssemblyMetadata = async () => {
     list.sort((a, b) => parseInt(a.assemblyNo) - parseInt(b.assemblyNo));
     assemblyCache = list;
 
+const Admin = require('../models/Admin');
+
     // Build district array
     const sortedDistricts = Object.values(distMap).sort((a, b) => a.district.localeCompare(b.district));
     districtCache = sortedDistricts.map((d, idx) => {
-      const passcode = String(60228001 + idx);
       const username = `${d.slug}_admin`;
       return {
         district: d.district,
         assembliesCount: d.assembliesCount,
         username,
-        passcode
+        passcode: 'DB_PROTECTED'
       };
     });
 
@@ -113,17 +114,14 @@ const getDistrictCredentialsList = async () => {
 const getAssemblyCredentialsList = async () => {
   const assemblies = await getAssemblyMetadata();
   return assemblies.map((a) => {
-    const numNo = parseInt(a.assemblyNo) || 1;
-    const passcode = String(60227000 + numNo);
     const username = `${a.slug}_admin`;
-
     return {
       assemblyNo: a.assemblyNo,
       assemblyName: a.assemblyName,
       district: a.district,
       label: a.label,
       username,
-      passcode
+      passcode: 'DB_PROTECTED'
     };
   });
 };
@@ -148,14 +146,11 @@ const getBoothCredentialsForAssembly = async (assemblyNo) => {
   }
 
   const boothLogins = boothNumbers.map((bNo) => {
-    const numericB = parseInt(bNo) || 1;
-    const passcode = String(60227680 + numericB);
     const username = `${target.slug}_b${bNo}`;
-
     return {
       boothNo: String(bNo),
       username,
-      passcode
+      passcode: 'DB_PROTECTED'
     };
   });
 
@@ -168,70 +163,117 @@ const getBoothCredentialsForAssembly = async (assemblyNo) => {
   };
 };
 
-// Dynamic Admin Authentication Helper
+// Dynamic Admin Authentication Helper — Loads & Verifies Credentials from MongoDB Database
 const authenticateDynamicAdmin = async (username, password) => {
   const cleanUsername = username.trim().toLowerCase();
-  const assemblies = await getAssemblyMetadata();
-  const districts = await getDistrictCredentialsList();
+  const cleanPassword = password.trim();
 
-  // 1. Check Booth Admin Username format: e.g. gummidipoondi_b1 or ass33_b1
+  // 1. Direct MongoDB lookup for any seeded / dynamic admin account
+  const dbAdmin = await Admin.findOne({ username: cleanUsername });
+  if (dbAdmin) {
+    const isMatch = await dbAdmin.matchPassword(cleanPassword);
+    if (isMatch) {
+      return {
+        _id: dbAdmin._id,
+        username: dbAdmin.username,
+        role: dbAdmin.role,
+        district: dbAdmin.district,
+        assemblyName: dbAdmin.assemblyName,
+        boothNo: dbAdmin.boothNo,
+        tokenVersion: dbAdmin.tokenVersion || 1
+      };
+    }
+  }
+
+  // 2. Initial On-Demand Seeding for Valid Jurisdiction Passcodes
+  const assemblies = await getAssemblyMetadata();
+  const districts = Object.values(districtCache || {});
+
+  // Check Booth Admin Username format: e.g. gummidipoondi_b1 or ass33_b1
   const boothMatch = cleanUsername.match(/^([a-z0-9]+)_b([0-9]+)$/);
   if (boothMatch) {
     const slug = boothMatch[1];
     const boothNo = boothMatch[2];
-
     const targetAssembly = assemblies.find(a => a.slug === slug || `ass${a.assemblyNo}` === slug);
-    if (targetAssembly) {
-      const numericB = parseInt(boothNo) || 1;
-      const expectedPasscode = String(60227680 + numericB);
 
-      if (password === expectedPasscode) {
-        return {
-          _id: `DYNAMIC_BOOTH_${targetAssembly.assemblyNo}_${boothNo}`,
+    if (targetAssembly) {
+      const initialSeedPassword = process.env.BOOTH_ADMIN_DEFAULT_PASSWORD || `BJP@Booth${boothNo}#2026`;
+      if (cleanPassword === initialSeedPassword) {
+        const newAdmin = await Admin.create({
           username: cleanUsername,
+          password: cleanPassword,
           role: 'BOOTH_ADMIN',
           district: targetAssembly.district,
           assemblyName: targetAssembly.assemblyName,
-          boothNo: String(boothNo)
+          boothNo: String(boothNo),
+          createdBy: 'AUTO_JURISDICTION_SEED'
+        });
+        return {
+          _id: newAdmin._id,
+          username: newAdmin.username,
+          role: newAdmin.role,
+          district: newAdmin.district,
+          assemblyName: newAdmin.assemblyName,
+          boothNo: newAdmin.boothNo,
+          tokenVersion: newAdmin.tokenVersion || 1
         };
       }
     }
   }
 
-  // 2. Check Assembly Admin Username format: e.g. gummidipoondi_admin or ass33_admin
+  // Check Assembly Admin Username format: e.g. gummidipoondi_admin or ass33_admin
   const assMatch = cleanUsername.match(/^([a-z0-9]+)_admin$/);
   if (assMatch) {
     const slug = assMatch[1];
     const targetAssembly = assemblies.find(a => a.slug === slug || `ass${a.assemblyNo}` === slug);
 
     if (targetAssembly) {
-      const numNo = parseInt(targetAssembly.assemblyNo) || 1;
-      const expectedPasscode = String(60227000 + numNo);
-
-      if (password === expectedPasscode) {
-        return {
-          _id: `DYNAMIC_ASS_${targetAssembly.assemblyNo}`,
+      const initialSeedPassword = process.env.ASSEMBLY_ADMIN_DEFAULT_PASSWORD || `BJP@Ass${targetAssembly.assemblyNo}#2026`;
+      if (cleanPassword === initialSeedPassword) {
+        const newAdmin = await Admin.create({
           username: cleanUsername,
+          password: cleanPassword,
           role: 'ASSEMBLY_ADMIN',
           district: targetAssembly.district,
           assemblyName: targetAssembly.assemblyName,
-          boothNo: null
+          boothNo: null,
+          createdBy: 'AUTO_JURISDICTION_SEED'
+        });
+        return {
+          _id: newAdmin._id,
+          username: newAdmin.username,
+          role: newAdmin.role,
+          district: newAdmin.district,
+          assemblyName: newAdmin.assemblyName,
+          boothNo: null,
+          tokenVersion: newAdmin.tokenVersion || 1
         };
       }
     }
   }
 
-  // 3. Check District Admin Username format: e.g. thiruvallur_admin or chengalpattu_admin
+  // Check District Admin Username format: e.g. thiruvallur_admin or chengalpattu_admin
   const distObj = districts.find(d => d.username.toLowerCase() === cleanUsername);
   if (distObj) {
-    if (password === distObj.passcode) {
-      return {
-        _id: `DYNAMIC_DIST_${cleanSlug(distObj.district)}`,
+    const initialSeedPassword = process.env.DISTRICT_ADMIN_DEFAULT_PASSWORD || `BJP@Dist${cleanSlug(distObj.district)}#2026`;
+    if (cleanPassword === initialSeedPassword) {
+      const newAdmin = await Admin.create({
         username: cleanUsername,
+        password: cleanPassword,
         role: 'DISTRICT_ADMIN',
         district: distObj.district,
         assemblyName: null,
-        boothNo: null
+        boothNo: null,
+        createdBy: 'AUTO_JURISDICTION_SEED'
+      });
+      return {
+        _id: newAdmin._id,
+        username: newAdmin.username,
+        role: newAdmin.role,
+        district: newAdmin.district,
+        assemblyName: null,
+        boothNo: null,
+        tokenVersion: newAdmin.tokenVersion || 1
       };
     }
   }
