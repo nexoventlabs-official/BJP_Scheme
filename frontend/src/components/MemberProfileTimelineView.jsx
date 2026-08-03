@@ -66,15 +66,68 @@ const SCHEME_ALIASES = [
   { key: 'e-Shram', keywords: ['shram', 'eshram'] }
 ];
 
+const LOCAL_SCHEME_IMAGES = {
+  1: "/schemes/PMSBY.png",
+  2: "/schemes/PMJJBY.png",
+  3: "/schemes/APY.png",
+  4: "/schemes/PM SVANidhi.png",
+  5: "/schemes/PM Mudra Shishu.png",
+  6: "/schemes/PM Mudra Kishor.png",
+  7: "/schemes/Udyam.png",
+  8: "/schemes/Stand Up India.png",
+  9: "/schemes/Startup Seed Fund.png",
+  10: "/schemes/PM Kisan.png",
+  11: "/schemes/PM Fasal Bima.png",
+  12: "/schemes/PM Kisan Maan Dhan.png",
+  13: "/schemes/Ayushman Bharat.png",
+  14: "/schemes/ABHA.png",
+  15: "/schemes/PM Ujjwala.png",
+  16: "/schemes/PM Matru Vandana.png",
+  17: "/schemes/Sukanya Samridhi.png",
+  18: "/schemes/PM Awas Yojana.png",
+  19: "/schemes/PMKVY.png",
+  20: "/schemes/NSP Scholarship.png",
+  21: "/schemes/PM Vishwakarma.png",
+  22: "/schemes/Jan Dhan.png",
+  23: "/schemes/e-Shram.png"
+};
+
 export const getSchemeBgImage = (schemeIdOrName) => {
   if (!schemeIdOrName) return null;
+
+  // Handle full scheme objects passed from ChatbotPage (e.g. {id:9, title:"...", ...})
+  if (typeof schemeIdOrName === 'object' && !Array.isArray(schemeIdOrName)) {
+    const id = schemeIdOrName.id;
+    if (id && LOCAL_SCHEME_IMAGES[id]) return LOCAL_SCHEME_IMAGES[id];
+    // Try title string
+    const title = schemeIdOrName.title || schemeIdOrName.name_en || '';
+    const titleMatch = String(title).match(/^(\d+)\./);
+    if (titleMatch && LOCAL_SCHEME_IMAGES[Number(titleMatch[1])]) {
+      return LOCAL_SCHEME_IMAGES[Number(titleMatch[1])];
+    }
+    // Fall through with title string for keyword matching
+    return getSchemeBgImage(title || String(id || ''));
+  }
+
+  // Handle numeric IDs
+  const numId = parseInt(String(schemeIdOrName), 10);
+  if (!isNaN(numId) && numId > 0 && LOCAL_SCHEME_IMAGES[numId]) {
+    return LOCAL_SCHEME_IMAGES[numId];
+  }
+
+  // Handle "9. Startup India..." style title strings
+  const idMatch = String(schemeIdOrName).match(/^(\d+)\./);
+  if (idMatch && LOCAL_SCHEME_IMAGES[Number(idMatch[1])]) {
+    return LOCAL_SCHEME_IMAGES[Number(idMatch[1])];
+  }
+
+  // Fallback: keyword / Cloudinary lookup
   const name = formatSchemeName(schemeIdOrName);
   let rawUrl = CLOUDINARY_SCHEME_IMAGES[name];
 
   if (!rawUrl) {
     const lower = String(name).toLowerCase().trim();
-    
-    // 1. Check exact key or substring match
+
     for (const [key, path] of Object.entries(CLOUDINARY_SCHEME_IMAGES)) {
       const kLower = key.toLowerCase();
       if (kLower === lower || lower.includes(kLower) || kLower.includes(lower)) {
@@ -83,7 +136,6 @@ export const getSchemeBgImage = (schemeIdOrName) => {
       }
     }
 
-    // 2. Check alias keywords
     if (!rawUrl) {
       for (const item of SCHEME_ALIASES) {
         if (item.keywords.some(kw => lower.includes(kw))) {

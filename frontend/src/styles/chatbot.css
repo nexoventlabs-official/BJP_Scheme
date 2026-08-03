@@ -495,10 +495,11 @@
 }
 
 .banner-content h2 {
-  font-size: var(--text-heading-sm);
+  font-size: clamp(22px, 6.5vw, var(--text-heading-sm));
   font-family: var(--font-display);
-  font-weight: 600;
+  font-weight: 700;
   margin: 0;
+  line-height: 1.25;
   color: var(--color-chalk);
 }
 
@@ -527,6 +528,45 @@
 
 .btn-start:hover {
   opacity: 0.9;
+}
+
+/* ── Scheme Selection Grid ────────────────────────────────── */
+.scheme-selection-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 6px;
+}
+
+.scheme-selection-card {
+  padding: 8px;
+  border-radius: 10px;
+  transition: all 0.18s ease;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  justify-content: space-between;
+  min-height: 90px;
+  height: 90px;
+  position: relative;
+  overflow: hidden;
+  box-sizing: border-box;
+}
+
+/* Mobile: 2 columns, taller cards, larger font size */
+@media (max-width: 600px) {
+  .scheme-selection-grid {
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 8px !important;
+  }
+  .scheme-selection-card {
+    min-height: 105px !important;
+    height: 105px !important;
+    padding: 10px !important;
+  }
+  .scheme-selection-card .scheme-card-name {
+    font-size: 11.5px !important;
+    line-height: 1.25 !important;
+  }
 }
 
 /* ── Voter details card ───────────────────────────────────── */
@@ -2130,4 +2170,165 @@
   flex-shrink: 0 !important;
   margin-left: 6px !important;
 }
+
+/* ── Language Switcher Toggle ── */
+.lang-toggle-group {
+  display: inline-flex;
+  align-items: center;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 20px;
+  padding: 2px;
+  gap: 2px;
+}
+
+.lang-toggle-btn {
+  border: none;
+  background: transparent;
+  color: var(--color-ash, #aaa);
+  font-size: 11px;
+  font-weight: 700;
+  padding: 4px 10px;
+  border-radius: 16px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+.lang-toggle-btn:hover {
+  color: var(--color-chalk, #fff);
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.lang-toggle-btn.active {
+  background: #FF9933;
+  color: #ffffff;
+  box-shadow: 0 2px 8px rgba(255, 153, 51, 0.4);
+}
+
+/* ── Responsive Scheme Card Layout (Mobile / Tablet / PC) ── */
+.scheme-card-responsive {
+  border-radius: 16px;
+  overflow: hidden;
+  position: relative;
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 3px 14px rgba(0, 0, 0, 0.05);
+  box-sizing: border-box;
+  background-color: #fffaf4;
+  display: flex;
+  flex-direction: column;
+  padding: 0px !important;
+}
+
+.scheme-card-responsive:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(255, 153, 51, 0.15);
+}
+
+.scheme-card-header-area {
+  position: relative;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+/* PC / Desktop View */
+@media (min-width: 769px) {
+  .scheme-card-header-area {
+    min-height: 220px;
+    padding: 22px 24px;
+    position: relative;
+    overflow: hidden;
+    z-index: 2;
+  }
+  .scheme-card-desktop-bg {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-size: 100% 100%;
+    background-position: center right;
+    background-repeat: no-repeat;
+    pointer-events: none;
+    z-index: 1;
+  }
+  .scheme-card-desktop-left {
+    max-width: 55%;
+    z-index: 2;
+    position: relative;
+  }
+  .scheme-card-mobile-banner {
+    display: none !important;
+  }
+  .scheme-card-desktop-only-meta {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 6px;
+    flex-wrap: wrap;
+  }
+  .scheme-card-expanded-body {
+    position: relative;
+    z-index: 2;
+    padding: 0 24px 22px 24px;
+    width: 100%;
+    box-sizing: border-box;
+  }
+}
+
+/* Mobile & Tablet View */
+@media (max-width: 768px) {
+  .scheme-card-responsive {
+    display: flex;
+    flex-direction: column;
+    padding: 0 !important;
+    background-color: #ffffff !important;
+    background-image: none !important;
+  }
+  .scheme-card-header-area {
+    display: flex;
+    flex-direction: column;
+    padding: 0 !important;
+  }
+  .scheme-card-desktop-bg {
+    display: none !important;
+  }
+  .scheme-card-desktop-left {
+    max-width: 100% !important;
+    padding: 16px;
+    z-index: 2;
+    background: #ffffff;
+  }
+  .scheme-card-mobile-banner {
+    width: 100%;
+    height: 180px;
+    background-size: 100% 100% !important;
+    background-position: center !important;
+    background-repeat: no-repeat !important;
+    position: relative;
+    border-bottom: 1px solid rgba(255, 153, 51, 0.15);
+  }
+  .scheme-card-expanded-body {
+    padding: 0 16px 16px 16px;
+    background: #ffffff;
+  }
+  .scheme-view-details-btn {
+    display: none !important;
+  }
+  .scheme-card-mobile-banner-overlay {
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+    z-index: 3;
+  }
+  .scheme-card-desktop-only-meta {
+    display: none !important;
+  }
+}
+
+
 

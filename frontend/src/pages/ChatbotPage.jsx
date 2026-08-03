@@ -28,6 +28,63 @@ const fmtDateTime = (d) => {
   } catch { return '' }
 }
 
+function LanguageToggle() {
+  const { lang, setLang } = useLang();
+  const isTamil = lang === 'ta';
+
+  return (
+    <div 
+      className="lang-toggle-group"
+      style={{
+        display: 'inline-flex',
+        alignItems: 'center',
+        background: 'rgba(255, 255, 255, 0.08)',
+        border: '1px solid rgba(255, 255, 255, 0.15)',
+        borderRadius: 20,
+        padding: '2px 4px',
+        gap: 4
+      }}
+    >
+      <button 
+        type="button" 
+        className={`lang-toggle-btn ${!isTamil ? 'active' : ''}`}
+        onClick={() => setLang('en')}
+        style={{
+          border: 'none',
+          background: !isTamil ? '#FF9933' : 'transparent',
+          color: !isTamil ? '#ffffff' : 'var(--color-ash, #aaa)',
+          fontSize: 11,
+          fontWeight: 700,
+          padding: '4px 10px',
+          borderRadius: 16,
+          cursor: 'pointer',
+          transition: 'all 0.2s ease'
+        }}
+      >
+        EN
+      </button>
+      <button 
+        type="button" 
+        className={`lang-toggle-btn ${isTamil ? 'active' : ''}`}
+        onClick={() => setLang('ta')}
+        style={{
+          border: 'none',
+          background: isTamil ? '#FF9933' : 'transparent',
+          color: isTamil ? '#ffffff' : 'var(--color-ash, #aaa)',
+          fontSize: 11,
+          fontWeight: 700,
+          padding: '4px 10px',
+          borderRadius: 16,
+          cursor: 'pointer',
+          transition: 'all 0.2s ease'
+        }}
+      >
+        தமிழ்
+      </button>
+    </div>
+  );
+}
+
 // ── Always produce a frontend referral link (never the backend origin) ──
 const toFrontendReferralLink = (rawLink, bjpCode) => {
   let code = bjpCode;
@@ -147,14 +204,27 @@ const getActiveStep = (chatState) => {
   }
 }
 
+const FINAL_BANNER_URL = 'https://res.cloudinary.com/dkjrdntf/image/upload/f_auto,q_auto,w_1000/v1785563946/bjp_schemes/bjp_final_banner.png';
+
+// Instant memory preload for zero-delay rendering
+if (typeof window !== 'undefined') {
+  const _bannerPreload = new Image();
+  _bannerPreload.src = FINAL_BANNER_URL;
+}
+
 // ── Message renderers ───────────────────────────────────────
 function WelcomeBannerMsg({ onStart }) {
   const { t } = useLang()
   return (
     <div className="welcome-banner">
-      <img src="/banner.png" alt="BJP Tamil Nadu" className="banner-img"
-        loading="lazy"
-        onError={(e) => { e.target.style.display = 'none' }} />
+      <img 
+        src={FINAL_BANNER_URL} 
+        alt="BJP Tamil Nadu" 
+        className="banner-img"
+        fetchpriority="high"
+        decoding="sync"
+        onError={(e) => { e.target.style.display = 'none' }} 
+      />
       <div className="banner-content">
         <h2>{t("World's Largest. India's Biggest. Soon to be Tamil Nadu's No. 1.")}</h2>
         <p>{t("You are joining the world's leading political organization. Click below to register for Central Government welfare schemes.")}</p>
@@ -630,8 +700,10 @@ const NT_SCHEMES = [
 
 // ── Scheme Info Modal ─────────────────────────────────────────
 function SchemeInfoModal({ scheme, onClose }) {
+  const { t, getSchemeData } = useLang()
   if (!scheme) return null
-  const name = scheme.name_en.replace(/^[A-Z]+\s*—\s*/, '')
+  const schData = getSchemeData(scheme)
+  const name = (schData.title || schData.name_en || '').replace(/^[A-Z0-9\s]+\.?\s*—?\s*/, '')
 
   // Close on overlay click
   const handleOverlay = (e) => { if (e.target === e.currentTarget) onClose() }
@@ -673,7 +745,7 @@ function SchemeInfoModal({ scheme, onClose }) {
               {name}
             </div>
             <div style={{ fontSize: 11, color: 'var(--color-signal-mint, #2ecc71)', marginTop: 2, fontWeight: 600 }}>
-              {scheme.cluster}
+              {schData.category || schData.cluster}
             </div>
           </div>
           <button
@@ -701,7 +773,7 @@ function SchemeInfoModal({ scheme, onClose }) {
             fontSize: 12, color: 'var(--color-signal-mint, #2ecc71)', fontWeight: 600,
           }}>
             <i className="bi bi-star-fill" style={{ fontSize: 10 }} />
-            {scheme.benefit_en}
+            {schData.benefit_en || schData.highlight || schData.overview}
           </div>
         </div>
 
@@ -713,10 +785,10 @@ function SchemeInfoModal({ scheme, onClose }) {
               fontSize: 10, fontWeight: 700, color: 'rgba(255,255,255,0.45)',
               textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 6,
             }}>
-              What is it?
+              {t('What is it?')}
             </div>
             <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.85)', lineHeight: 1.6 }}>
-              {scheme.overview}
+              {schData.overview}
             </div>
           </div>
 
@@ -726,7 +798,7 @@ function SchemeInfoModal({ scheme, onClose }) {
               fontSize: 10, fontWeight: 700, color: 'rgba(255,255,255,0.45)',
               textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 6,
             }}>
-              Who can apply?
+              {t('Who can apply?')}
             </div>
             <div style={{
               fontSize: 13, color: 'rgba(255,255,255,0.85)', lineHeight: 1.6,
@@ -734,7 +806,7 @@ function SchemeInfoModal({ scheme, onClose }) {
               background: 'rgba(255,255,255,0.06)',
               borderRadius: 8, borderLeft: '3px solid var(--color-signal-mint, #2ecc71)',
             }}>
-              {scheme.eligibility}
+              {schData.eligibility}
             </div>
           </div>
 
@@ -744,10 +816,10 @@ function SchemeInfoModal({ scheme, onClose }) {
               fontSize: 10, fontWeight: 700, color: 'rgba(255,255,255,0.45)',
               textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 6,
             }}>
-              How to apply
+              {t('How to apply?')}
             </div>
             <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.85)', lineHeight: 1.6 }}>
-              {scheme.how_to_apply}
+              {schData.how_to_apply || schData.overview}
             </div>
           </div>
         </div>
@@ -769,7 +841,7 @@ function SchemeInfoModal({ scheme, onClose }) {
               }}
             >
               <i className="bi bi-box-arrow-up-right" />
-              Visit Official Website
+              {t('Visit Official Website')}
             </a>
           </div>
         )}
@@ -787,7 +859,7 @@ function SchemeInfoModal({ scheme, onClose }) {
 
 // ── Scheme Selection Message ─────────────────────────────────
 function SchemeSelectionMsg({ isLatest, onSubmit, disabled }) {
-  const { t } = useLang()
+  const { t, getSchemeData } = useLang()
   const [selected, setSelected] = useState(new Set())
   const [submitted, setSubmitted] = useState(false)
   const [infoScheme, setInfoScheme] = useState(null)
@@ -819,13 +891,13 @@ function SchemeSelectionMsg({ isLatest, onSubmit, disabled }) {
       }}>
         <i className="bi bi-check2-square" style={{ color: 'var(--color-signal-mint)' }} />
         {selected.size > 0
-          ? <span style={{ color: 'var(--color-signal-mint)', fontWeight: 600 }}>{selected.size} {t('scheme(s) selected')}</span>
+          ? <span style={{ color: 'var(--color-signal-mint)', fontWeight: 600 }}>{t('{count} scheme(s) selected ✓', { count: selected.size })}</span>
           : t('Select one or more schemes you are interested in')}
       </div>
 
       {clusters.map(cluster => (
         <div key={cluster} style={{ marginBottom: 14 }}>
-          {/* Cluster heading — English only */}
+          {/* Cluster heading */}
           <div style={{
             fontSize: 10, fontWeight: 700, color: 'var(--color-ash)',
             textTransform: 'uppercase', letterSpacing: '0.07em',
@@ -835,35 +907,24 @@ function SchemeSelectionMsg({ isLatest, onSubmit, disabled }) {
             {cluster}
           </div>
 
-          {/* 3-column grid */}
-          <div style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(3, 1fr)',
-            gap: 5
-          }}>
-            {NT_SCHEMES.filter(s => s.cluster === cluster).map(scheme => {
+          {/* 2-col on mobile, 3-col on desktop */}
+          <div className="scheme-selection-grid">
+            {NT_SCHEMES.filter(s => s.cluster === cluster).map(rawScheme => {
+              const scheme = getSchemeData(rawScheme);
               const isSelected = selected.has(scheme.id);
               const bgImg = getSchemeBgImage(scheme.name_en);
               return (
                 <div
                   key={scheme.id}
+                  className="scheme-selection-card"
                   onClick={() => toggle(scheme.id)}
                   style={{
-                    padding: '8px 8px',
                     background: bgImg
                       ? `url("${encodeURI(bgImg)}") center / 100% 100% no-repeat`
                       : (isSelected ? 'rgba(250,93,0,0.08)' : 'var(--color-carbon)'),
                     border: `2px solid ${isSelected ? '#FF9933' : '#e5e5ea'}`,
-                    borderRadius: 10,
                     cursor: submitted || !isLatest ? 'default' : 'pointer',
-                    transition: 'all 0.18s ease',
                     opacity: submitted && !isSelected ? 0.4 : 1,
-                    display: 'flex', flexDirection: 'column', gap: 4, justifyContent: 'space-between',
-                    minHeight: 90,
-                    height: 90,
-                    position: 'relative',
-                    overflow: 'hidden',
-                    boxSizing: 'border-box',
                     boxShadow: isSelected ? '0 4px 12px rgba(255,153,51,0.35)' : '0 2px 6px rgba(0,0,0,0.06)'
                   }}
                 >
@@ -884,14 +945,14 @@ function SchemeSelectionMsg({ isLatest, onSubmit, disabled }) {
                   {/* Scheme name & Benefit row */}
                   <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', width: '100%', gap: 2, zIndex: 2 }}>
                     <div style={{ flex: 1, minWidth: 0 }}>
-                      <div style={{
+                      <div className="scheme-card-name" style={{
                         fontSize: 10, fontWeight: 700,
                         color: '#1d1d1f',
                         lineHeight: 1.2,
                         overflow: 'hidden', display: '-webkit-box',
                         WebkitLineClamp: 2, WebkitBoxOrient: 'vertical'
                       }}>
-                        {scheme.name_en.replace(/^[A-Z0-9\s]+—\s*/, '')}
+                        {(scheme.title || scheme.name_en || '').replace(/^[A-Z0-9\s]+\.?\s*—?\s*/, '')}
                       </div>
                     </div>
                     <button
@@ -904,8 +965,8 @@ function SchemeSelectionMsg({ isLatest, onSubmit, disabled }) {
                         display: 'flex', alignItems: 'center', justifyContent: 'center',
                         boxShadow: '0 1px 2px rgba(0,0,0,0.1)'
                       }}
-                      title="Learn more"
-                      aria-label={`Info: ${scheme.name_en}`}
+                      title={t('View Details')}
+                      aria-label={`Info: ${scheme.title || scheme.name_en}`}
                     >
                       <i className="bi bi-info-circle" />
                     </button>
@@ -957,7 +1018,7 @@ function SchemeSelectionMsg({ isLatest, onSubmit, disabled }) {
 
 // ── My Schemes Dashboard Panel ──────────────────────────────
 function MySchemePanel({ epicNo, mobile, onBack }) {
-  const { t } = useLang()
+  const { t, getSchemeData } = useLang()
   const [applyStatus, setApplyStatus] = useState({});
   const [expandedId, setExpandedId] = useState(null);
   const [selectedSchemeForModal, setSelectedSchemeForModal] = useState(null);
@@ -973,6 +1034,20 @@ function MySchemePanel({ epicNo, mobile, onBack }) {
     const userKey = activeEpic || activeMobile || 'user';
     const storageKey = `bjp_applied_schemes_${userKey}`;
 
+    const findSchemeMatch = (itemOrNameOrId) => {
+      if (!itemOrNameOrId) return null;
+      const str = String(itemOrNameOrId).trim();
+      const num = parseInt(str, 10);
+
+      return SCHEMES.find(sch => {
+        if (num && sch.id === num) return true;
+        if (sch.name_en && (sch.name_en === str || sch.name_en.includes(str) || str.includes(sch.name_en))) return true;
+        const schData = getSchemeData(sch);
+        if (schData?.title && (schData.title === str || schData.title.includes(str) || str.includes(schData.title))) return true;
+        return false;
+      });
+    };
+
     let localAppliedMap = {};
     const loadFromStorage = (key) => {
       try {
@@ -980,7 +1055,7 @@ function MySchemePanel({ epicNo, mobile, onBack }) {
         if (saved) {
           const arr = JSON.parse(saved);
           arr.forEach(item => {
-            const s = SCHEMES.find(sch => sch.id === item || sch.title === item);
+            const s = findSchemeMatch(item);
             if (s) localAppliedMap[s.id] = 'applied';
           });
         }
@@ -1001,11 +1076,11 @@ function MySchemePanel({ epicNo, mobile, onBack }) {
 
           apps.forEach(app => {
             const sName = app.schemeName || app.schemeId;
-            const match = SCHEMES.find(sch => sch.title === sName || sch.id === Number(sName) || sch.title?.includes(sName));
+            const match = findSchemeMatch(sName);
             if (match) {
               updatedMap[match.id] = 'applied';
               appsMap[match.id] = app;
-              titlesList.push(match.title);
+              titlesList.push(match.id);
             }
           });
 
@@ -1079,8 +1154,10 @@ function MySchemePanel({ epicNo, mobile, onBack }) {
     }
   };
 
-  const appliedSchemes = SCHEMES.filter(s => applyStatus[s.id] === 'applied');
-  const notAppliedSchemes = SCHEMES.filter(s => applyStatus[s.id] !== 'applied');
+  const appliedSchemes = SCHEMES.map(s => getSchemeData(s)).filter(s => applyStatus[s.id] === 'applied');
+  const notAppliedSchemes = SCHEMES.map(s => getSchemeData(s)).filter(s => applyStatus[s.id] !== 'applied');
+  const cleanCategory = (cat) => (cat || '').replace(/^CLUSTER\s*\d*\s*—?\s*/i, '').trim();
+  const cleanSchemeTitle = (title) => (title || '').replace(/^(\d+\.\s*)+/, '').trim();
 
   // ── Application Tracking detail view (timeline of admin status updates) ──
   if (trackingScheme) {
@@ -1109,8 +1186,8 @@ function MySchemePanel({ epicNo, mobile, onBack }) {
 
             {/* Scheme summary + current status */}
             <div style={{ background: 'var(--color-carbon)', border: `1px solid ${cs.border}`, borderRadius: 14, padding: '16px 18px' }}>
-              <div className="scheme-meta-cat" style={{ color: '#2ecc71' }}>{t(scheme.category)}</div>
-              <h3 className="scheme-title" style={{ marginTop: 2 }}>{scheme.id}. {scheme.title}</h3>
+              <div className="scheme-meta-cat" style={{ color: '#2ecc71' }}>{cleanCategory(t(scheme.category))}</div>
+              <h3 className="scheme-title" style={{ marginTop: 2 }}>{scheme.id}. {cleanSchemeTitle(scheme.title)}</h3>
               <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginTop: 12, flexWrap: 'wrap' }}>
                 <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, background: cs.fg, color: '#fff', padding: '6px 14px', borderRadius: 20, fontSize: 12, fontWeight: 800 }}>
                   <i className={`bi ${cs.icon}`} /> {t(current)}
@@ -1266,7 +1343,7 @@ function MySchemePanel({ epicNo, mobile, onBack }) {
                   textTransform: 'uppercase', 
                   letterSpacing: 0.5 
                 }}>
-                  {selectedSchemeForModal.category}
+                  {cleanCategory(t(selectedSchemeForModal.category))}
                 </span>
                 <h3 style={{ fontSize: 20, fontWeight: 700, color: 'var(--color-chalk, #fff)', margin: '4px 0 0 0' }}>
                   {selectedSchemeForModal.title}
@@ -1332,25 +1409,27 @@ function MySchemePanel({ epicNo, mobile, onBack }) {
               </div>
             </div>
 
-            <label style={{ 
+            <div style={{ 
               display: 'flex', 
               alignItems: 'center', 
               gap: 10, 
-              cursor: 'pointer',
-              fontSize: 13,
-              color: 'var(--color-chalk, #ddd)',
-              marginTop: 4
-            }}>
+              padding: '10px 12px', 
+              background: 'rgba(255,255,255,0.03)', 
+              borderRadius: 10,
+              cursor: 'pointer'
+            }} onClick={() => setIsAgreed(!isAgreed)}>
               <input 
                 type="checkbox" 
                 checked={isAgreed} 
                 onChange={(e) => setIsAgreed(e.target.checked)}
-                style={{ width: 16, height: 16, accentColor: '#2ecc71', cursor: 'pointer' }}
+                style={{ width: 18, height: 18, accentColor: '#2ecc71', cursor: 'pointer' }}
               />
-              <span>{t('I confirm to submit application request for this scheme.')}</span>
-            </label>
+              <span style={{ fontSize: 12, color: 'var(--color-ash, #aaa)', lineHeight: 1.3 }}>
+                {t('I confirm to submit application request for this scheme.')}
+              </span>
+            </div>
 
-            <div style={{ display: 'flex', gap: 12, marginTop: 8 }}>
+            <div style={{ display: 'flex', gap: 12, marginTop: 4 }}>
               <button
                 onClick={() => setSelectedSchemeForModal(null)}
                 style={{
@@ -1449,80 +1528,112 @@ function MySchemePanel({ epicNo, mobile, onBack }) {
                   const app = appliedAppsMap[scheme.id] || null;
                   const st = app?.status || 'Submitted';
                   const sc = statusColor(st);
-                  const bgImg = getSchemeBgImage(scheme.title);
+                  const bgImg = getSchemeBgImage(scheme);
                   const lastUpdate = app?.statusHistory?.length
                     ? app.statusHistory[app.statusHistory.length - 1].updatedAt
                     : app?.appliedAt;
+                  const catText = cleanCategory(t(scheme.category));
+
                   return (
                     <div 
                       key={scheme.id} 
-                      className="scheme-card"
+                      className="scheme-card scheme-card-responsive"
                       style={{
                         border: `1.5px solid ${sc.border}`,
-                        borderRadius: 16,
-                        padding: '22px 24px',
-                        cursor: 'pointer',
-                        overflow: 'hidden',
-                        position: 'relative',
-                        minHeight: 210,
-                        boxSizing: 'border-box',
-                        background: bgImg
-                          ? `url("${encodeURI(bgImg)}") center / 100% 100% no-repeat`
-                          : sc.tint,
-                        boxShadow: '0 3px 12px rgba(0,0,0,0.06)',
-                        transition: 'all 0.2s ease'
+                        backgroundColor: bgImg ? '#fffaf4' : sc.tint,
+                        padding: 0,
                       }}
                       onClick={() => openTracking(scheme)}
                     >
-                      <div style={{ maxWidth: '50%', zIndex: 2, position: 'relative' }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 4, flexWrap: 'wrap' }}>
-                          <div className="scheme-meta-cat" style={{ color: '#2ecc71', fontWeight: 700, fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.5px' }}>
-                            {t(scheme.category)}
-                          </div>
-                          <span style={{
-                            display: 'inline-flex',
-                            alignItems: 'center',
-                            gap: 5,
-                            background: sc.fg,
-                            color: '#fff',
-                            padding: '3px 10px',
-                            borderRadius: 20,
-                            fontSize: 10.5,
-                            fontWeight: 700,
-                            whiteSpace: 'nowrap',
-                            boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
-                          }}>
-                            <i className={`bi ${sc.icon}`} /> {t(st)}
-                          </span>
-                        </div>
-
-                        <h3 className="scheme-title" style={{ fontSize: 18, fontWeight: 700, color: '#1d1d1f', margin: '2px 0 0 0', lineHeight: 1.25 }}>
-                          {scheme.id}. {scheme.title}
-                        </h3>
-
-                        <p className="scheme-overview" style={{ marginTop: 8, marginBottom: 14, fontSize: 13, color: '#2d2d32', lineHeight: 1.5, fontWeight: 500 }}>
-                          {scheme.overview}
-                        </p>
-
-                        <div style={{ display: 'flex', gap: 12, alignItems: 'center', flexWrap: 'wrap' }}>
-                          <button
-                            className="scheme-toggle-btn"
-                            onClick={(e) => { e.stopPropagation(); openTracking(scheme); }}
-                            style={{
-                              display: 'inline-flex', alignItems: 'center', gap: 6,
-                              background: '#2ecc71', color: '#ffffff', border: 'none',
-                              padding: '8px 18px', borderRadius: 10, fontSize: 12.5, fontWeight: 700,
-                              cursor: 'pointer', boxShadow: '0 2px 8px rgba(46, 204, 113, 0.3)'
-                            }}
+                      <div className="scheme-card-header-area">
+                        {/* Desktop View Background Image */}
+                        {bgImg && (
+                          <div 
+                            className="scheme-card-desktop-bg"
+                            style={{ backgroundImage: `url("${bgImg}")` }}
+                          />
+                        )}
+                        {/* Mobile Top Banner Image Header */}
+                        {bgImg && (
+                          <div 
+                            className="scheme-card-mobile-banner"
+                            style={{ backgroundImage: `url("${bgImg}")` }}
                           >
-                            <i className="bi bi-clipboard-check" />
-                            <span>{t('Track Application')}</span>
-                          </button>
-                          {lastUpdate && (
-                            <span style={{ fontSize: 11.5, color: '#474747', fontWeight: 600 }}>
-                              {t('Updated')}: {fmtDateTime(lastUpdate)}
+                            <div className="scheme-card-mobile-banner-overlay">
+                              <div className="scheme-meta-cat" style={{ color: '#2ecc71', fontWeight: 700, fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.5px', background: 'rgba(0,0,0,0.65)', padding: '3px 10px', borderRadius: 6, backdropFilter: 'blur(4px)' }}>
+                                {catText}
+                              </div>
+                              <span style={{
+                                display: 'inline-flex',
+                                alignItems: 'center',
+                                gap: 5,
+                                background: sc.fg,
+                                color: '#fff',
+                                padding: '3px 10px',
+                                borderRadius: 20,
+                                fontSize: 10.5,
+                                fontWeight: 700,
+                                whiteSpace: 'nowrap',
+                                boxShadow: '0 2px 4px rgba(0,0,0,0.2)'
+                              }}>
+                                <i className={`bi ${sc.icon}`} /> {t(st)}
+                              </span>
+                            </div>
+                          </div>
+                        )}
+
+                        {/* Main Content Area */}
+                        <div className="scheme-card-desktop-left">
+                          {/* Desktop Only Meta Header */}
+                          <div className="scheme-card-desktop-only-meta">
+                            <div className="scheme-meta-cat" style={{ color: '#2ecc71', fontWeight: 700, fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                              {catText}
+                            </div>
+                            <span style={{
+                              display: 'inline-flex',
+                              alignItems: 'center',
+                              gap: 5,
+                              background: sc.fg,
+                              color: '#fff',
+                              padding: '3px 10px',
+                              borderRadius: 20,
+                              fontSize: 10.5,
+                              fontWeight: 700,
+                              whiteSpace: 'nowrap',
+                              boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
+                            }}>
+                              <i className={`bi ${sc.icon}`} /> {t(st)}
                             </span>
-                          )}
+                          </div>
+
+                          <h3 className="scheme-title" style={{ fontSize: 18, fontWeight: 700, color: '#1d1d1f', margin: '2px 0 0 0', lineHeight: 1.25 }}>
+                            {scheme.id}. {cleanSchemeTitle(scheme.title || scheme.name_en)}
+                          </h3>
+
+                          <p className="scheme-overview" style={{ marginTop: 8, marginBottom: 14, fontSize: 13, color: '#2d2d32', lineHeight: 1.5, fontWeight: 500 }}>
+                            {scheme.overview}
+                          </p>
+
+                          <div style={{ display: 'flex', gap: 12, alignItems: 'center', flexWrap: 'wrap' }}>
+                            <button
+                              className="scheme-toggle-btn"
+                              onClick={(e) => { e.stopPropagation(); openTracking(scheme); }}
+                              style={{
+                                display: 'inline-flex', alignItems: 'center', gap: 6,
+                                background: '#2ecc71', color: '#ffffff', border: 'none',
+                                padding: '8px 18px', borderRadius: 10, fontSize: 12.5, fontWeight: 700,
+                                cursor: 'pointer', boxShadow: '0 2px 8px rgba(46, 204, 113, 0.3)'
+                              }}
+                            >
+                              <i className="bi bi-clipboard-check" />
+                              <span>{t('Track Application')}</span>
+                            </button>
+                            {lastUpdate && (
+                              <span style={{ fontSize: 11.5, color: '#474747', fontWeight: 600 }}>
+                                {t('Updated')}: {fmtDateTime(lastUpdate)}
+                              </span>
+                            )}
+                          </div>
                         </div>
                       </div>
                     </div>
@@ -1552,93 +1663,110 @@ function MySchemePanel({ epicNo, mobile, onBack }) {
               <div className="schemes-list" style={{ gap: 12 }}>
                 {notAppliedSchemes.map((scheme) => {
                   const isExpanded = expandedId === scheme.id;
-                  const bgImg = getSchemeBgImage(scheme.title);
+                  const bgImg = getSchemeBgImage(scheme);
+                  const catText = cleanCategory(t(scheme.category));
+
                   return (
                     <div 
                       key={scheme.id} 
-                      className="scheme-card"
+                      className="scheme-card scheme-card-responsive"
                       style={{
                         border: '1px solid #e5e5ea',
-                        borderRadius: 16,
-                        padding: '22px 24px',
-                        cursor: 'pointer',
-                        overflow: 'hidden',
-                        position: 'relative',
-                        minHeight: 210,
-                        boxSizing: 'border-box',
-                        background: bgImg
-                          ? `url("${encodeURI(bgImg)}") center / 100% 100% no-repeat`
-                          : 'var(--color-carbon)',
-                        boxShadow: '0 3px 12px rgba(0,0,0,0.06)',
-                        transition: 'all 0.2s ease'
+                        backgroundColor: '#fffaf4',
+                        padding: 0,
                       }}
                       onClick={() => setExpandedId(isExpanded ? null : scheme.id)}
                     >
-                      <div style={{ maxWidth: '50%', zIndex: 2, position: 'relative' }}>
-                        <div className="scheme-meta-cat" style={{ color: 'var(--color-saffron, #ea580c)', fontWeight: 700, fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: 4 }}>
-                          {t(scheme.category)}
+                      {/* Header Container */}
+                      <div className="scheme-card-header-area">
+                        {/* Desktop View Background Image */}
+                        {bgImg && (
+                          <div 
+                            className="scheme-card-desktop-bg"
+                            style={{ backgroundImage: `url("${bgImg}")` }}
+                          />
+                        )}
+                        {/* Mobile Top Banner Image */}
+                        {bgImg && (
+                          <div 
+                            className="scheme-card-mobile-banner"
+                            style={{ backgroundImage: `url("${bgImg}")` }}
+                          />
+                        )}
+
+                        {/* Main Content Area */}
+                        <div className="scheme-card-desktop-left">
+                          {/* Desktop Only Meta Header */}
+                          <div className="scheme-card-desktop-only-meta">
+                            <div className="scheme-meta-cat" style={{ color: 'var(--color-saffron, #ea580c)', fontWeight: 700, fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                              {catText}
+                            </div>
+                          </div>
+
+                          <h3 className="scheme-title" style={{ fontSize: 18, fontWeight: 700, color: '#1d1d1f', margin: 0, lineHeight: 1.25 }}>
+                            {scheme.id}. {cleanSchemeTitle(scheme.title || scheme.name_en)}
+                          </h3>
+
+                          <div className="scheme-tags-row" style={{ display: 'flex', gap: 6, flexWrap: 'wrap', margin: '8px 0' }}>
+                            {scheme.tags.map((tItem, idx) => (
+                              <span key={idx} className="scheme-tag" style={{ background: 'rgba(255,255,255,0.88)', border: '1px solid #d2d2d7', color: '#1d1d1f', fontSize: 11, fontWeight: 600, padding: '2px 8px', borderRadius: 6 }}>
+                                {tItem}
+                              </span>
+                            ))}
+                          </div>
+
+                          <p className="scheme-overview" style={{ fontSize: 13, color: '#2d2d32', lineHeight: 1.5, fontWeight: 500, margin: '8px 0 14px 0' }}>
+                            {scheme.overview}
+                          </p>
+
+                          <div style={{ display: 'flex', gap: 12, alignItems: 'center', flexWrap: 'wrap' }}>
+                            <button
+                              className="scheme-toggle-btn scheme-view-details-btn"
+                              onClick={(e) => { e.stopPropagation(); setExpandedId(isExpanded ? null : scheme.id); }}
+                              style={{
+                                display: 'inline-flex', alignItems: 'center', gap: 6,
+                                background: 'rgba(255,255,255,0.92)', border: '1px solid #c2c2c7',
+                                color: '#1d1d1f', padding: '7px 16px', borderRadius: 10, fontSize: 12, fontWeight: 700,
+                                cursor: 'pointer', boxShadow: '0 1px 3px rgba(0,0,0,0.1)'
+                              }}
+                            >
+                              <i className={`bi bi-chevron-${isExpanded ? 'up' : 'down'}`} />
+                              <span>{isExpanded ? t('Hide Steps') : t('View Details')}</span>
+                            </button>
+
+                            <button
+                              className="btn-apply-scheme"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleOpenApplyModal(scheme);
+                              }}
+                              style={{
+                                display: 'inline-flex',
+                                alignItems: 'center',
+                                gap: 6,
+                                backgroundColor: '#2ecc71',
+                                color: '#FFFFFF',
+                                padding: '7px 20px',
+                                borderRadius: 10,
+                                fontWeight: 700,
+                                border: 'none',
+                                cursor: 'pointer',
+                                fontSize: 12.5,
+                                transition: 'all 0.15s',
+                                boxShadow: '0 2px 8px rgba(46, 204, 113, 0.3)'
+                              }}
+                            >
+                              <i className="bi bi-send-check-fill" />
+                              {t('Apply Now')}
+                            </button>
+                          </div>
                         </div>
+                      </div>
 
-                        <h3 className="scheme-title" style={{ fontSize: 18, fontWeight: 700, color: '#1d1d1f', margin: 0, lineHeight: 1.25 }}>
-                          {scheme.id}. {scheme.title}
-                        </h3>
-
-                        <div className="scheme-tags-row" style={{ display: 'flex', gap: 6, flexWrap: 'wrap', margin: '8px 0' }}>
-                          {scheme.tags.map((tItem, idx) => (
-                            <span key={idx} className="scheme-tag" style={{ background: 'rgba(255,255,255,0.88)', border: '1px solid #d2d2d7', color: '#1d1d1f', fontSize: 11, fontWeight: 600, padding: '2px 8px', borderRadius: 6 }}>
-                              {tItem}
-                            </span>
-                          ))}
-                        </div>
-
-                        <p className="scheme-overview" style={{ fontSize: 13, color: '#2d2d32', lineHeight: 1.5, fontWeight: 500, margin: '8px 0 14px 0' }}>
-                          {scheme.overview}
-                        </p>
-
-                        <div style={{ display: 'flex', gap: 12, alignItems: 'center', flexWrap: 'wrap' }}>
-                          <button
-                            className="scheme-toggle-btn"
-                            onClick={(e) => { e.stopPropagation(); setExpandedId(isExpanded ? null : scheme.id); }}
-                            style={{
-                              display: 'inline-flex', alignItems: 'center', gap: 6,
-                              background: 'rgba(255,255,255,0.92)', border: '1px solid #c2c2c7',
-                              color: '#1d1d1f', padding: '7px 16px', borderRadius: 10, fontSize: 12, fontWeight: 700,
-                              cursor: 'pointer', boxShadow: '0 1px 3px rgba(0,0,0,0.1)'
-                            }}
-                          >
-                            <i className={`bi bi-chevron-${isExpanded ? 'up' : 'down'}`} />
-                            <span>{isExpanded ? t('Hide Steps') : t('View Details')}</span>
-                          </button>
-
-                          <button
-                            className="btn-apply-scheme"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleOpenApplyModal(scheme);
-                            }}
-                            style={{
-                              display: 'inline-flex',
-                              alignItems: 'center',
-                              gap: 6,
-                              backgroundColor: '#2ecc71',
-                              color: '#FFFFFF',
-                              padding: '7px 20px',
-                              borderRadius: 10,
-                              fontWeight: 700,
-                              border: 'none',
-                              cursor: 'pointer',
-                              fontSize: 12.5,
-                              transition: 'all 0.15s',
-                              boxShadow: '0 2px 8px rgba(46, 204, 113, 0.3)'
-                            }}
-                          >
-                            <i className="bi bi-send-check-fill" />
-                            {t('Apply Now')}
-                          </button>
-                        </div>
-
-                        {isExpanded && (
-                          <div className="scheme-details-expanded" onClick={(e) => e.stopPropagation()} style={{ marginTop: 16, background: 'rgba(255,255,255,0.95)', padding: 16, borderRadius: 12, border: '1px solid #e5e5ea', width: '190%' }}>
+                      {/* Expanded Section (opens below header) */}
+                      {isExpanded && (
+                        <div className="scheme-card-expanded-body" onClick={(e) => e.stopPropagation()}>
+                          <div className="scheme-details-expanded" style={{ marginTop: 12, background: 'rgba(255,255,255,0.95)', padding: 16, borderRadius: 12, border: '1px solid #e5e5ea', width: '100%' }}>
                             <div>
                               <div className="details-section-title" style={{ fontWeight: 700, color: '#1d1d1f' }}>
                                 <i className="bi bi-info-circle-fill" style={{ color: '#ea580c' }} /> {t('Eligibility & Benefits')}
@@ -1660,8 +1788,8 @@ function MySchemePanel({ epicNo, mobile, onBack }) {
                               </div>
                             </div>
                           </div>
-                        )}
-                      </div>
+                        </div>
+                      )}
                     </div>
                   );
                 })}
@@ -2206,9 +2334,6 @@ function FullProfilePanel({ epicNo, mobile, referredCount, onBack }) {
             {/* Header Name & Role Badge */}
             <div style={{ textAlign: 'center', marginBottom: 8 }}>
               <h3 style={{ fontSize: 22, fontWeight: 700, color: 'var(--color-chalk)', marginBottom: 4 }}>{voterName}</h3>
-              <p style={{ fontSize: 13, color: 'var(--color-signal-mint)', fontWeight: 600, margin: 0 }}>
-                {referredCount >= 5 ? t('BJP Volunteer Agent') : t('BJP Registered Member')}
-              </p>
             </div>
 
             {/* Details Grid */}
@@ -2854,9 +2979,9 @@ export default function ChatbotPage() {
       // value, which caused a false "Already registered" on a plain revisit.
       const urlRef = hasReferralInUrl()
       if (urlRef) {
-        addMsg('bot', 'text', { text: t('⚠️ *You are already registered!* Your schemes are active.') })
+        addMsg('bot', 'text', { text: '⚠️ *You are already registered!* Your schemes are active.', i18nKey: true })
       } else {
-        addMsg('bot', 'text', { text: t('👋 Welcome back to *Nalam Thittam!*') })
+        addMsg('bot', 'text', { text: '👋 Welcome back to *Nalam Thittam!*', i18nKey: true })
       }
       setTimeout(() => {
         const cachedRefLink = toFrontendReferralLink(cache.card.referral_link, cache.card.bjp_code)
@@ -3301,7 +3426,10 @@ export default function ChatbotPage() {
           .replace(/</g, '&lt;')
           .replace(/>/g, '&gt;')
           .replace(/"/g, '&quot;')
-        const safeHtml = escapeHtml(msg.text || '').replace(/\*(.*?)\*/g, '<strong>$1</strong>')
+        // i18nKey messages are stored as English keys and translated at render time
+        // so they switch language instantly when the user toggles EN/TA
+        const displayText = msg.i18nKey ? t(msg.text || '') : (msg.text || '')
+        const safeHtml = escapeHtml(displayText).replace(/\*(.*?)\*/g, '<strong>$1</strong>')
         return <span dangerouslySetInnerHTML={{ __html: safeHtml }} />
       }
       case 'welcome_banner':
@@ -3399,7 +3527,7 @@ export default function ChatbotPage() {
               </div>
             </div>
             <div className="left-menu-header-actions" style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
-
+              <LanguageToggle />
               {isDone && (
                 <button
                   className="chat-header-btn"
@@ -3517,7 +3645,7 @@ export default function ChatbotPage() {
                 </div>
               </div>
               <div className="chat-header-actions" style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
-
+                <LanguageToggle />
                 {isDone && (
                   <button
                     className="chat-header-btn"

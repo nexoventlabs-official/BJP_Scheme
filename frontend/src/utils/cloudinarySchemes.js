@@ -1,3 +1,30 @@
+// Local scheme images map served directly from public/schemes/
+const LOCAL_SCHEME_IMAGES = {
+  1: "/schemes/PMSBY.png",
+  2: "/schemes/PMJJBY.png",
+  3: "/schemes/APY.png",
+  4: "/schemes/PM SVANidhi.png",
+  5: "/schemes/PM Mudra Shishu.png",
+  6: "/schemes/PM Mudra Kishor.png",
+  7: "/schemes/Udyam.png",
+  8: "/schemes/Stand Up India.png",
+  9: "/schemes/Startup Seed Fund.png",
+  10: "/schemes/PM Kisan.png",
+  11: "/schemes/PM Fasal Bima.png",
+  12: "/schemes/PM Kisan Maan Dhan.png",
+  13: "/schemes/Ayushman Bharat.png",
+  14: "/schemes/ABHA.png",
+  15: "/schemes/PM Ujjwala.png",
+  16: "/schemes/PM Matru Vandana.png",
+  17: "/schemes/Sukanya Samridhi.png",
+  18: "/schemes/PM Awas Yojana.png",
+  19: "/schemes/PMKVY.png",
+  20: "/schemes/NSP Scholarship.png",
+  21: "/schemes/PM Vishwakarma.png",
+  22: "/schemes/Jan Dhan.png",
+  23: "/schemes/e-Shram.png"
+};
+
 const RAW_CLOUDINARY_SCHEME_IMAGES = {
   "ABHA": "https://res.cloudinary.com/dkjrdntf/image/upload/v1785409290/bjp_schemes/ABHA.png",
   "APY": "https://res.cloudinary.com/dkjrdntf/image/upload/v1785409389/bjp_schemes/APY.png",
@@ -24,29 +51,75 @@ const RAW_CLOUDINARY_SCHEME_IMAGES = {
   "Udyam": "https://res.cloudinary.com/dkjrdntf/image/upload/v1785409442/bjp_schemes/Udyam.png"
 };
 
-// Helper to inject Cloudinary automatic WebP/AVIF format + quality compression + resizing
-export const optimizeCloudinaryUrl = (url, width = 600) => {
-  if (!url || typeof url !== 'string') return url;
-  if (url.includes('res.cloudinary.com') && url.includes('/upload/')) {
-    return url.replace('/upload/', `/upload/f_auto,q_auto,w_${width}/`);
-  }
-  return url;
+export const optimizeCloudinaryUrl = (url) => url;
+
+export const CLOUDINARY_SCHEME_IMAGES = RAW_CLOUDINARY_SCHEME_IMAGES;
+
+const SCHEME_ID_TO_IMAGE_KEY = {
+  1: "PMSBY",
+  2: "PMJJBY",
+  3: "APY",
+  4: "PM SVANidhi",
+  5: "PM Mudra Shishu",
+  6: "PM Mudra Kishor",
+  7: "Udyam",
+  8: "Stand Up India",
+  9: "Startup Seed Fund",
+  10: "PM Kisan",
+  11: "PM Fasal Bima",
+  12: "PM Kisan Maan Dhan",
+  13: "Ayushman Bharat",
+  14: "ABHA",
+  15: "PM Ujjwala",
+  16: "PM Matru Vandana",
+  17: "Sukanya Samridhi",
+  18: "PM Awas Yojana",
+  19: "PMKVY",
+  20: "NSP Scholarship",
+  21: "PM Vishwakarma",
+  22: "Jan Dhan",
+  23: "e-Shram"
 };
 
-// Pre-optimized mapping
-export const CLOUDINARY_SCHEME_IMAGES = Object.entries(RAW_CLOUDINARY_SCHEME_IMAGES).reduce((acc, [key, val]) => {
-  acc[key] = optimizeCloudinaryUrl(val, 600);
-  return acc;
-}, {});
+export const getSchemeBgImage = (schemeObjOrTitle, optionalId) => {
+  let id = optionalId || null;
 
-// Immediate in-memory image preloading queue for instant zero-latency loading
-if (typeof window !== 'undefined') {
-  const preloaded = new Set();
-  Object.values(CLOUDINARY_SCHEME_IMAGES).forEach(url => {
-    if (!preloaded.has(url)) {
-      preloaded.add(url);
-      const img = new Image();
-      img.src = url;
+  if (!id && schemeObjOrTitle && typeof schemeObjOrTitle === 'object') {
+    id = schemeObjOrTitle.id;
+    if (!id && schemeObjOrTitle.title) {
+      const match = String(schemeObjOrTitle.title).match(/^(\d+)\./);
+      if (match) id = Number(match[1]);
     }
-  });
-}
+  }
+  
+  if (!id && typeof schemeObjOrTitle === 'number') {
+    id = schemeObjOrTitle;
+  }
+
+  if (!id && typeof schemeObjOrTitle === 'string') {
+    const match = schemeObjOrTitle.match(/^(\d+)\./);
+    if (match) id = Number(match[1]);
+  }
+
+  const num = Number(id);
+  if (num && LOCAL_SCHEME_IMAGES[num]) {
+    return LOCAL_SCHEME_IMAGES[num];
+  }
+
+  if (num && SCHEME_ID_TO_IMAGE_KEY[num]) {
+    const key = SCHEME_ID_TO_IMAGE_KEY[num];
+    if (CLOUDINARY_SCHEME_IMAGES[key]) return CLOUDINARY_SCHEME_IMAGES[key];
+  }
+
+  // Title string keyword search fallback
+  const titleStr = typeof schemeObjOrTitle === 'string' ? schemeObjOrTitle : (schemeObjOrTitle?.title || schemeObjOrTitle?.name_en || '');
+  if (titleStr) {
+    for (const [key, url] of Object.entries(CLOUDINARY_SCHEME_IMAGES)) {
+      if (titleStr.toLowerCase().includes(key.toLowerCase())) {
+        return url;
+      }
+    }
+  }
+
+  return '';
+};
