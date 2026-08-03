@@ -87,6 +87,7 @@ export const ta = {
   "This application is being synced. Please check back shortly.": "இந்த விண்ணப்பம் ஒத்திசைக்கப்பட்டு வருகிறது. சிறிது நேரம் கழித்து மீண்டும் பார்க்கவும்.",
   "No updates yet. Your application is being reviewed.": "இதுவரை புதுப்பிப்புகள் இல்லை. உங்கள் விண்ணப்பம் ஆய்வு செய்யப்பட்டு வருகிறது.",
   "My Profile": "எனது சுயவிவரம்",
+  "View your registration details": "உங்கள் பதிவு விவரங்களைக் காண்க",
   "BJP Volunteer Agent": "பாஜக தன்னார்வத் தொண்டர்",
   "BJP Registered Member": "பாஜக பதிவு செய்யப்பட்ட உறுப்பினர்",
   "EPIC Number": "EPIC எண்",

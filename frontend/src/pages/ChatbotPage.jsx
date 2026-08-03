@@ -1559,25 +1559,30 @@ function MySchemePanel({ epicNo, mobile, onBack }) {
                             className="scheme-card-mobile-banner"
                             style={{ backgroundImage: `url("${bgImg}")` }}
                           >
-                            <div className="scheme-card-mobile-banner-overlay">
-                              <div className="scheme-meta-cat" style={{ color: '#2ecc71', fontWeight: 700, fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.5px', background: 'rgba(0,0,0,0.65)', padding: '3px 10px', borderRadius: 6, backdropFilter: 'blur(4px)' }}>
-                                {catText}
+                            <div className="scheme-card-mobile-banner-content">
+                              <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap', marginBottom: 4 }}>
+                                <div className="scheme-meta-cat" style={{ color: '#2ecc71', fontWeight: 700, fontSize: 10, textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                                  {catText}
+                                </div>
+                                <span style={{
+                                  display: 'inline-flex',
+                                  alignItems: 'center',
+                                  gap: 4,
+                                  background: sc.fg,
+                                  color: '#fff',
+                                  padding: '2px 8px',
+                                  borderRadius: 20,
+                                  fontSize: 10,
+                                  fontWeight: 700,
+                                  whiteSpace: 'nowrap',
+                                  boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
+                                }}>
+                                  <i className={`bi ${sc.icon}`} /> {t(st)}
+                                </span>
                               </div>
-                              <span style={{
-                                display: 'inline-flex',
-                                alignItems: 'center',
-                                gap: 5,
-                                background: sc.fg,
-                                color: '#fff',
-                                padding: '3px 10px',
-                                borderRadius: 20,
-                                fontSize: 10.5,
-                                fontWeight: 700,
-                                whiteSpace: 'nowrap',
-                                boxShadow: '0 2px 4px rgba(0,0,0,0.2)'
-                              }}>
-                                <i className={`bi ${sc.icon}`} /> {t(st)}
-                              </span>
+                              <h3 className="scheme-mobile-title">
+                                {scheme.id}. {cleanSchemeTitle(scheme.title || scheme.name_en)}
+                              </h3>
                             </div>
                           </div>
                         )}
@@ -1691,7 +1696,16 @@ function MySchemePanel({ epicNo, mobile, onBack }) {
                           <div 
                             className="scheme-card-mobile-banner"
                             style={{ backgroundImage: `url("${bgImg}")` }}
-                          />
+                          >
+                            <div className="scheme-card-mobile-banner-content">
+                              <div className="scheme-meta-cat" style={{ color: 'var(--color-saffron, #ea580c)', fontWeight: 700, fontSize: 10, textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: 4 }}>
+                                {catText}
+                              </div>
+                              <h3 className="scheme-mobile-title">
+                                {scheme.id}. {cleanSchemeTitle(scheme.title || scheme.name_en)}
+                              </h3>
+                            </div>
+                          </div>
                         )}
 
                         {/* Main Content Area */}
