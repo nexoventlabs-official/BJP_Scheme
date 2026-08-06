@@ -1,6 +1,6 @@
 import React from 'react';
 import {
-  LayoutDashboard, Users, Building, Shield, LogOut, ChevronLeft, ChevronRight, KeyRound, BarChart3, MapPin, FileText
+  LayoutDashboard, Users, Building, Shield, LogOut, ChevronLeft, ChevronRight, KeyRound, BarChart3, MapPin, FileText, ShieldCheck
 } from 'lucide-react';
 
 /**
@@ -22,6 +22,7 @@ const AdminSidebar = ({
         return [
           { id: 'dashboard', label: 'Overview Dashboard', icon: LayoutDashboard },
           { id: 'applications', label: 'Scheme Applications', icon: Users },
+          { id: 'booth_presidents', label: 'Booth President Requests', icon: ShieldCheck },
           { id: 'reports', label: 'Analytics & Reports', icon: BarChart3 },
           { id: 'logins', label: 'Admin Credentials', icon: KeyRound },
           { id: 'districts', label: 'District Stats', icon: Building },
@@ -34,6 +35,7 @@ const AdminSidebar = ({
           { id: 'dashboard', label: 'Overview Dashboard', icon: LayoutDashboard },
           { id: 'districts', label: 'District Breakdown', icon: Building },
           { id: 'applications', label: 'Scheme Applications', icon: Users },
+          { id: 'booth_presidents', label: 'Booth President Requests', icon: ShieldCheck },
           { id: 'reports', label: 'Reports', icon: BarChart3 },
           { id: 'logins', label: 'Assembly Logins', icon: KeyRound }
         ];
@@ -43,6 +45,7 @@ const AdminSidebar = ({
           { id: 'dashboard', label: 'Overview Dashboard', icon: LayoutDashboard },
           { id: 'assemblies', label: 'Assembly Breakdown', icon: Building },
           { id: 'applications', label: 'Scheme Applications', icon: Users },
+          { id: 'booth_presidents', label: 'Booth President Requests', icon: ShieldCheck },
           { id: 'logins', label: 'Booth Logins', icon: KeyRound }
         ];
 
@@ -51,6 +54,7 @@ const AdminSidebar = ({
           { id: 'dashboard', label: 'Overview Dashboard', icon: LayoutDashboard },
           { id: 'booths', label: 'Booth Breakdown', icon: Building },
           { id: 'applications', label: 'Scheme Applications', icon: Users },
+          { id: 'booth_presidents', label: 'Booth President Requests', icon: ShieldCheck },
           { id: 'logins', label: 'Booth Logins', icon: KeyRound }
         ];
 

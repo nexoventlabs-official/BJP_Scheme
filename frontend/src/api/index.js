@@ -95,4 +95,13 @@ export const chat = {
 
   registerSchemes: (data) =>
     api.post('/api/register-schemes', data),
+
+  applyBoothPresident: (data) =>
+    api.post('/api/booth-president/apply', data),
+
+  getMyBoothPresidentStatus: () =>
+    api.get('/api/booth-president/my-status'),
+
+  getPublicJurisdictions: () =>
+    api.get('/api/booth-president/jurisdictions'),
 }

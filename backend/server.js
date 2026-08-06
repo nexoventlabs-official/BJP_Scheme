@@ -26,6 +26,7 @@ const schemeRoutes = require('./routes/schemeRoutes');
 const adminRoutes = require('./routes/adminRoutes');
 const referralRoutes = require('./routes/referralRoutes');
 const userChatRoutes = require('./routes/userChatRoutes');
+const boothPresidentRoutes = require('./routes/boothPresidentRoutes');
 const { getAssemblyMetadata } = require('./services/jurisdictionService');
 
 const app = express();
@@ -129,9 +130,11 @@ app.get('/', (req, res) => {
 
 // API Routes
 app.use('/api', userChatRoutes);
+app.use('/api/booth-president', boothPresidentRoutes);
 app.use('/api/voter', voterRoutes);
 app.use('/api/schemes', schemeRoutes);
 app.use('/api/admin', adminRoutes);
+app.use('/api/admin', boothPresidentRoutes);
 app.use('/api/referrals', referralRoutes);
 
 // Health Check (Verifies Application & Database Readiness)

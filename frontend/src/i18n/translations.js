@@ -42,6 +42,8 @@ export const ta = {
   "✓ Confirmed": "✓ உறுதிசெய்யப்பட்டது",
   "↩ Try Again": "↩ மீண்டும் முயற்சிக்கவும்",
   "Referral Link": "பரிந்துரை இணைப்பு( Referral Link )",
+  "Be a Booth President": "பூத் தலைவராக செயல்பட",
+  "Apply to lead your electoral booth": "உங்கள் வாக்குச்சாவடியின் தலைவராக விண்ணப்பிக்கவும்",
   "🪷 Here is your referral link and QR code! Share this to invite others and build your team:": "🪷 உங்கள் பரிந்துரை இணைப்பு( Referral Link ) மற்றும் QR குறியீடு இதோ! மற்றவர்களை இணைக்கவும், உங்கள் குழுவை உருவாக்கவும் இதைப் பகிரவும்:",
   "Scan this QR to join BJP Tamil Nadu": "தமிழக பாஜக-வில்  இணைய இந்த QR-ஐ ஸ்கேன் செய்யவும்",
   "Copy Link": "இணைப்பை நகலெடு",

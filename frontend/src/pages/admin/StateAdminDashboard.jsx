@@ -11,6 +11,7 @@ import {
 import TopReferrersCard from '../../components/TopReferrersCard';
 import SchemePieChart from '../../components/SchemePieChart';
 import AdminSidebar from '../../components/AdminSidebar';
+import BoothPresidentRequestsView from '../../components/BoothPresidentRequestsView';
 
 const LIMIT = 20;
 
@@ -904,6 +905,11 @@ const StateAdminDashboard = () => {
           </div>
           {renderPagination(boothStatsPage, statsData.boothStats?.length || 0, 15, setBoothStatsPage)}
         </div>
+      )}
+
+      {/* PAGE: BOOTH PRESIDENT REQUESTS */}
+      {subPage === 'booth_presidents' && (
+        <BoothPresidentRequestsView admin={admin} />
       )}
 
       {/* ══════════════════════════════════════════ */}

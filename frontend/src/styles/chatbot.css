@@ -1212,11 +1212,12 @@
 .chatbot-app.bjp-theme .left-menu-panel {
   display: flex;
   flex-direction: column;
-  width: 360px;
-  height: 100%;
+  width: 340px;
+  flex-shrink: 0;
+  align-self: stretch;
+  overflow: hidden;
   background-color: var(--color-carbon);
   border-right: 1px solid rgba(255, 102, 0, 0.12);
-  flex-shrink: 0;
 }
 
 @media (max-width: 1023px) {
@@ -1279,19 +1280,25 @@
 
 /* Chat List */
 .chatbot-app.bjp-theme .left-chat-list {
-  flex: 1;
+  flex: 1 1 0;
+  min-height: 0;
   overflow-y: auto;
+  overflow-x: hidden;
   background-color: var(--color-carbon);
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 153, 51, 0.3) transparent;
+  -webkit-overflow-scrolling: touch;
 }
 
 .chatbot-app.bjp-theme .left-chat-item {
   display: flex;
   align-items: center;
-  gap: 12px;
-  padding: 12px 16px;
+  gap: 8px;
+  padding: 7px 12px;
   border-bottom: 1px solid rgba(255, 102, 0, 0.05);
   cursor: pointer;
   transition: background-color 0.15s;
+  flex-shrink: 0;
 }
 
 .chatbot-app.bjp-theme .left-chat-item:hover {
@@ -1303,15 +1310,15 @@
 }
 
 .chatbot-app.bjp-theme .left-chat-avatar {
-  width: 44px;
-  height: 44px;
+  width: 36px;
+  height: 36px;
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
   background-color: rgba(255, 102, 0, 0.06);
   color: var(--color-signal-mint);
-  font-size: 20px;
+  font-size: 17px;
   flex-shrink: 0;
 }
 
@@ -1349,6 +1356,40 @@
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+}
+
+/* Menu option items — spaced, card-like, with larger tap targets so the
+   options don't look cramped and have clear breathing room between them. */
+.chatbot-app.bjp-theme .left-chat-list {
+  padding: 6px 0 12px;
+}
+
+.chatbot-app.bjp-theme .left-chat-item.option-item {
+  margin: 8px 10px;
+  padding: 13px 14px;
+  gap: 12px;
+  border-radius: 14px;
+  border: 1px solid rgba(255, 102, 0, 0.12);
+  background-color: var(--color-carbon);
+}
+
+.chatbot-app.bjp-theme .left-chat-item.option-item:not(.locked):hover {
+  background-color: rgba(255, 102, 0, 0.04);
+  border-color: rgba(255, 102, 0, 0.28);
+}
+
+.chatbot-app.bjp-theme .left-chat-item.option-item .left-chat-avatar {
+  width: 42px;
+  height: 42px;
+  font-size: 19px;
+}
+
+.chatbot-app.bjp-theme .left-chat-item.option-item .left-chat-name {
+  font-size: 14.5px;
+}
+
+.chatbot-app.bjp-theme .left-chat-item.option-item .left-chat-msg {
+  font-size: 12px;
 }
 
 .chatbot-app.bjp-theme .left-chat-item.locked {
@@ -1416,6 +1457,58 @@
 .chatbot-app.bjp-theme .interactive-btn:disabled {
   opacity: 0.5;
   cursor: not-allowed;
+}
+
+/* ── Rich text inside chat bubbles (WhatsApp / Meta template style) ── */
+.rich-text {
+  white-space: pre-wrap;
+  word-break: break-word;
+  line-height: 1.5;
+}
+
+.rich-text strong { font-weight: 700; }
+.rich-text em { font-style: italic; }
+.rich-text del { opacity: 0.65; }
+
+.rich-text .chat-code {
+  background: #fff2e8;
+  color: #c2410c;
+  border: 1px solid rgba(250, 93, 0, 0.25);
+  padding: 1px 6px;
+  border-radius: 5px;
+  font-family: 'SFMono-Regular', Consolas, 'Courier New', monospace;
+  font-weight: 700;
+  font-size: 0.92em;
+  display: inline-block;
+  margin: 1px 1px;
+}
+
+.rich-text .chat-code.on-user {
+  background: rgba(250, 93, 0, 0.14);
+  border-color: rgba(250, 93, 0, 0.35);
+}
+
+/* Richer, softer card-style bubbles like the CRM */
+.chatbot-app.bjp-theme .msg-row.bot .msg-bubble {
+  box-shadow: 0 2px 12px rgba(29, 30, 28, 0.06);
+  border-radius: 14px;
+  border-bottom-left-radius: 4px;
+  padding: 11px 15px;
+}
+
+.chatbot-app.bjp-theme .msg-row.user .msg-bubble {
+  box-shadow: 0 2px 12px rgba(250, 93, 0, 0.08);
+  border-radius: 14px;
+  border-bottom-right-radius: 4px;
+  padding: 11px 15px;
+}
+
+/* ── Meta template style action buttons (full-width CTA footer) ── */
+.chatbot-app.bjp-theme .interactive-btn {
+  padding: 12px 12px;
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: 0.01em;
 }
 
 .chatbot-app.bjp-theme .msg-bubble {
