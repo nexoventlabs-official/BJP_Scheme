@@ -1,6 +1,6 @@
 import React from 'react';
 import {
-  LayoutDashboard, Users, Building, Shield, LogOut, ChevronLeft, ChevronRight, KeyRound, BarChart3, MapPin, FileText, ShieldCheck
+  LayoutDashboard, Users, Building, Shield, LogOut, ChevronLeft, ChevronRight, KeyRound, BarChart3, MapPin, FileText, ShieldCheck, Gift
 } from 'lucide-react';
 
 /**
@@ -22,6 +22,7 @@ const AdminSidebar = ({
         return [
           { id: 'dashboard', label: 'Overview Dashboard', icon: LayoutDashboard },
           { id: 'applications', label: 'Scheme Applications', icon: Users },
+          { id: 'schemes', label: 'Manage Schemes', icon: Gift },
           { id: 'booth_presidents', label: 'Booth President Requests', icon: ShieldCheck },
           { id: 'reports', label: 'Analytics & Reports', icon: BarChart3 },
           { id: 'logins', label: 'Admin Credentials', icon: KeyRound },

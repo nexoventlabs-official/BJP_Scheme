@@ -1,10 +1,11 @@
 import React from 'react';
-import { BJP_SCHEMES } from '../utils/constants';
+import { useBjpSchemes } from '../utils/schemesData';
 import { useAuth } from '../context/AuthContext';
 import { Send, X, CheckCircle, Award, User, MapPin, Trash2 } from 'lucide-react';
 
 const SchemeApplyModal = ({ selectedIds, onClose, onSubmit, isSubmitting }) => {
   const { user } = useAuth();
+  const BJP_SCHEMES = useBjpSchemes();
   const selectedSchemes = BJP_SCHEMES.filter(s => selectedIds.includes(s.id));
 
   return (

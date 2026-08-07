@@ -1,6 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { PieChart as PieIcon, Layers } from 'lucide-react';
-import { BJP_SCHEMES } from '../utils/constants';
+import { useBjpSchemes } from '../utils/schemesData';
 
 // Curated Apple (España) harmonious color palette for 23 schemes
 const SCHEME_COLORS = [
@@ -16,6 +16,7 @@ const SCHEME_COLORS = [
  */
 const SchemePieChart = ({ schemePopularity = [], scopeLabel = '' }) => {
   const [hoveredIdx, setHoveredIdx] = useState(null);
+  const BJP_SCHEMES = useBjpSchemes();
 
   // Process data to merge API popularity counts with the 23 canonical schemes
   const chartData = useMemo(() => {
@@ -75,7 +76,7 @@ const SchemePieChart = ({ schemePopularity = [], scopeLabel = '' }) => {
     });
 
     return { slices, total };
-  }, [schemePopularity]);
+  }, [schemePopularity, BJP_SCHEMES]);
 
   // Helper to convert polar coordinates to SVG arc paths
   const getArcPath = (cx, cy, rInner, rOuter, startAngleDeg, endAngleDeg) => {

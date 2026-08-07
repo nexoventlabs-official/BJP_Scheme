@@ -138,63 +138,59 @@ const BoothPresidentRequestsView = ({ admin = {} }) => {
       </div>
 
       {/* 4 Stat Cards Grid */}
-      {(() => {
-        const cardBase = {
-          padding: '18px 20px',
-          background: '#fff',
-          borderRadius: '14px',
-          display: 'flex',
-          flexDirection: 'row',
-          alignItems: 'center',
-          justifyContent: 'flex-start',
-          gap: '14px',
-          minHeight: 'auto',
-          boxSizing: 'border-box',
-        };
-        const iconChip = (bg, color) => ({
-          width: '46px',
-          height: '46px',
-          minWidth: '46px',
-          borderRadius: '12px',
-          background: bg,
-          color,
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          flexShrink: 0,
-          padding: 0,
-          margin: 0,
-          boxSizing: 'border-box',
-        });
-        const numberStyle = (color) => ({ fontSize: '26px', fontWeight: 800, lineHeight: 1.1, color, marginBottom: '2px' });
-        const labelStyle = (color) => ({ fontSize: '12.5px', fontWeight: 600, color, whiteSpace: 'nowrap' });
-        const cards = [
-          { key: 'total', filter: null, border: '#e2e8f0', iconBg: '#f1f5f9', iconColor: '#0f172a', numColor: '#0f172a', labelColor: '#64748b', Icon: FileText, value: stats.total, label: 'Total Applications' },
-          { key: 'pending', filter: 'Pending', border: '#fed7aa', iconBg: '#fff7ed', iconColor: '#ea580c', numColor: '#ea580c', labelColor: '#ea580c', Icon: Clock, value: stats.pending, label: 'Pending Approval' },
-          { key: 'approved', filter: 'Approved', border: '#bbf7d0', iconBg: '#f0fdf4', iconColor: '#16a34a', numColor: '#16a34a', labelColor: '#16a34a', Icon: CheckCircle2, value: stats.approved, label: 'Approved Presidents' },
-          { key: 'rejected', filter: 'Rejected', border: '#fecaca', iconBg: '#fef2f2', iconColor: '#dc2626', numColor: '#dc2626', labelColor: '#dc2626', Icon: XCircle, value: stats.rejected, label: 'Declined' },
-        ];
-        return (
-          <div className="stat-cards-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '16px', marginBottom: '24px' }}>
-            {cards.map(({ key, filter, border, iconBg, iconColor, numColor, labelColor, Icon, value, label }) => (
-              <div
-                key={key}
-                className="stat-card"
-                onClick={filter ? () => setStatusFilter(filter) : undefined}
-                style={{ ...cardBase, border: `1px solid ${border}`, cursor: filter ? 'pointer' : 'default' }}
-              >
-                <div className="stat-icon" style={iconChip(iconBg, iconColor)}>
-                  <Icon size={22} />
-                </div>
-                <div style={{ minWidth: 0 }}>
-                  <div className="stat-number" style={numberStyle(numColor)}>{value}</div>
-                  <div className="stat-label" style={labelStyle(labelColor)}>{label}</div>
-                </div>
-              </div>
-            ))}
+      <div className="stat-cards-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '16px', marginBottom: '24px' }}>
+        <div className="stat-card" style={{ padding: '16px', background: '#fff', borderRadius: '12px', border: '1px solid #e2e8f0', display: 'flex', gap: '12px', alignItems: 'center' }}>
+          <div className="stat-icon" style={{ background: '#f1f5f9', color: '#0f172a', padding: '10px', borderRadius: '10px' }}>
+            <FileText size={20} />
           </div>
-        );
-      })()}
+          <div>
+            <div className="stat-number" style={{ fontSize: '22px', fontWeight: '800' }}>{stats.total}</div>
+            <div className="stat-label" style={{ fontSize: '12px', color: '#64748b' }}>Total Applications</div>
+          </div>
+        </div>
+
+        <div
+          className="stat-card"
+          onClick={() => setStatusFilter('Pending')}
+          style={{ padding: '16px', background: '#fff', borderRadius: '12px', border: '1px solid #fed7aa', cursor: 'pointer', display: 'flex', gap: '12px', alignItems: 'center' }}
+        >
+          <div className="stat-icon" style={{ background: '#fff7ed', color: '#ea580c', padding: '10px', borderRadius: '10px' }}>
+            <Clock size={20} />
+          </div>
+          <div>
+            <div className="stat-number" style={{ fontSize: '22px', fontWeight: '800', color: '#ea580c' }}>{stats.pending}</div>
+            <div className="stat-label" style={{ fontSize: '12px', color: '#ea580c' }}>Pending Approval</div>
+          </div>
+        </div>
+
+        <div
+          className="stat-card"
+          onClick={() => setStatusFilter('Approved')}
+          style={{ padding: '16px', background: '#fff', borderRadius: '12px', border: '1px solid #bbf7d0', cursor: 'pointer', display: 'flex', gap: '12px', alignItems: 'center' }}
+        >
+          <div className="stat-icon" style={{ background: '#f0fdf4', color: '#16a34a', padding: '10px', borderRadius: '10px' }}>
+            <CheckCircle2 size={20} />
+          </div>
+          <div>
+            <div className="stat-number" style={{ fontSize: '22px', fontWeight: '800', color: '#16a34a' }}>{stats.approved}</div>
+            <div className="stat-label" style={{ fontSize: '12px', color: '#16a34a' }}>Approved Presidents</div>
+          </div>
+        </div>
+
+        <div
+          className="stat-card"
+          onClick={() => setStatusFilter('Rejected')}
+          style={{ padding: '16px', background: '#fff', borderRadius: '12px', border: '1px solid #fecaca', cursor: 'pointer', display: 'flex', gap: '12px', alignItems: 'center' }}
+        >
+          <div className="stat-icon" style={{ background: '#fef2f2', color: '#dc2626', padding: '10px', borderRadius: '10px' }}>
+            <XCircle size={20} />
+          </div>
+          <div>
+            <div className="stat-number" style={{ fontSize: '22px', fontWeight: '800', color: '#dc2626' }}>{stats.rejected}</div>
+            <div className="stat-label" style={{ fontSize: '12px', color: '#dc2626' }}>Declined</div>
+          </div>
+        </div>
+      </div>
 
       {/* Filter Toolbar */}
       <div className="campsite-card" style={{ padding: '16px', marginBottom: '20px', background: '#fff', borderRadius: '12px', border: '1px solid #e2e8f0', display: 'flex', flexDirection: 'column', gap: '12px' }}>

@@ -17,6 +17,12 @@ const {
   getAllAdmins,
   getBoothVoterRoll
 } = require('../controllers/adminController');
+const {
+  getAllSchemesAdmin,
+  createScheme,
+  updateScheme,
+  deleteScheme
+} = require('../controllers/schemeAdminController');
 const { protectAdmin, authorizeRoles } = require('../middleware/authMiddleware');
 
 router.post('/login', adminLogin);
@@ -37,5 +43,11 @@ router.get('/export-excel', protectAdmin, exportApplicationsExcel);
 router.put('/applications/:id/status', protectAdmin, updateApplicationStatus);
 router.post('/create-credential', protectAdmin, authorizeRoles('SUPER_ADMIN'), createAdminCredential);
 router.get('/credentials', protectAdmin, authorizeRoles('SUPER_ADMIN'), getAllAdmins);
+
+// ── Scheme management (SUPER_ADMIN only) ──
+router.get('/schemes', protectAdmin, authorizeRoles('SUPER_ADMIN'), getAllSchemesAdmin);
+router.post('/schemes', protectAdmin, authorizeRoles('SUPER_ADMIN'), createScheme);
+router.put('/schemes/:id', protectAdmin, authorizeRoles('SUPER_ADMIN'), updateScheme);
+router.delete('/schemes/:id', protectAdmin, authorizeRoles('SUPER_ADMIN'), deleteScheme);
 
 module.exports = router;

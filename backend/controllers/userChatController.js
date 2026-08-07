@@ -229,8 +229,10 @@ const getProfile = async (req, res) => {
       return res.status(401).json({ success: false, message: 'Authentication required' });
     }
 
+    // Identity is the mobile number (unique). EPIC can be shared by multiple
+    // members, so we must NOT match applications by epicNo — that would leak
+    // another member's applications who happen to share the same voter ID.
     const appConditions = [{ userId: user._id }];
-    if (user.epicNo) appConditions.push({ epicNo: user.epicNo });
     if (user.mobile) appConditions.push({ mobile: user.mobile });
 
     const applications = await SchemeApplication.find({ $or: appConditions }).sort({ appliedAt: -1 });
@@ -288,11 +290,13 @@ const registerSchemes = async (req, res) => {
       }
     }
 
-    const orConditions = [];
-    if (cleanMobile) orConditions.push({ mobile: cleanMobile });
-    if (cleanEpic) orConditions.push({ epicNo: cleanEpic });
-
-    let user = tokenUser || await User.findOne({ $or: orConditions });
+    // Users are keyed by mobile number (unique). EPIC is NOT unique — multiple
+    // members can share the same voter ID — so we never look up or dedupe users
+    // by epic. This keeps user 2 (different mobile, same EPIC) a separate user.
+    let user = tokenUser;
+    if (!user && cleanMobile) {
+      user = await User.findOne({ mobile: cleanMobile });
+    }
 
     if (!user) {
       const ntCode = 'NT-' + Math.random().toString(36).substring(2, 10).toUpperCase();
@@ -314,7 +318,8 @@ const registerSchemes = async (req, res) => {
     const targetSchemes = schemeIds || schemes || ['PM_KISAN', 'PM_UJJWALA', 'AYUSHMAN_BHARAT'];
     const registeredApps = [];
 
-    const { BJP_SCHEMES_LIST } = require('./schemeController');
+    const { getSchemesCatalog } = require('./schemeController');
+    const BJP_SCHEMES_LIST = await getSchemesCatalog();
 
     for (let sch of targetSchemes) {
       const schemeName = String(sch);
@@ -329,8 +334,7 @@ const registerSchemes = async (req, res) => {
       const existing = await SchemeApplication.findOne({
         $or: [
           { userId: user._id, schemeName },
-          { mobile: user.mobile, schemeName },
-          { epicNo: user.epicNo, schemeName }
+          { mobile: user.mobile, schemeName }
         ]
       });
 

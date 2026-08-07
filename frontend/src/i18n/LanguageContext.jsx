@@ -40,17 +40,21 @@ export function LanguageProvider({ children }) {
 
   const getSchemeData = (scheme) => {
     if (!scheme) return scheme
-    if (lang === 'ta' && schemesTa && schemesTa[scheme.id]) {
-      const taData = schemesTa[scheme.id]
-      return {
-        ...scheme,
-        category: taData.category || scheme.category,
-        title: taData.title || scheme.title,
-        overview: taData.overview || scheme.overview,
-        eligibility: taData.eligibility || scheme.eligibility,
-        highlight: taData.highlight || scheme.highlight,
-        tags: taData.tags && taData.tags.length ? taData.tags : scheme.tags,
-        documents: taData.documents && taData.documents.length ? taData.documents : scheme.documents,
+    if (lang === 'ta') {
+      // Prefer the built-in Tamil map for the original schemes; fall back to
+      // the scheme's own embedded Tamil fields (schemes added via admin panel).
+      const taData = (schemesTa && schemesTa[scheme.id]) || scheme._ta
+      if (taData) {
+        return {
+          ...scheme,
+          category: taData.category || scheme.category,
+          title: taData.title || scheme.title,
+          overview: taData.overview || scheme.overview,
+          eligibility: taData.eligibility || scheme.eligibility,
+          highlight: taData.highlight || scheme.highlight,
+          tags: taData.tags && taData.tags.length ? taData.tags : scheme.tags,
+          documents: taData.documents && taData.documents.length ? taData.documents : scheme.documents,
+        }
       }
     }
     return scheme

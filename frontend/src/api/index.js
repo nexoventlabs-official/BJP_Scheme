@@ -96,6 +96,9 @@ export const chat = {
   registerSchemes: (data) =>
     api.post('/api/register-schemes', data),
 
+  getSchemes: () =>
+    api.get('/api/schemes/list'),
+
   applyBoothPresident: (data) =>
     api.post('/api/booth-president/apply', data),
 

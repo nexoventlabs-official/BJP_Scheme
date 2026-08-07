@@ -5,6 +5,7 @@ import { chat } from '../api'
 import '../styles/chatbot.css'
 import { useLang } from '../i18n/LanguageContext'
 import { getSchemeBgImage } from '../components/MemberProfileTimelineView'
+import { useMergedSchemes, adaptToNtShape, adaptToSchemesShape } from '../utils/schemesData'
 
 // ── Scheme application status → colour + icon metadata (tracking timeline) ──
 const SCHEME_STATUS_META = {
@@ -515,8 +516,9 @@ function FullReferralPanel({ link, onBack }) {
   )
 }
 
-// ── 23 Central Government Schemes (Nalam Thittam) ──────────
-const NT_SCHEMES = [
+// Schemes are fully DB-driven now — no hardcoded fallback list.
+const NT_SCHEMES_STATIC = []
+const _ARCHIVED_NT_SCHEMES_UNUSED = [
   {
     id: 1, cluster: 'Insurance', icon: '🛡️',
     name_en: 'PMSBY — Suraksha Bima Yojana',
@@ -767,7 +769,6 @@ function SchemeInfoModal({ scheme, onClose }) {
           padding: '14px 20px 12px',
           borderBottom: '1px solid rgba(255,255,255,0.07)',
         }}>
-          <span style={{ fontSize: 28 }}>{scheme.icon}</span>
           <div style={{ flex: 1 }}>
             <div style={{ fontSize: 14, fontWeight: 700, color: 'rgba(255,255,255,0.93)', lineHeight: 1.3 }}>
               {name}
@@ -892,6 +893,7 @@ function SchemeSelectionMsg({ isLatest, onSubmit, disabled }) {
   const [submitted, setSubmitted] = useState(false)
   const [infoScheme, setInfoScheme] = useState(null)
 
+  const NT_SCHEMES = useMergedSchemes(NT_SCHEMES_STATIC, adaptToNtShape)
   const clusters = [...new Set(NT_SCHEMES.map(s => s.cluster))]
 
   const toggle = (id) => {
@@ -956,9 +958,8 @@ function SchemeSelectionMsg({ isLatest, onSubmit, disabled }) {
                     boxShadow: isSelected ? '0 4px 12px rgba(255,153,51,0.35)' : '0 2px 6px rgba(0,0,0,0.06)'
                   }}
                 >
-                  {/* Icon + checkbox row */}
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%', zIndex: 2 }}>
-                    <span style={{ fontSize: 16, lineHeight: 1, filter: 'drop-shadow(0 1px 2px rgba(255,255,255,0.8))' }}>{scheme.icon}</span>
+                  {/* Checkbox row */}
+                  <div style={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center', width: '100%', zIndex: 2 }}>
                     <div style={{
                       width: 15, height: 15, borderRadius: 4, flexShrink: 0,
                       background: isSelected ? '#FF9933' : 'rgba(255, 255, 255, 0.95)',
@@ -1047,6 +1048,7 @@ function SchemeSelectionMsg({ isLatest, onSubmit, disabled }) {
 // ── My Schemes Dashboard Panel ──────────────────────────────
 function MySchemePanel({ epicNo, mobile, onBack }) {
   const { t, getSchemeData } = useLang()
+  const SCHEMES = useMergedSchemes(SCHEMES_STATIC, adaptToSchemesShape)
   const [applyStatus, setApplyStatus] = useState({});
   const [expandedId, setExpandedId] = useState(null);
   const [selectedSchemeForModal, setSelectedSchemeForModal] = useState(null);
@@ -1059,7 +1061,9 @@ function MySchemePanel({ epicNo, mobile, onBack }) {
   useEffect(() => {
     const activeEpic = epicNo || localStorage.getItem('bjp_user_epic') || '';
     const activeMobile = mobile || localStorage.getItem('bjp_user_mobile') || '';
-    const userKey = activeEpic || activeMobile || 'user';
+    // Key the local cache by mobile (the unique per-user id), not EPIC —
+    // members can share an EPIC, so an epic-keyed cache would mix their data.
+    const userKey = activeMobile || activeEpic || 'user';
     const storageKey = `bjp_applied_schemes_${userKey}`;
 
     const findSchemeMatch = (itemOrNameOrId) => {
@@ -1091,7 +1095,6 @@ function MySchemePanel({ epicNo, mobile, onBack }) {
     };
 
     loadFromStorage(storageKey);
-    loadFromStorage('bjp_applied_schemes_global');
     setApplyStatus({ ...localAppliedMap });
 
     if (activeEpic || activeMobile) {
@@ -1116,7 +1119,6 @@ function MySchemePanel({ epicNo, mobile, onBack }) {
           setAppliedAppsMap(appsMap);
           try {
             localStorage.setItem(storageKey, JSON.stringify(titlesList));
-            localStorage.setItem('bjp_applied_schemes_global', JSON.stringify(titlesList));
           } catch(e) {}
         })
         .catch(() => {});
@@ -1158,14 +1160,13 @@ function MySchemePanel({ epicNo, mobile, onBack }) {
       setIsSubmitting(false);
       setApplyStatus((prev) => ({ ...prev, [scheme.id]: 'applied' }));
 
-      const userKey = activeEpic || activeMobile || 'user';
+      const userKey = activeMobile || activeEpic || 'user';
       const storageKey = `bjp_applied_schemes_${userKey}`;
       try {
         const raw = localStorage.getItem(storageKey);
         let list = raw ? JSON.parse(raw) : [];
         if (!list.includes(scheme.title)) list.push(scheme.title);
         localStorage.setItem(storageKey, JSON.stringify(list));
-        localStorage.setItem('bjp_applied_schemes_global', JSON.stringify(list));
       } catch (e) {}
 
       setSelectedSchemeForModal(null);
@@ -1422,7 +1423,7 @@ function MySchemePanel({ epicNo, mobile, onBack }) {
                 {t('Required Documents for Verification:')}
               </span>
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
-                {selectedSchemeForModal.documents.map((doc, idx) => (
+                {(selectedSchemeForModal.documents || []).map((doc, idx) => (
                   <span key={idx} style={{
                     fontSize: 11,
                     background: 'rgba(255,255,255,0.06)',
@@ -1690,7 +1691,7 @@ function MySchemePanel({ epicNo, mobile, onBack }) {
 
             {notAppliedSchemes.length === 0 ? (
               <div style={{ textAlign: 'center', padding: '24px 16px', background: 'var(--color-carbon)', borderRadius: 12, border: '1px solid var(--color-graphite)', color: 'var(--color-signal-mint)', fontWeight: 600 }}>
-                🎉 {t('Congratulations! You have applied for all 23 Central Welfare Schemes!')}
+                🎉 {t('Congratulations! You have applied for all {count} Central Welfare Schemes!', { count: SCHEMES.length })}
               </div>
             ) : (
               <div className="schemes-list" style={{ gap: 12 }}>
@@ -1750,7 +1751,7 @@ function MySchemePanel({ epicNo, mobile, onBack }) {
                           </h3>
 
                           <div className="scheme-tags-row" style={{ display: 'flex', gap: 6, flexWrap: 'wrap', margin: '8px 0' }}>
-                            {scheme.tags.map((tItem, idx) => (
+                            {(scheme.tags || []).map((tItem, idx) => (
                               <span key={idx} className="scheme-tag" style={{ background: 'rgba(255,255,255,0.88)', border: '1px solid #d2d2d7', color: '#1d1d1f', fontSize: 11, fontWeight: 600, padding: '2px 8px', borderRadius: 6 }}>
                                 {tItem}
                               </span>
@@ -1821,7 +1822,7 @@ function MySchemePanel({ epicNo, mobile, onBack }) {
                                 <i className="bi bi-file-earmark-check-fill" style={{ color: '#2ecc71' }} /> {t('Required Documents')}
                               </div>
                               <div className="documents-list">
-                                {scheme.documents.map((doc, idx) => (
+                                {(scheme.documents || []).map((doc, idx) => (
                                   <div key={idx} className="doc-item" style={{ color: '#333' }}>
                                     <i className="bi bi-check-circle-fill" style={{ color: '#2ecc71' }} />
                                     <span>{doc}</span>
@@ -2001,7 +2002,8 @@ function ReferralLinkMsg({ link }) {
   )
 }
 
-const SCHEMES = [
+const SCHEMES_STATIC = []
+const _ARCHIVED_SCHEMES_UNUSED = [
   {
     id: 1,
     category: 'Cluster 1 — Insurance Trinity',

@@ -8,9 +8,10 @@ const userSchema = new mongoose.Schema({
     trim: true
   },
   epicNo: {
+    // NOT unique — multiple members can share the same voter ID (EPIC).
+    // The mobile number is the unique per-user identifier.
     type: String,
     required: true,
-    unique: true,
     uppercase: true,
     trim: true
   },
@@ -63,5 +64,6 @@ const userSchema = new mongoose.Schema({
 
 userSchema.index({ district: 1, assemblyName: 1, boothNo: 1 });
 userSchema.index({ createdAt: -1 });
+userSchema.index({ epicNo: 1 }); // non-unique lookup index (EPIC can repeat)
 
 module.exports = mongoose.model('User', userSchema);

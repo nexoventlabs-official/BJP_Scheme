@@ -3,7 +3,7 @@ import ExcelJS from 'exceljs';
 import API from '../utils/api';
 import { useAuth } from '../context/AuthContext';
 import StatusBadge from './StatusBadge';
-import { BJP_SCHEMES } from '../utils/constants';
+import { useBjpSchemes } from '../utils/schemesData';
 import {
   FileSpreadsheet, Filter, Search, RefreshCw, Download, Users, FileText, CheckCircle2, Clock, XCircle, Shield
 } from 'lucide-react';
@@ -50,6 +50,7 @@ const ReportsView = ({
   initialScheme = ''
 }) => {
   const { admin } = useAuth();
+  const BJP_SCHEMES = useBjpSchemes();
   const role = admin?.role || 'SUPER_ADMIN';
 
   // Filters State
@@ -396,7 +397,7 @@ const ReportsView = ({
               className="form-control"
               style={{ marginTop: '4px' }}
             >
-              <option value="">All 23 Central BJP Schemes</option>
+              <option value="">All {BJP_SCHEMES.length} Central BJP Schemes</option>
               {BJP_SCHEMES.map(s => (
                 <option key={s.id} value={s.name}>
                   {s.name} ({s.fullTitle || s.fullName})

@@ -14,8 +14,8 @@ router.post('/apply', protectUser, applyBoothPresident);
 router.get('/my-status', protectUser, getMyBoothPresidentStatus);
 router.get('/jurisdictions', getPublicJurisdictions);
 
-// Admin endpoints (mounted at /api/admin in server.js → /api/admin/booth-president-requests)
-router.get('/booth-president-requests', protectAdmin, getAdminBoothPresidentRequests);
-router.post('/booth-president-requests/:id/action', protectAdmin, handleBoothPresidentAction);
+// Admin endpoints
+router.get('/admin/booth-president-requests', protectAdmin, getAdminBoothPresidentRequests);
+router.post('/admin/booth-president-requests/:id/action', protectAdmin, handleBoothPresidentAction);
 
 module.exports = router;

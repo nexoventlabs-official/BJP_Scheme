@@ -4,7 +4,7 @@ import { useAuth } from '../../context/AuthContext';
 import StatusBadge from '../../components/StatusBadge';
 import MemberProfileTimelineView, { formatSchemeName, formatAppliedDateTime, getSchemeBgImage } from '../../components/MemberProfileTimelineView';
 import ReportsView from '../../components/ReportsView';
-import { BJP_SCHEMES } from '../../utils/constants';
+import { useBjpSchemes, buildSchemeCards } from '../../utils/schemesData';
 import {
   Shield, Users, Building, PhoneCall, RefreshCw, Search, Eye, Award, Share2
 } from 'lucide-react';
@@ -15,6 +15,7 @@ import BoothPresidentRequestsView from '../../components/BoothPresidentRequestsV
 
 const DistrictAdminDashboard = () => {
   const { admin, logoutAdmin } = useAuth();
+  const BJP_SCHEMES = useBjpSchemes();
   const [subPage, setSubPage] = useState('dashboard');
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
 
@@ -339,7 +340,7 @@ const DistrictAdminDashboard = () => {
               <span style={{ fontSize: '12px', color: 'var(--color-slate)' }}>Click any scheme to filter applications</span>
             </div>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(240px, 1fr))', gap: '12px', width: '100%' }}>
-              {statsData.schemePopularity?.map((item) => {
+              {buildSchemeCards(BJP_SCHEMES, statsData.schemePopularity).map((item) => {
                 const bgImg = getSchemeBgImage(item._id);
                 return (
                   <div
@@ -489,7 +490,7 @@ const DistrictAdminDashboard = () => {
                 className="admin-filter-select"
                 style={{ flex: '1 1 220px', minWidth: '220px' }}
               >
-                <option value="">All 23 Central BJP Schemes</option>
+                <option value="">All {BJP_SCHEMES.length} Central BJP Schemes</option>
                 {BJP_SCHEMES.map(s => (
                   <option key={s.id} value={s.name}>
                     {s.name} ({s.fullTitle || s.fullName})

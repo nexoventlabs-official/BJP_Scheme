@@ -70,7 +70,7 @@ export const ta = {
   "Track Application": "விண்ணப்பத்தை கண்காணிக்க",
   "Updated": "புதுப்பிக்கப்பட்டது",
   "Available Central Schemes to Apply": "விண்ணப்பிக்கக்கூடிய மத்திய அரசு நலத்திட்டங்கள்",
-  "🎉 Congratulations! You have applied for all 23 Central Welfare Schemes!": "🎉 வாழ்த்துக்கள்! நீங்கள் அனைத்து 23 மத்திய நல திட்டங்களுக்கும் விண்ணப்பித்துவிட்டீர்கள்!",
+  "Congratulations! You have applied for all {count} Central Welfare Schemes!": "வாழ்த்துக்கள்! நீங்கள் அனைத்து {count} மத்திய நல திட்டங்களுக்கும் விண்ணப்பித்துவிட்டீர்கள்!",
   "View Details": "விவரங்களை காண்க",
   "Hide Steps": "படிநிலைகளை மறை",
   "Apply Now": "இப்போது விண்ணப்பிக்க",

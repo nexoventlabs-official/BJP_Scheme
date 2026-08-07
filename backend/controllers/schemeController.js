@@ -1,11 +1,33 @@
 const SchemeApplication = require('../models/SchemeApplication');
 const User = require('../models/User');
+const Scheme = require('../models/Scheme');
 
-// All 23 BJP Nalam Thittam Schemes — single source of truth
+// Static fallback — used only if the Scheme collection is empty or unreachable.
 const { BJP_SCHEMES } = require('../constants/schemes');
-const BJP_SCHEMES_LIST = BJP_SCHEMES; // alias so rest of file is unchanged
+const BJP_SCHEMES_LIST = BJP_SCHEMES; // legacy alias
 
+// ── Cached scheme catalog (DB-backed, short TTL) ──────────────
+let _cache = { at: 0, data: null };
+const CACHE_MS = 30000;
 
+// Returns the scheme catalog from the DB (fallback to static constants).
+async function getSchemesCatalog() {
+  const now = Date.now();
+  if (_cache.data && now - _cache.at < CACHE_MS) return _cache.data;
+  try {
+    const docs = await Scheme.find({}).sort({ order: 1, id: 1 }).lean();
+    // Fully DB-driven: return exactly what's in the DB (even an empty list).
+    _cache = { at: now, data: docs || [] };
+    return _cache.data;
+  } catch (e) {
+    console.error('[getSchemesCatalog] DB error:', e.message);
+    return _cache.data || [];
+  }
+}
+
+function invalidateSchemeCache() {
+  _cache = { at: 0, data: null };
+}
 
 // @desc    Apply for single or multiple BJP schemes
 // @route   POST /api/schemes/apply
@@ -20,9 +42,10 @@ const applySchemes = async (req, res) => {
     const user = req.user;
     const appliedResults = [];
     const skippedAlreadyApplied = [];
+    const catalog = await getSchemesCatalog();
 
     for (let id of schemeIds) {
-      const schemeInfo = BJP_SCHEMES_LIST.find(s => s.id === Number(id));
+      const schemeInfo = catalog.find(s => Number(s.id) === Number(id));
       if (!schemeInfo) continue;
 
       // Check if already applied
@@ -93,19 +116,25 @@ const getUserRequests = async (req, res) => {
   }
 };
 
-// @desc    Get scheme catalog list
+// @desc    Get scheme catalog list (dynamic — from DB)
 // @route   GET /api/schemes/list
 // @access  Public
 const getSchemeList = async (req, res) => {
-  return res.status(200).json({
-    success: true,
-    schemes: BJP_SCHEMES_LIST
-  });
+  try {
+    const schemes = await getSchemesCatalog();
+    const list = (schemes || []).filter(s => s.active !== false);
+    return res.status(200).json({ success: true, schemes: list });
+  } catch (error) {
+    console.error('[getSchemeList Error]:', error);
+    return res.status(200).json({ success: true, schemes: [] });
+  }
 };
 
 module.exports = {
   applySchemes,
   getUserRequests,
   getSchemeList,
+  getSchemesCatalog,
+  invalidateSchemeCache,
   BJP_SCHEMES_LIST
 };

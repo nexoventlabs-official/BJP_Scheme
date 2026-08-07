@@ -1,4 +1,6 @@
-export const BJP_SCHEMES = [
+// Schemes are fully DB-driven now — no hardcoded fallback list.
+export const BJP_SCHEMES = []
+const _ARCHIVED_BJP_SCHEMES_UNUSED = [
   // Cluster 1 — Insurance
   {
     id: 1,
