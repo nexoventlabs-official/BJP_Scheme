@@ -1,4 +1,5 @@
 const express = require('express');
+const mongoose = require('mongoose');
 const cors = require('cors');
 const helmet = require('helmet');
 const rateLimit = require('express-rate-limit');
@@ -27,7 +28,11 @@ const adminRoutes = require('./routes/adminRoutes');
 const referralRoutes = require('./routes/referralRoutes');
 const userChatRoutes = require('./routes/userChatRoutes');
 const boothPresidentRoutes = require('./routes/boothPresidentRoutes');
+const whatsappWebhookRoutes = require('./routes/whatsappWebhook');
+const whatsappFlowRoutes = require('./routes/whatsappFlow');
+const flowImagesRoutes = require('./routes/flowImagesRoutes');
 const { getAssemblyMetadata } = require('./services/jurisdictionService');
+const { ensureKeysExist } = require('./services/waFlowImages');
 
 const app = express();
 
@@ -58,7 +63,16 @@ app.use(cors({
 // served frontend can still consume the API responses.
 app.use(helmet({ crossOriginResourcePolicy: { policy: 'cross-origin' } }));
 
-app.use(express.json({ limit: '8mb' }));
+// Capture the raw body ONLY for the WhatsApp webhook so we can verify Meta's
+// X-Hub-Signature-256 HMAC. All other routes just get parsed JSON.
+app.use(express.json({
+  limit: '8mb',
+  verify: (req, _res, buf) => {
+    if (req.originalUrl && req.originalUrl.startsWith('/api/whatsapp/webhook')) {
+      req.rawBody = buf.toString();
+    }
+  },
+}));
 
 // Behind nginx: trust the first proxy hop so rate-limit / logging see the real
 // client IP from X-Forwarded-For.
@@ -135,7 +149,12 @@ app.use('/api/voter', voterRoutes);
 app.use('/api/schemes', schemeRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/admin', boothPresidentRoutes);
+app.use('/api/admin/flow-images', flowImagesRoutes);
 app.use('/api/referrals', referralRoutes);
+
+// ── WhatsApp Cloud API automation ──
+app.use('/api/whatsapp', whatsappWebhookRoutes);   // GET/POST /api/whatsapp/webhook
+app.use('/api/whatsapp/flow', whatsappFlowRoutes); // encrypted Flow data-exchange endpoint
 
 // Health Check (Verifies Application & Database Readiness)
 app.get('/api/health', async (req, res) => {
@@ -223,6 +242,10 @@ const startServer = async () => {
   await connectAppDb();
   await getVoterDbClient();
   await seedDefaultAdmins();
+  // Seed the WhatsApp flow-image key catalog (one bulkWrite).
+  ensureKeysExist()
+    .then(() => console.log('[Seed] WhatsApp flow-image keys ensured'))
+    .catch((err) => console.warn('[Seed] flow-image keys skipped:', err.message));
 
   app.listen(PORT, () => {
     console.log(`====================================================`);

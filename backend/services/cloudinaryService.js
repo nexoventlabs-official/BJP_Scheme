@@ -35,6 +35,17 @@ const uploadSchemeImage = async (dataUri, publicId) => {
   return { secure_url: res.secure_url, public_id: res.public_id };
 };
 
+/**
+ * Generic image upload from a base64 data URI (used by the Flow Images admin
+ * page). No forced resize — flow icons/banners keep their aspect ratio.
+ */
+const uploadDataUri = async (dataUri, { folder = 'bjp_flow', publicId } = {}) => {
+  const opts = { folder, overwrite: true, resource_type: 'image' };
+  if (publicId) opts.public_id = publicId;
+  const res = await cloudinary.uploader.upload(dataUri, opts);
+  return { secure_url: res.secure_url, public_id: res.public_id };
+};
+
 const deleteImage = async (publicId) => {
   if (!publicId) return;
   try {
@@ -63,4 +74,4 @@ const publicIdFromUrl = (url) => {
   return publicId || null;
 };
 
-module.exports = { cloudinary, isConfigured, uploadSchemeImage, deleteImage, publicIdFromUrl };
+module.exports = { cloudinary, isConfigured, uploadSchemeImage, uploadDataUri, deleteImage, publicIdFromUrl };

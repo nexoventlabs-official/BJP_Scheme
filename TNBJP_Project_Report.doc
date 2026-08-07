@@ -1,0 +1,149 @@
+<html xmlns:o="urn:schemas-microsoft-com:office:office"
+      xmlns:w="urn:schemas-microsoft-com:office:word"
+      xmlns="http://www.w3.org/TR/REC-html40">
+<head>
+<meta charset="utf-8">
+<title>TN BJP Nalam Thittam - Project Report</title>
+<!--[if gte mso 9]>
+<xml>
+<w:WordDocument>
+<w:View>Print</w:View>
+<w:Zoom>100</w:Zoom>
+</w:WordDocument>
+</xml>
+<![endif]-->
+<style>
+@page {
+  size: 21cm 29.7cm;
+  margin: 1.4cm 1.6cm 1.4cm 1.6cm;
+}
+body {
+  font-family: "Calibri", "Segoe UI", sans-serif;
+  font-size: 9.6pt;
+  line-height: 1.28;
+  color: #1a1a1a;
+  margin: 0;
+}
+h1 {
+  font-size: 17pt;
+  color: #E85D04;
+  margin: 0 0 1pt 0;
+  text-align: center;
+}
+.subtitle {
+  text-align: center;
+  font-size: 9pt;
+  color: #555;
+  margin: 0 0 8pt 0;
+  border-bottom: 2px solid #138808;
+  padding-bottom: 5pt;
+}
+h2 {
+  font-size: 11pt;
+  color: #ffffff;
+  background: #E85D04;
+  padding: 3pt 7pt;
+  margin: 9pt 0 4pt 0;
+}
+h3 {
+  font-size: 9.8pt;
+  color: #138808;
+  margin: 6pt 0 2pt 0;
+}
+p { margin: 0 0 4pt 0; text-align: justify; }
+ul { margin: 2pt 0 4pt 0; padding-left: 16pt; }
+li { margin: 0 0 1.5pt 0; }
+table { border-collapse: collapse; width: 100%; margin: 3pt 0; font-size: 8.8pt; }
+td, th { border: 0.5pt solid #cfcfcf; padding: 2.5pt 5pt; vertical-align: top; }
+th { background: #fff3e6; color: #333; text-align: left; }
+.tag { color: #E85D04; font-weight: bold; }
+.lead { color: #138808; font-weight: bold; }
+.pagebreak { page-break-before: always; }
+.foot { font-size: 7.6pt; color: #888; text-align: center; margin-top: 8pt; border-top: 0.5pt solid #ddd; padding-top: 3pt; }
+</style>
+</head>
+<body>
+
+<h1>BJP Nalam Thittam &mdash; Digital Welfare Scheme Platform</h1>
+<div class="subtitle">Project Report for Tamil Nadu BJP (TN BJP) &nbsp;|&nbsp; Web Application, WhatsApp Automation &amp; Party Dashboard</div>
+
+<h2>1. What We Built &amp; Why</h2>
+<p><span class="lead">BJP Nalam Thittam</span> ("Nalam Thittam" means "welfare scheme" in Tamil) is a complete digital platform that helps ordinary citizens of Tamil Nadu discover and apply for <b>Central Government welfare schemes</b> &mdash; like PM Kisan, Ayushman Bharat health cover, and Ujjwala free-gas &mdash; in just a few taps, in <b>both Tamil and English</b>. At the same time, it gives the party a powerful, real-time dashboard to see how many people have enrolled, booth-by-booth, across the entire state, and to grow a grassroots membership and referral network.</p>
+<p>The platform reaches people through <b>three connected surfaces</b>: a mobile-friendly <b>Web App</b>, a fully automated <b>WhatsApp Chatbot</b>, and a secure <b>Admin Dashboard</b> for party officials. All three share the same central database, so information stays consistent no matter where a person signs up.</p>
+
+<h3>Who Uses It</h3>
+<table>
+<tr><th>User</th><th>What they do</th></tr>
+<tr><td><b>Voters / Members</b> (public)</td><td>Register with mobile OTP and Voter ID, browse and apply for schemes, track their application status, share a personal referral link, and volunteer to become a Booth President.</td></tr>
+<tr><td><b>Booth Presidents</b></td><td>Members whose request has been approved by a senior official; they represent the party at the local booth level.</td></tr>
+<tr><td><b>Party Admins</b> (5 levels)</td><td>Super Admin &rarr; State &rarr; District &rarr; Assembly &rarr; Booth. Each official sees data only for their own area and manages enrollments within it.</td></tr>
+</table>
+
+<h2>2. The Web Application</h2>
+<p>The web app opens as a friendly, <b>WhatsApp-style chat screen</b> that guides the citizen step by step, so even first-time smartphone users feel comfortable. There is a language toggle for Tamil and English throughout.</p>
+<h3>For Citizens / Members</h3>
+<ul>
+<li><b>Simple sign-up:</b> Enter mobile number &rarr; receive a 6-digit OTP by SMS &rarr; enter Voter ID (EPIC). The system instantly finds the voter in the official electoral roll and shows a confirmation card with their name, district, assembly, and booth.</li>
+<li><b>Apply for schemes:</b> Schemes are grouped into easy categories (Insurance, Farmers, Health, Women &amp; Families, Housing, Youth &amp; Skills, Credit). The user selects the ones they want and submits in one go.</li>
+<li><b>Live status tracking:</b> A visual timeline shows each application moving through stages (Submitted &rarr; Processing &rarr; Verified &rarr; Approved / Completed). The screen refreshes automatically with a sound alert when an official updates the status.</li>
+<li><b>Referral network:</b> Every member gets a personal <b>referral link and a downloadable QR code</b> to share on WhatsApp. They can see everyone they have referred and what schemes those members applied for.</li>
+<li><b>Become a Booth President:</b> Members can apply for their own booth or choose another one, and check whether their request was approved.</li>
+<li><b>Safety:</b> Sessions log out automatically after 30 minutes of inactivity.</li>
+</ul>
+<h3>For Party Officials (Admin Dashboard)</h3>
+<p>Each official logs in and sees a dashboard scoped to <b>only their jurisdiction</b>. Booth, assembly, and district logins are created automatically from the electoral map. Key tools:</p>
+<ul>
+<li><b>Overview &amp; charts:</b> Total enrollments, status breakdown, most popular schemes, and top referrers at a glance.</li>
+<li><b>Applications manager:</b> Search and filter every application, update its status, add remarks, and log follow-up calls to members.</li>
+<li><b>Booth voter roll:</b> A color-coded view of every voter in a booth &mdash; who has applied, who is in progress, and who has not yet enrolled.</li>
+<li><b>Reports:</b> One-click export to <b>Excel and CSV</b> for offline review.</li>
+<li><b>Booth President requests:</b> Approve or reject volunteers within their area.</li>
+<li><b>Schemes management (Super Admin):</b> Add, edit, or remove schemes and their images &mdash; changes appear instantly on the web app and WhatsApp bot.</li>
+</ul>
+
+<div class="pagebreak"></div>
+
+<h2>3. The WhatsApp Automation</h2>
+<p>Many citizens are most comfortable on WhatsApp, so we built a <b>fully automated chatbot</b> on the official <b>Meta WhatsApp Cloud API</b>. The entire journey happens inside WhatsApp &mdash; no app to download, no website to visit.</p>
+<h3>How the Conversation Works</h3>
+<ul>
+<li><b>Say "Hi":</b> The bot replies with a welcome image and lets the user pick <b>English or Tamil</b>.</li>
+<li><b>Smart routing:</b> New users are sent a <b>Register form</b>; returning users are shown a <b>Services menu</b>.</li>
+<li><b>In-chat forms (WhatsApp Flows):</b> Instead of long back-and-forth typing, the bot uses WhatsApp's native multi-screen forms. The citizen enters their Voter ID, the bot verifies it against the electoral roll, shows a confirmation card, and lets them pick and confirm a scheme &mdash; all within the chat.</li>
+<li><b>Services menu (for registered members):</b> My Profile, My Schemes (application status), Apply for More Schemes, My Referral Link, My Members (people they referred), and Be a Booth President.</li>
+</ul>
+<p>Everything the WhatsApp bot does writes to the <b>same database as the web app</b>, so a member can start on WhatsApp and continue on the web (or vice-versa) without losing anything. All sensitive form data travels over an <b>encrypted channel</b> for privacy.</p>
+
+<h2>4. The Government Schemes Covered</h2>
+<p>The catalog is managed by the party and currently covers <b>Central Government welfare schemes</b> organized into simple clusters:</p>
+<table>
+<tr><th>Category</th><th>Example schemes</th></tr>
+<tr><td>Insurance &amp; Pension</td><td>PMSBY (&#8377;2 lakh accident cover), PMJJBY (life cover), Atal Pension Yojana</td></tr>
+<tr><td>Farmers</td><td>PM Kisan (&#8377;6,000/year), Fasal Bima crop insurance, Kisan Maan Dhan pension</td></tr>
+<tr><td>Health</td><td>Ayushman Bharat PM-JAY (&#8377;5 lakh cashless treatment), ABHA health ID</td></tr>
+<tr><td>Women &amp; Families</td><td>Ujjwala (free LPG), Matru Vandana (maternity), Sukanya Samriddhi (girl-child savings)</td></tr>
+<tr><td>Housing</td><td>PM Awas Yojana (home construction support)</td></tr>
+<tr><td>Youth &amp; Skills</td><td>PMKVY skill training, National Scholarships, PM Vishwakarma (artisans)</td></tr>
+<tr><td>Credit &amp; Business</td><td>PM SVANidhi, Mudra loans, Udyam MSME, Stand Up India, Startup India</td></tr>
+<tr><td>Foundation</td><td>Jan Dhan bank account, e-Shram worker card</td></tr>
+</table>
+
+<h2>5. Technology &amp; Security</h2>
+<table>
+<tr><th>Area</th><th>What we used</th></tr>
+<tr><td>Web App</td><td>React (Vite) &mdash; fast, mobile-friendly, bilingual interface</td></tr>
+<tr><td>Backend / API</td><td>Node.js + Express with a MongoDB database</td></tr>
+<tr><td>WhatsApp</td><td>Meta WhatsApp Cloud API with encrypted in-chat Flows</td></tr>
+<tr><td>Voter verification</td><td>Read-only electoral roll database (fast search across all 234 assembly segments)</td></tr>
+<tr><td>OTP / SMS</td><td>2Factor SMS gateway for 6-digit login codes</td></tr>
+<tr><td>Images</td><td>Cloudinary for scheme cards and banners</td></tr>
+</table>
+<p><b>Security highlights:</b> OTP-based login, protected sessions that expire and can be revoked across devices, strict rate-limiting to stop abuse, and role-based access so each official sees only their own area's data. Voter records are read-only and never modified by the platform.</p>
+
+<h2>6. In Short</h2>
+<p>We delivered an end-to-end system that makes government welfare schemes <b>easy for any Tamil Nadu citizen to access</b> &mdash; through both a web app and WhatsApp, in their own language &mdash; while giving TN BJP a <b>live, booth-level view</b> of enrollments and a growing grassroots membership network. It is fully working across the web front end, the backend, and the WhatsApp automation.</p>
+
+<div class="foot">BJP Nalam Thittam &mdash; TN BJP Digital Welfare Scheme Platform &nbsp;|&nbsp; Project Report</div>
+
+</body>
+</html>

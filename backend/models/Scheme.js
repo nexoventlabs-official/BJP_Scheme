@@ -49,8 +49,14 @@ const schemeSchema = new mongoose.Schema(
     steps_ta: { type: [String], default: [] },
 
     // ── Media (Cloudinary) ──
-    backgroundImage: { type: String, default: '' },             // secure_url
+    backgroundImage: { type: String, default: '' },             // secure_url (web card)
     imagePublicId: { type: String, default: '' },               // for deletion/overwrite
+    // WhatsApp flow media (managed via the admin Flow Images page) — kept
+    // separate from the web background image.
+    waLogo: { type: String, default: '' },
+    waLogoPublicId: { type: String, default: '' },
+    waBanner: { type: String, default: '' },
+    waBannerPublicId: { type: String, default: '' },
 
     // ── Meta ──
     order: { type: Number, default: 0 },

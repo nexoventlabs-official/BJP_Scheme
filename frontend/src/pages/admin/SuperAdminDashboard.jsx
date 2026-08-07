@@ -13,6 +13,7 @@ import SchemePieChart from '../../components/SchemePieChart';
 import AdminSidebar from '../../components/AdminSidebar';
 import BoothPresidentRequestsView from '../../components/BoothPresidentRequestsView';
 import SchemesManagementView from '../../components/SchemesManagementView';
+import FlowImagesView from '../../components/FlowImagesView';
 
 
 
@@ -1250,6 +1251,10 @@ const SuperAdminDashboard = () => {
 
       {subPage === 'schemes' && (
         <SchemesManagementView />
+      )}
+
+      {subPage === 'flow_images' && (
+        <FlowImagesView />
       )}
         </main>
       </div>
