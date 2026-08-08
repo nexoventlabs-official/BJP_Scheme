@@ -179,6 +179,20 @@ const ReportsView = ({
     fetchReportData();
   }, [districtFilter, assemblyFilter, boothFilter, statusFilter, schemeFilter, searchQuery, currentPage]);
 
+  // ── Resolve a scheme's display name (some records store the numeric scheme
+  // id in schemeName/schemeId; map those back to the readable name). ──
+  const schemeNameById = React.useMemo(() => {
+    const m = {};
+    (BJP_SCHEMES || []).forEach(s => { if (s.id != null && s.name) m[String(s.id)] = s.name; });
+    return m;
+  }, [BJP_SCHEMES]);
+  const resolveSchemeName = (raw) => {
+    if (raw == null || String(raw).trim() === '') return 'General Scheme';
+    const str = String(raw).trim();
+    if (/^\d+$/.test(str)) return schemeNameById[str] || `Scheme ${str}`;
+    return str;
+  };
+
   // ── Flatten All Scheme Application Items for Export & Stats ──
   const allReportApps = reportVoters.flatMap(v => {
     if (!v.applications || v.applications.length === 0) {
@@ -202,7 +216,7 @@ const ReportsView = ({
       district: v.district || app.district || 'N/A',
       assemblyName: v.assemblyName || app.assemblyName || 'N/A',
       boothNo: v.boothNo || app.boothNo || 'N/A',
-      schemeName: app.schemeName || app.schemeId || 'General Scheme',
+      schemeName: resolveSchemeName(app.schemeName || app.schemeId),
       clusterName: app.clusterName || 'BJP Welfare',
       status: app.status || 'Submitted',
       appliedAt: app.appliedAt ? new Date(app.appliedAt).toLocaleDateString() : '—'
