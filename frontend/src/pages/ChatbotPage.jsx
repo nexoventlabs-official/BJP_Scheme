@@ -5,7 +5,23 @@ import { chat } from '../api'
 import '../styles/chatbot.css'
 import { useLang } from '../i18n/LanguageContext'
 import { getSchemeBgImage } from '../components/MemberProfileTimelineView'
-import { useMergedSchemes, adaptToNtShape, adaptToSchemesShape } from '../utils/schemesData'
+import { useMergedSchemes, adaptToNtShape, adaptToSchemesShape, getDynamicSchemeWaLogoById } from '../utils/schemesData'
+
+// Reactive viewport check — true on mobile / small-tablet widths.
+function useIsMobile(maxWidth = 768) {
+  const query = `(max-width: ${maxWidth}px)`
+  const read = () => (typeof window !== 'undefined' && window.matchMedia ? window.matchMedia(query).matches : false)
+  const [isMobile, setIsMobile] = useState(read)
+  useEffect(() => {
+    if (typeof window === 'undefined' || !window.matchMedia) return
+    const mq = window.matchMedia(query)
+    const handler = (e) => setIsMobile(e.matches)
+    setIsMobile(mq.matches)
+    mq.addEventListener ? mq.addEventListener('change', handler) : mq.addListener(handler)
+    return () => { mq.removeEventListener ? mq.removeEventListener('change', handler) : mq.removeListener(handler) }
+  }, [query])
+  return isMobile
+}
 
 // ── Scheme application status → colour + icon metadata (tracking timeline) ──
 const SCHEME_STATUS_META = {
@@ -296,11 +312,12 @@ function VoterCardMsg({ voter, isLatest, chatState, onConfirm, onRetry, disabled
       </div>
       {showButtons && (
         <div className="interactive-buttons">
+          {/* These two actions are always shown in English, even in Tamil mode. */}
           <button className="interactive-btn" onClick={onConfirm} disabled={disabled}>
-            <i className="bi bi-check-circle-fill" /> {t('Confirm Details')}
+            <i className="bi bi-check-circle-fill" /> Confirm Details
           </button>
           <button className="interactive-btn" onClick={onRetry} disabled={disabled} style={{ color: '#d32f2f' }}>
-            <i className="bi bi-arrow-counterclockwise" /> {t('Re-enter ID')}
+            <i className="bi bi-arrow-counterclockwise" /> Re-enter ID
           </button>
         </div>
       )}
@@ -733,7 +750,7 @@ function SchemeInfoModal({ scheme, onClose }) {
   const { t, getSchemeData } = useLang()
   if (!scheme) return null
   const schData = getSchemeData(scheme)
-  const name = (schData.title || schData.name_en || '').replace(/^[A-Z0-9\s]+\.?\s*—?\s*/, '')
+  const name = (schData.title || schData.name_en || '')
 
   // Close on overlay click
   const handleOverlay = (e) => { if (e.target === e.currentTarget) onClose() }
@@ -889,6 +906,7 @@ function SchemeInfoModal({ scheme, onClose }) {
 // ── Scheme Selection Message ─────────────────────────────────
 function SchemeSelectionMsg({ isLatest, onSubmit, disabled }) {
   const { t, getSchemeData } = useLang()
+  const isMobile = useIsMobile()
   const [selected, setSelected] = useState(new Set())
   const [submitted, setSubmitted] = useState(false)
   const [infoScheme, setInfoScheme] = useState(null)
@@ -942,15 +960,23 @@ function SchemeSelectionMsg({ isLatest, onSubmit, disabled }) {
             {NT_SCHEMES.filter(s => s.cluster === cluster).map(rawScheme => {
               const scheme = getSchemeData(rawScheme);
               const isSelected = selected.has(scheme.id);
-              const bgImg = getSchemeBgImage(scheme.name_en);
+              const webBg = getSchemeBgImage(scheme.name_en);
+              // Mobile: prefer the square (1:1) WhatsApp Flow logo as the card
+              // background (fits the square cards). Desktop stays unchanged.
+              const waLogo = getDynamicSchemeWaLogoById(scheme.id);
+              const usingLogo = isMobile && !!waLogo;
+              const cardBg = usingLogo ? waLogo : webBg;
+              // Logo: fit the WHOLE 1:1 image inside the box (contain) on a white
+              // backdrop. Web banner: stretch to fill as before.
+              const bgSize = usingLogo ? 'contain' : '100% 100%';
               return (
                 <div
                   key={scheme.id}
                   className="scheme-selection-card"
                   onClick={() => toggle(scheme.id)}
                   style={{
-                    background: bgImg
-                      ? `url("${encodeURI(bgImg)}") center / 100% 100% no-repeat`
+                    background: cardBg
+                      ? `${usingLogo ? '#ffffff ' : ''}url("${encodeURI(cardBg)}") center / ${bgSize} no-repeat`
                       : (isSelected ? 'rgba(250,93,0,0.08)' : 'var(--color-carbon)'),
                     border: `2px solid ${isSelected ? '#FF9933' : '#e5e5ea'}`,
                     cursor: submitted || !isLatest ? 'default' : 'pointer',
@@ -958,8 +984,23 @@ function SchemeSelectionMsg({ isLatest, onSubmit, disabled }) {
                     boxShadow: isSelected ? '0 4px 12px rgba(255,153,51,0.35)' : '0 2px 6px rgba(0,0,0,0.06)'
                   }}
                 >
-                  {/* Checkbox row */}
-                  <div style={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center', width: '100%', zIndex: 2 }}>
+                  {/* Top row: scheme name (left) + checkbox (right) */}
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', width: '100%', gap: 6, zIndex: 2 }}>
+                    <div style={{ flex: '1 1 auto', minWidth: 0, maxWidth: '62%' }}>
+                      {/* On mobile with a logo background, hide the name — the
+                          logo + info icon convey the scheme. Show it otherwise. */}
+                      {!usingLogo && (
+                        <div className="scheme-card-name" style={{
+                          fontSize: 10, fontWeight: 700,
+                          color: '#1d1d1f',
+                          lineHeight: 1.2,
+                          overflow: 'hidden', display: '-webkit-box',
+                          WebkitLineClamp: 4, WebkitBoxOrient: 'vertical'
+                        }}>
+                          {(scheme.title || scheme.name_en || '')}
+                        </div>
+                      )}
+                    </div>
                     <div style={{
                       width: 15, height: 15, borderRadius: 4, flexShrink: 0,
                       background: isSelected ? '#FF9933' : 'rgba(255, 255, 255, 0.95)',
@@ -971,19 +1012,8 @@ function SchemeSelectionMsg({ isLatest, onSubmit, disabled }) {
                       {isSelected && <i className="bi bi-check-lg" style={{ fontSize: 9, color: '#fff', fontWeight: 800, lineHeight: 1 }} />}
                     </div>
                   </div>
-                  {/* Scheme name & Benefit row */}
-                  <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', width: '100%', gap: 2, zIndex: 2 }}>
-                    <div style={{ flex: 1, minWidth: 0 }}>
-                      <div className="scheme-card-name" style={{
-                        fontSize: 10, fontWeight: 700,
-                        color: '#1d1d1f',
-                        lineHeight: 1.2,
-                        overflow: 'hidden', display: '-webkit-box',
-                        WebkitLineClamp: 2, WebkitBoxOrient: 'vertical'
-                      }}>
-                        {(scheme.title || scheme.name_en || '').replace(/^[A-Z0-9\s]+\.?\s*—?\s*/, '')}
-                      </div>
-                    </div>
+                  {/* Bottom row: info icon (right) */}
+                  <div style={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'flex-end', width: '100%', zIndex: 2 }}>
                     <button
                       onClick={(e) => { e.stopPropagation(); setInfoScheme(scheme) }}
                       style={{
@@ -3358,6 +3388,7 @@ export default function ChatbotPage() {
   const profileRef  = useRef(null)
   const voterRef    = useRef(null)
   const stateRef    = useRef(S.WELCOME)
+  const chatInputRef = useRef(null)   // the main chat text input (for EPIC keyboard switch)
   // Referral attribution — populated from URL params on mount
   const referralRef = useRef(getReferralParams())
 
@@ -3830,7 +3861,9 @@ export default function ChatbotPage() {
   }
 
   const handleSchemesSubmit = async (selectedIds) => {
-    const { ref } = referralRef.current
+    // Read fresh (URL ?ref= + localStorage fallback) so a referral captured just
+    // before registration isn't missed due to mount-time timing.
+    const { ref } = getReferralParams() || referralRef.current || {}
     addMsg('user', 'text', { text: t('{count} scheme(s) selected ✓', { count: selectedIds.length }) })
     setIsTyping(true)
     try {
@@ -3956,6 +3989,12 @@ export default function ChatbotPage() {
   }
 
   // ── Input config ──────────────────────────────────────────
+  // ── Dynamic mobile keyboard for the EPIC field ──
+  // EPIC = 3 letters + 7 digits. After the first 3 chars, switch to the numeric
+  // keypad. Android switches live from the inputMode change; iOS keeps the
+  // current keyboard (we must NOT blur/refocus — that closed the keyboard on iOS).
+  const epicNumericMode = chatState === S.AWAIT_EPIC && inputValue.length >= 3
+
   const getInputCfg = () => {
     switch (chatState) {
       case S.AWAIT_MOBILE:
@@ -3963,7 +4002,7 @@ export default function ChatbotPage() {
       case S.AWAIT_OTP:
         return { type: 'tel', placeholder: t('Enter 6-digit OTP'), maxLength: 6, inputMode: 'numeric' }
       case S.AWAIT_EPIC:
-        return { type: 'text', placeholder: t('EPIC Number (e.g. ABC1234567)'), maxLength: 10 }
+        return { type: 'text', placeholder: t('EPIC Number (e.g. ABC1234567)'), maxLength: 10, inputMode: epicNumericMode ? 'numeric' : 'text' }
       default:
         return null
     }
@@ -4361,6 +4400,7 @@ export default function ChatbotPage() {
                   )}
                   <div className="chat-input-wrapper">
                     <input
+                      ref={chatInputRef}
                       className="chat-input"
                       value={inputValue}
                       onChange={handleInputChange}

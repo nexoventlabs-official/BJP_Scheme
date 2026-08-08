@@ -41,9 +41,10 @@ export function LanguageProvider({ children }) {
   const getSchemeData = (scheme) => {
     if (!scheme) return scheme
     if (lang === 'ta') {
-      // Prefer the built-in Tamil map for the original schemes; fall back to
-      // the scheme's own embedded Tamil fields (schemes added via admin panel).
-      const taData = (schemesTa && schemesTa[scheme.id]) || scheme._ta
+      // Prefer the scheme's own embedded Tamil (from the DB — the source of
+      // truth, correctly matched by id). Only fall back to the legacy static
+      // Tamil map if a scheme carries no Tamil of its own.
+      const taData = scheme._ta || (schemesTa && schemesTa[scheme.id])
       if (taData) {
         return {
           ...scheme,

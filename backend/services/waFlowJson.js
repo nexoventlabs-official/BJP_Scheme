@@ -76,7 +76,7 @@ function buildRegisterFlowJSON() {
             bannerImage(),
             { type: 'TextHeading', text: '${data.title}' },
             { type: 'TextBody', text: '${data.body}' },
-            { type: 'TextBody', text: '⚠️ ${data.error_text}', visible: '${data.has_error}' },
+            { type: 'TextBody', text: '${data.error_text}', visible: '${data.has_error}' },
             { type: 'TextInput', name: 'mobile', label: '${data.mobile_label}', required: false, 'input-type': 'phone', enabled: false, 'init-value': '${data.init_phone}' },
             { type: 'TextInput', name: 'epic_no', label: '${data.epic_label}', required: true, 'input-type': 'text', 'init-value': '${data.init_epic}' },
             footer('${data.cta}', { name: 'data_exchange', payload: { action: 'lookup_epic', epic_no: '${form.epic_no}' } }),
@@ -171,7 +171,7 @@ function buildServiceFlowJSON() {
     version: '7.0',
     data_api_version: '3.0',
     routing_model: {
-      SERVICE_MENU: ['PROFILE', 'MY_SCHEMES', 'APPLY_LIST', 'REFERRAL', 'MEMBERS', 'BOOTH_HOME', 'BOOTH_STATUS', 'INFO'],
+      SERVICE_MENU: ['PROFILE', 'MY_SCHEMES', 'APP_STATUS', 'APPLY_LIST', 'REFERRAL', 'MEMBERS', 'BOOTH_HOME', 'BOOTH_STATUS', 'INFO'],
       MY_SCHEMES: ['APP_STATUS', 'INFO'],
       APP_STATUS: [],
       APPLY_LIST: ['APPLY_DETAIL', 'INFO'],
@@ -180,10 +180,12 @@ function buildServiceFlowJSON() {
       PROFILE: [],
       REFERRAL: [],
       MEMBERS: ['INFO'],
-      BOOTH_HOME: ['BOOTH_DISTRICT', 'BOOTH_DONE', 'BOOTH_STATUS'],
+      BOOTH_HOME: ['BOOTH_CHOICE', 'BOOTH_DONE', 'BOOTH_STATUS'],
+      BOOTH_CHOICE: ['BOOTH_DISTRICT', 'BOOTH_DONE'],
       BOOTH_DISTRICT: ['BOOTH_ASSEMBLY'],
       BOOTH_ASSEMBLY: ['BOOTH_BOOTH'],
-      BOOTH_BOOTH: ['BOOTH_DONE'],
+      BOOTH_BOOTH: ['BOOTH_CONFIRM'],
+      BOOTH_CONFIRM: ['BOOTH_DONE'],
       BOOTH_DONE: [],
       BOOTH_STATUS: [],
       INFO: [],
@@ -273,21 +275,37 @@ function buildServiceFlowJSON() {
           ],
         },
       },
-      // Booth President
+      // Booth President — current jurisdiction shown as a table.
+      // (RichText must be the ONLY component besides Footer, so the choice of
+      //  "confirm" vs "different booth" happens on the next screen.)
       {
         id: 'BOOTH_HOME',
         title: '${data.title}',
-        data: { title: S('Be a Booth President'), current_md: S('District: X\nAssembly: Y\nBooth: Z'), another_label: S('Apply for a different booth'), cta: S('Confirm this Booth') },
+        data: { title: S('Be a Booth President'), current_md: S('# Be a Booth President\n\n| Field | Value |\n| --- | --- |\n| District | X |'), cta: S('Continue') },
+        layout: {
+          type: 'SingleColumnLayout',
+          children: [
+            { type: 'RichText', text: '${data.current_md}' },
+            footer('${data.cta}', { name: 'data_exchange', payload: { action: 'booth_home_next' } }),
+          ],
+        },
+      },
+      // Choose: confirm current booth OR apply for a different booth.
+      {
+        id: 'BOOTH_CHOICE',
+        title: '${data.title}',
+        data: { title: S('Be a Booth President'), body: S('How would you like to proceed?'), label: S('Select an option'), options: ARR(), cta: S('Continue') },
         layout: {
           type: 'SingleColumnLayout',
           children: [
             { type: 'TextHeading', text: '${data.title}' },
-            { type: 'TextBody', text: '${data.current_md}' },
-            { type: 'EmbeddedLink', text: '${data.another_label}', 'on-click-action': { name: 'data_exchange', payload: { action: 'booth_another' } } },
-            footer('${data.cta}', { name: 'data_exchange', payload: { action: 'booth_confirm_current' } }),
+            { type: 'TextBody', text: '${data.body}' },
+            { type: 'RadioButtonsGroup', name: 'booth_choice', label: '${data.label}', 'data-source': '${data.options}', required: true },
+            footer('${data.cta}', { name: 'data_exchange', payload: { action: 'booth_choice', booth_choice: '${form.booth_choice}' } }),
           ],
         },
       },
+      // Step-by-step booth selection: District → Assembly → Booth.
       {
         id: 'BOOTH_DISTRICT',
         title: '${data.title}',
@@ -317,13 +335,28 @@ function buildServiceFlowJSON() {
       {
         id: 'BOOTH_BOOTH',
         title: '${data.title}',
-        data: { title: S('Select Booth'), label: S('Booth'), booths: ARR(), cta: S('Confirm') },
+        data: { title: S('Select Booth'), label: S('Booth Number'), hint: S('Enter your booth number.'), error_text: S(''), has_error: B(false), init_booth: S(''), cta: S('Confirm') },
         layout: {
           type: 'SingleColumnLayout',
           children: [
             { type: 'TextHeading', text: '${data.title}' },
-            { type: 'Dropdown', name: 'booth', label: '${data.label}', 'data-source': '${data.booths}', required: true },
-            footer('${data.cta}', { name: 'data_exchange', payload: { action: 'booth_confirm_custom', booth: '${form.booth}' } }),
+            { type: 'TextBody', text: '${data.hint}' },
+            { type: 'TextBody', text: '${data.error_text}', visible: '${data.has_error}' },
+            { type: 'TextInput', name: 'booth', label: '${data.label}', required: true, 'input-type': 'number', 'init-value': '${data.init_booth}' },
+            footer('${data.cta}', { name: 'data_exchange', payload: { action: 'booth_check', booth: '${form.booth}' } }),
+          ],
+        },
+      },
+      // Confirm the entered booth (shown as a table) before submitting.
+      {
+        id: 'BOOTH_CONFIRM',
+        title: '${data.title}',
+        data: { title: S('Be a Booth President'), confirm_md: S('| Field | Value |\n| --- | --- |\n| Booth | 1 |'), cta: S('Confirm this Booth') },
+        layout: {
+          type: 'SingleColumnLayout',
+          children: [
+            { type: 'RichText', text: '${data.confirm_md}' },
+            footer('${data.cta}', { name: 'data_exchange', payload: { action: 'booth_final_confirm' } }),
           ],
         },
       },

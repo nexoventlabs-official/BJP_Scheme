@@ -298,6 +298,9 @@ const registerSchemes = async (req, res) => {
       user = await User.findOne({ mobile: cleanMobile });
     }
 
+    const incomingRef = String(referredBy || refCode || '').trim().toUpperCase();
+    console.log('[registerSchemes] mobile=%s referredBy=%s', cleanMobile, incomingRef || '(none)');
+
     if (!user) {
       const ntCode = 'NT-' + Math.random().toString(36).substring(2, 10).toUpperCase();
 
@@ -310,8 +313,12 @@ const registerSchemes = async (req, res) => {
         boothNo: cleanBooth,
         gender: gender || 'Unspecified',
         referralCode: ntCode,
-        referredBy: (referredBy || refCode || null)
+        referredBy: incomingRef || null
       });
+    } else if (incomingRef && !user.referredBy && incomingRef !== String(user.referralCode || '').toUpperCase()) {
+      // Existing member with no referrer yet → attribute them to this referral.
+      user.referredBy = incomingRef;
+      await user.save();
     }
 
     // List of selected schemes to register

@@ -69,6 +69,17 @@ const getAdminScopeQuery = (admin) => {
   return query;
 };
 
+// ── Dashboard stats cache (5-min TTL, keyed by admin scope + query filters) ──
+// Dashboard aggregates are expensive; cache them briefly per scope. The cache is
+// cleared whenever an application status changes so admins see fresh numbers.
+const _statsCache = new Map();
+const STATS_TTL_MS = 5 * 60 * 1000;
+const statsCacheKey = (admin, q = {}) => JSON.stringify({
+  r: admin.role || '', d: admin.district || '', a: admin.assemblyName || '', b: admin.boothNo || '',
+  qd: q.district || '', qa: q.assemblyName || '', qb: q.boothNo || ''
+});
+const invalidateStatsCache = () => _statsCache.clear();
+
 // @desc    Admin Login
 // @route   POST /api/admin/login
 // @access  Public
@@ -204,6 +215,14 @@ const getDashboardStats = async (req, res) => {
   try {
     const admin = req.admin;
     const { district, assemblyName, boothNo } = req.query || {};
+
+    // Serve from the 5-min scope cache when fresh.
+    const _cacheKey = statsCacheKey(admin, req.query || {});
+    const _cached = _statsCache.get(_cacheKey);
+    if (_cached && Date.now() - _cached.at < STATS_TTL_MS) {
+      return res.status(200).json(_cached.payload);
+    }
+
     const scopeQuery = getAdminScopeQuery(admin);
 
     // Count from WRITE DB: unique enrolled members with scheme applications
@@ -484,7 +503,7 @@ const getDashboardStats = async (req, res) => {
       })
     );
 
-    return res.status(200).json({
+    const payload = {
       success: true,
       adminRole: admin.role,
       jurisdiction: {
@@ -505,7 +524,9 @@ const getDashboardStats = async (req, res) => {
       boothStats,
       schemePopularity,
       topReferrers
-    });
+    };
+    _statsCache.set(_cacheKey, { at: Date.now(), payload });
+    return res.status(200).json(payload);
   } catch (error) {
     console.error('[getDashboardStats Error]:', error);
     return res.status(500).json({ success: false, message: 'Failed to compute dashboard stats' });
@@ -941,6 +962,7 @@ const updateApplicationStatus = async (req, res) => {
     });
 
     await app.save();
+    invalidateStatsCache(); // stats changed — drop cached dashboard aggregates
 
     return res.status(200).json({
       success: true,

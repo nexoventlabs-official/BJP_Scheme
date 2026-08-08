@@ -1,3 +1,4 @@
+require('express-async-errors'); // route async errors auto-forward to the global handler
 const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
@@ -189,13 +190,27 @@ app.get('/api/health', async (req, res) => {
 
 // Seed Required Default Admin Credentials
 const seedDefaultAdmins = async () => {
-  try {
-    const superAdminPassword = process.env.SUPER_ADMIN_PASSWORD || 'SetStrongSuperAdminPassword2026!';
-    const stateAdminPassword = process.env.STATE_ADMIN_PASSWORD || 'SetStrongStateAdminPassword2026!';
+  const isProd = process.env.NODE_ENV === 'production';
+  const DEFAULT_SUPER = 'SetStrongSuperAdminPassword2026!';
+  const DEFAULT_STATE = 'SetStrongStateAdminPassword2026!';
+  const superAdminPassword = process.env.SUPER_ADMIN_PASSWORD || DEFAULT_SUPER;
+  const stateAdminPassword = process.env.STATE_ADMIN_PASSWORD || DEFAULT_STATE;
 
+  // In production, refuse to create a NEW seed admin with a missing/known-default
+  // password. This only fires when we're actually about to seed (admin absent),
+  // so existing deployments keep running untouched.
+  const assertSafePassword = (label, envValue, fallback, effective) => {
+    if (isProd && (!envValue || effective === fallback)) {
+      console.error(`[FATAL] ${label} is not set to a strong value. Refusing to seed a default/blank admin password in production. Set ${label} in the environment and restart.`);
+      process.exit(1);
+    }
+  };
+
+  try {
     // 1. Super Admin: admin
     const superAdmin = await Admin.findOne({ username: 'admin' });
     if (!superAdmin) {
+      assertSafePassword('SUPER_ADMIN_PASSWORD', process.env.SUPER_ADMIN_PASSWORD, DEFAULT_SUPER, superAdminPassword);
       await Admin.create({
         username: 'admin',
         password: superAdminPassword,
@@ -208,6 +223,7 @@ const seedDefaultAdmins = async () => {
     // 2. State Admin: BJP
     const stateAdmin = await Admin.findOne({ username: 'BJP' });
     if (!stateAdmin) {
+      assertSafePassword('STATE_ADMIN_PASSWORD', process.env.STATE_ADMIN_PASSWORD, DEFAULT_STATE, stateAdminPassword);
       await Admin.create({
         username: 'BJP',
         password: stateAdminPassword,

@@ -240,7 +240,7 @@ async function regStartError(phone, l, msg, epic = '') {
     data: {
       banner: imgs.wa_register_banner || '', has_banner: !!imgs.wa_register_banner,
       title: UI.reg_title(l), body: UI.reg_body(l),
-      error_text: msg, has_error: true,
+      error_text: `⚠️ ${msg}`, has_error: true,
       init_phone: phone, init_epic: epic,
       mobile_label: UI.mobile_label(l), epic_label: UI.epic_label(l),
       cta: UI.cont(l),
@@ -423,6 +423,8 @@ async function svcExchange({ screen, data, flow_token }) {
     if (sel === 'my_profile') return doneScreen('PROFILE', l, await profileMd(user, l), flow_token);
 
     if (sel === 'my_schemes') {
+      // Show the list of applied schemes (with logos); selecting one opens its
+      // status table (scheme / status / applied date) on the next screen.
       const items = await appliedItems(user, l);
       if (!items.length) return doneScreen('INFO', l, `# ${UI.my_schemes(l)}\n\n${L(l, 'You have not applied for any scheme yet.', 'நீங்கள் இதுவரை எந்த திட்டத்திற்கும் விண்ணப்பிக்கவில்லை.')}`, flow_token);
       return { screen: 'MY_SCHEMES', data: { title: UI.my_schemes(l), body: UI.my_schemes_body(l), list_label: UI.my_schemes(l), items, cta: UI.view_status(l) } };
@@ -454,11 +456,13 @@ async function svcExchange({ screen, data, flow_token }) {
         data: {
           title: UI.booth_title(l),
           current_md:
-            `${L(l, 'District', 'மாவட்டம்')}: ${user.district}\n` +
-            `${L(l, 'Assembly', 'தொகுதி')}: ${user.assemblyName}\n` +
-            `${L(l, 'Booth', 'பூத்')}: ${user.boothNo}`,
-          another_label: UI.booth_another(l),
-          cta: UI.booth_confirm_current(l),
+            `# ${UI.booth_title(l)}\n\n` +
+            `${L(l, 'Your current booth:', 'உங்கள் தற்போதைய பூத்:')}\n\n` +
+            `| **${L(l, 'Field', 'விவரம்')}** | **${L(l, 'Value', 'மதிப்பு')}** |\n| :--- | :--- |\n` +
+            `| ${L(l, 'District', 'மாவட்டம்')} | ${user.district} |\n` +
+            `| ${L(l, 'Assembly', 'தொகுதி')} | ${user.assemblyName} |\n` +
+            `| ${L(l, 'Booth', 'பூத்')} | ${user.boothNo} |`,
+          cta: UI.cont(l),
         },
       };
     }
@@ -489,63 +493,147 @@ async function svcExchange({ screen, data, flow_token }) {
     if (pickedId) await createApplication(user, pickedId);
     const s = (await getSchemesCatalog()).find((x) => Number(x.id) === pickedId);
     const body = `# ${L(l, 'Application Submitted 🎉', 'விண்ணப்பம் சமர்ப்பிக்கப்பட்டது 🎉')}\n\n${L(l, 'You applied for', 'நீங்கள் விண்ணப்பித்தது')}: **${s ? schemeTitle(s, l) : ''}**\n\n${L(l, 'Tap Done to choose another service.', 'மற்றொரு சேவையைத் தேர்வு செய்ய Done என தட்டவும்.')}`;
-    return doneScreen('APPLY_DONE', l, body, flow_token, 'choose_service');
+    return doneScreen('APPLY_DONE', l, body, flow_token, 'applied_scheme');
   }
 
   // ─── Booth President ───
+  // BOOTH_HOME (table) → Continue → BOOTH_CHOICE (confirm current / different).
   if (screen === 'BOOTH_HOME') {
-    // Footer "Confirm this Booth" (uses the member's own jurisdiction).
+    return {
+      screen: 'BOOTH_CHOICE',
+      data: {
+        title: UI.booth_title(l),
+        body: L(l, 'How would you like to proceed?', 'எப்படித் தொடர விரும்புகிறீர்கள்?'),
+        label: L(l, 'Select an option', 'ஒரு விருப்பத்தைத் தேர்ந்தெடுக்கவும்'),
+        options: [
+          { id: 'current', title: `${L(l, 'Confirm my booth', 'எனது பூத்தை உறுதிசெய்')} (${user.boothNo})`.slice(0, 30) },
+          { id: 'different', title: L(l, 'A different booth', 'வேறு பூத்').slice(0, 30) },
+        ],
+        cta: UI.cont(l),
+      },
+    };
+  }
+
+  if (screen === 'BOOTH_CHOICE') {
+    if (String(data?.booth_choice || '') === 'different') return boothDistrictScreen(l);
+    // Confirm current booth (member's own jurisdiction).
     await createBoothRequest(user, {
       district: user.district, assemblyName: user.assemblyName, assemblyNo: user.assemblyNo, boothNo: user.boothNo, isCustom: false,
     });
     return doneScreen('BOOTH_DONE', l, boothDoneMd(l, user.district, user.assemblyName, user.boothNo), flow_token, 'choose_service');
   }
 
+  // Step-by-step selection (District → Assembly → Booth). Reliable pattern:
+  // WhatsApp does not reliably cascade dropdowns live on a single screen.
   if (screen === 'BOOTH_DISTRICT') {
-    // Reached via the "Apply for a different booth" link OR after choosing a district.
-    if (data?.action === 'booth_another' || !data?.district) {
-      const meta = await getAssemblyMetadata();
-      const districts = [...new Set(meta.map((m) => m.district).filter(Boolean))].sort()
-        .slice(0, 120).map((d) => ({ id: d, title: d }));
-      return { screen: 'BOOTH_DISTRICT', data: { title: UI.select_district(l), label: UI.district(l), districts, cta: UI.cont(l) } };
-    }
-    const district = String(data.district);
+    const district = String(data?.district || '');
+    if (!district) return boothDistrictScreen(l);
     await saveContact(phone, { pendingBooth: { district } });
     const meta = await getAssemblyMetadata();
     const assemblies = meta.filter((m) => m.district === district)
       .sort((a, b) => parseInt(a.assemblyNo) - parseInt(b.assemblyNo))
-      .map((m) => ({ id: m.assemblyNo, title: `${m.assemblyNo} - ${m.assemblyName}` }));
+      .map((m) => ({ id: String(m.assemblyNo), title: `${m.assemblyNo} - ${m.assemblyName}` }));
     return { screen: 'BOOTH_ASSEMBLY', data: { title: UI.select_assembly(l), label: UI.assembly(l), assemblies, cta: UI.cont(l) } };
   }
 
   if (screen === 'BOOTH_ASSEMBLY') {
     const assemblyNo = String(data?.assembly || '');
     const meta = await getAssemblyMetadata();
-    const match = meta.find((m) => m.assemblyNo === assemblyNo);
+    const match = meta.find((m) => String(m.assemblyNo) === assemblyNo);
     const contact = await getContactDoc(phone);
     const pb = { ...(contact?.pendingBooth || {}), assemblyNo, assemblyName: match?.assemblyName || '' };
     await saveContact(phone, { pendingBooth: pb });
-    let booths = [];
+    // Assemblies can have 300+ booths — too many for a WhatsApp dropdown — so the
+    // member enters their booth number, and we validate it against the real list.
+    let hint = L(l, 'Enter your booth number.', 'உங்கள் பூத் எண்ணை உள்ளிடவும்.');
     try {
       const b = await getBoothCredentialsForAssembly(assemblyNo);
-      booths = (b?.boothLogins || []).slice(0, 200).map((x) => ({ id: String(x.boothNo), title: `${L(l, 'Booth', 'பூத்')} ${x.boothNo}` }));
+      const nums = (b?.boothLogins || []).map((x) => parseInt(x.boothNo)).filter((n) => !isNaN(n));
+      if (nums.length) {
+        const max = Math.max(...nums);
+        hint = L(l, `This assembly has booths 1–${max}. Enter your booth number.`, `இந்தத் தொகுதியில் 1–${max} பூத்கள் உள்ளன. உங்கள் பூத் எண்ணை உள்ளிடவும்.`);
+      }
     } catch { /* ignore */ }
-    if (!booths.length) booths = [{ id: '1', title: `${L(l, 'Booth', 'பூத்')} 1` }];
-    return { screen: 'BOOTH_BOOTH', data: { title: UI.select_booth(l), label: UI.booth(l), booths, cta: UI.confirm(l) } };
+    return { screen: 'BOOTH_BOOTH', data: { title: UI.select_booth(l), label: UI.booth(l), hint, error_text: '', has_error: false, init_booth: '', cta: UI.cont(l) } };
   }
 
   if (screen === 'BOOTH_BOOTH') {
-    const boothNo = String(data?.booth || '1');
+    const boothNo = String(data?.booth || '').trim();
+    const contact = await getContactDoc(phone);
+    const pb = contact?.pendingBooth || {};
+    // Validate the typed booth against the assembly's real booth list.
+    let valid = !!boothNo;
+    let hint = L(l, 'Enter your booth number.', 'உங்கள் பூத் எண்ணை உள்ளிடவும்.');
+    if (boothNo && pb.assemblyNo) {
+      try {
+        const b = await getBoothCredentialsForAssembly(pb.assemblyNo);
+        const set = new Set((b?.boothLogins || []).map((x) => String(x.boothNo)));
+        if (set.size && !set.has(boothNo)) valid = false;
+        const nums = [...set].map((n) => parseInt(n)).filter((n) => !isNaN(n));
+        if (nums.length) hint = L(l, `This assembly has booths 1–${Math.max(...nums)}. Enter your booth number.`, `இந்தத் தொகுதியில் 1–${Math.max(...nums)} பூத்கள் உள்ளன. உங்கள் பூத் எண்ணை உள்ளிடவும்.`);
+      } catch { /* ignore */ }
+    }
+    if (!valid) {
+      // Booth does not exist → re-prompt with an error.
+      return {
+        screen: 'BOOTH_BOOTH',
+        data: {
+          title: UI.select_booth(l), label: UI.booth(l), hint,
+          error_text: boothNo
+            ? L(l, `⚠️ Booth "${boothNo}" does not exist. Please enter a valid booth number.`, `⚠️ "${boothNo}" பூத் இல்லை. சரியான பூத் எண்ணை உள்ளிடவும்.`)
+            : L(l, '⚠️ Please enter your booth number.', '⚠️ உங்கள் பூத் எண்ணை உள்ளிடவும்.'),
+          has_error: true, init_booth: boothNo, cta: UI.cont(l),
+        },
+      };
+    }
+    // Valid booth → save it and show a confirmation table.
+    await saveContact(phone, { pendingBooth: { ...pb, boothNo } });
+    const confirmMd =
+      `# ${UI.booth_title(l)}\n\n` +
+      `${L(l, 'Please confirm the booth you want to apply for:', 'நீங்கள் விண்ணப்பிக்க விரும்பும் பூத்தை உறுதிசெய்யவும்:')}\n\n` +
+      `| **${L(l, 'Field', 'விவரம்')}** | **${L(l, 'Value', 'மதிப்பு')}** |\n| :--- | :--- |\n` +
+      `| ${L(l, 'District', 'மாவட்டம்')} | ${pb.district || user.district} |\n` +
+      `| ${L(l, 'Assembly', 'தொகுதி')} | ${pb.assemblyName || user.assemblyName} |\n` +
+      `| ${L(l, 'Booth', 'பூத்')} | ${boothNo} |`;
+    return { screen: 'BOOTH_CONFIRM', data: { title: UI.booth_title(l), confirm_md: confirmMd, cta: L(l, 'Confirm this Booth', 'இந்தப் பூத்தை உறுதிசெய்') } };
+  }
+
+  if (screen === 'BOOTH_CONFIRM') {
     const contact = await getContactDoc(phone);
     const pb = contact?.pendingBooth || {};
     await createBoothRequest(user, {
       district: pb.district || user.district, assemblyName: pb.assemblyName || user.assemblyName,
-      assemblyNo: pb.assemblyNo || '', boothNo, isCustom: true,
+      assemblyNo: pb.assemblyNo || '', boothNo: pb.boothNo || '1', isCustom: true,
     });
-    return doneScreen('BOOTH_DONE', l, boothDoneMd(l, pb.district || user.district, pb.assemblyName || user.assemblyName, boothNo), flow_token, 'choose_service');
+    return doneScreen('BOOTH_DONE', l, boothDoneMd(l, pb.district || user.district, pb.assemblyName || user.assemblyName, pb.boothNo || ''), flow_token, 'choose_service');
   }
 
   return svcInit(flow_token);
+}
+
+// District-select screen — first step of "apply for a different booth".
+async function boothDistrictScreen(l) {
+  const meta = await getAssemblyMetadata();
+  const districts = [...new Set(meta.map((m) => m.district).filter(Boolean))].sort()
+    .slice(0, 120).map((d) => ({ id: d, title: d }));
+  return { screen: 'BOOTH_DISTRICT', data: { title: UI.select_district(l), label: UI.district(l), districts, cta: UI.cont(l) } };
+}
+
+// Build a table of ALL of a user's scheme applications (scheme | status | applied).
+async function allAppsStatusMd(user, l) {
+  const apps = await SchemeApplication.find({ userId: user._id }).sort({ appliedAt: -1 }).lean();
+  const catalog = await getSchemesCatalog();
+  const rows = apps.map((a) => {
+    const s = catalog.find((x) => Number(x.id) === Number(a.schemeId));
+    const name = s ? schemeTitle(s, l) : (a.schemeName || 'Scheme');
+    const d = a.appliedAt ? new Date(a.appliedAt).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }) : '—';
+    return `| ${name} | ${statusLabel(a.status, l)} | ${d} |`;
+  }).join('\n');
+  return (
+    `# ${L(l, 'My Scheme Applications', 'எனது திட்ட விண்ணப்பங்கள்')}\n\n` +
+    `| **${L(l, 'Scheme', 'திட்டம்')}** | **${L(l, 'Status', 'நிலை')}** | **${L(l, 'Applied', 'தேதி')}** |\n| :--- | :--- | :--- |\n` +
+    rows
+  );
 }
 
 /* ───────── Service data builders ───────── */
@@ -590,11 +678,12 @@ function appStatusMd(app, l) {
 function referralMd(user, l) {
   const link = `https://tnbjp.org/?ref=${user.referralCode}`;
   return (
-    `# ${L(l, 'My Referral Link', 'எனது பரிந்துரை இணைப்பு')}\n\n` +
-    `${L(l, 'Share this link to invite others:', 'மற்றவர்களை அழைக்க இந்த இணைப்பைப் பகிரவும்:')}\n\n` +
-    `**${link}**\n\n` +
-    `${L(l, 'Your code', 'உங்கள் குறியீடு')}: **${user.referralCode}**\n\n` +
-    `_${L(l, 'We will also send this link as a message you can forward.', 'இந்த இணைப்பை நீங்கள் பகிரக்கூடிய செய்தியாகவும் அனுப்புவோம்.')}_`
+    `# 🔗 ${L(l, 'My Referral Link', 'எனது பரிந்துரை இணைப்பு')}\n\n` +
+    `${L(l, 'Invite others to join', 'மற்றவர்களை இணைக்க')} **BJP Nalam Thittam** 🌱\n\n` +
+    `| **${L(l, 'Field', 'விவரம்')}** | **${L(l, 'Value', 'மதிப்பு')}** |\n| :--- | :--- |\n` +
+    `| 🔑 ${L(l, 'Referral Code', 'பரிந்துரை குறியீடு')} | ${user.referralCode} |\n` +
+    `| 🌐 ${L(l, 'Referral Link', 'பரிந்துரை இணைப்பு')} | ${link} |\n\n` +
+    `📤 ${L(l, "We'll also send this link as a separate message you can forward.", 'இந்த இணைப்பை நீங்கள் பகிரக்கூடிய தனி செய்தியாகவும் அனுப்புவோம்.')}`
   );
 }
 

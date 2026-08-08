@@ -15,6 +15,7 @@ const listeners = new Set()
 const imgById = new Map()
 const imgByName = new Map()
 const nameById = new Map()
+const waLogoById = new Map()   // WhatsApp Flow 1:1 scheme logos, keyed by id
 
 function emit() {
   listeners.forEach((l) => {
@@ -26,9 +27,11 @@ function rebuildImageMaps() {
   imgById.clear()
   imgByName.clear()
   nameById.clear()
+  waLogoById.clear()
   for (const s of schemes) {
     if (!s) continue
     if (s.id != null && s.name) nameById.set(Number(s.id), s.name)
+    if (s.id != null && s.waLogo) waLogoById.set(Number(s.id), s.waLogo)
     if (!s.backgroundImage) continue
     if (s.id != null) imgById.set(Number(s.id), s.backgroundImage)
     if (s.name) imgByName.set(String(s.name).toLowerCase().trim(), s.backgroundImage)
@@ -91,6 +94,12 @@ export function getDynamicSchemeImageByName(name) {
 export function getDynamicSchemeNameById(id) {
   if (id == null) return null
   return nameById.get(Number(id)) || null
+}
+
+/** Resolve a scheme's WhatsApp Flow 1:1 logo (waLogo) from its numeric id. */
+export function getDynamicSchemeWaLogoById(id) {
+  if (id == null) return null
+  return waLogoById.get(Number(id)) || null
 }
 
 // ── Tamil sub-object (only when the scheme carries any Tamil content) ──

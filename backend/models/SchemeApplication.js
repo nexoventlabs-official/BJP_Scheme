@@ -91,9 +91,13 @@ const schemeApplicationSchema = new mongoose.Schema({
 });
 
 schemeApplicationSchema.index({ district: 1, assemblyName: 1, boothNo: 1, status: 1 });
+schemeApplicationSchema.index({ district: 1, assemblyName: 1, status: 1 });
+schemeApplicationSchema.index({ district: 1, status: 1 });
 schemeApplicationSchema.index({ userId: 1, schemeId: 1 });
 schemeApplicationSchema.index({ epicNo: 1, schemeId: 1 });
 schemeApplicationSchema.index({ epicNo: 1 });
+schemeApplicationSchema.index({ mobile: 1 });
+schemeApplicationSchema.index({ schemeName: 1 });
 schemeApplicationSchema.index({ appliedAt: -1 });
 
 module.exports = mongoose.model('SchemeApplication', schemeApplicationSchema);
